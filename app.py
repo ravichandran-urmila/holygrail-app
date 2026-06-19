@@ -203,10 +203,38 @@ def render(ticker: str):
 
     chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Watchlist"])
 
-    # ---- Chart -------------------------------------------------------------
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
         st.plotly_chart(fig, use_container_width=True)
+
+        with st.spinner("Analyzing chart patterns..."):
+            ai_summary_html, source_badge = generate_ai_summary(ticker, name, res, settings)
+        
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                border: 1px solid rgba(224, 64, 251, 0.2);
+                border-radius: 12px;
+                padding: 20px;
+                margin-top: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            ">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 1.3rem; margin-right: 8px;">🧠</span>
+                        <span style="font-weight: 600; font-size: 1.1rem; color: #e040fb; letter-spacing: 0.5px; text-transform: uppercase;">AI Technical Analyst</span>
+                    </div>
+                    <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{source_badge}</span>
+                </div>
+                <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                    {ai_summary_html}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
@@ -568,6 +596,153 @@ def render(ticker: str):
                     )
             elif admin_pass:
                 st.error("Incorrect password.")
+
+
+def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str]:
+    import json
+    import requests
+    import re
+    import numpy as np
+
+    df = res.df
+    sm = res.summary
+    last_row = df.iloc[-1]
+
+    # Gather technical snapshot
+    last_close = sm["last_close"]
+    weighted_score = sm["weighted_score"]
+    total_weight = sm["total_weight"]
+    verdict = sm["verdict"]
+
+    # Gather status of each rule
+    rule_status = []
+    for rname, rstat, rval, _passed in res.dashboard:
+        rule_status.append(f"- {rname}: {rstat} ({rval})")
+    rules_text = "\n".join(rule_status)
+
+    entry_low = sm["entry_price_low"]
+    entry_high = sm["entry_price_high"]
+    stop_price = sm["stop_price"]
+
+    # Determine if API keys are available in st.secrets
+    gemini_key = None
+    openai_key = None
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            gemini_key = st.secrets["GEMINI_API_KEY"]
+        if "OPENAI_API_KEY" in st.secrets:
+            openai_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        pass
+
+    prompt = f"""You are a professional stock market technical analyst. Write a concise, executive summary analyzing the stock {name} ({ticker}) based on the Holy Grail setup rules.
+
+Technical Snapshot:
+- Latest Close: ${last_close:.2f}
+- Setup Verdict: {verdict}
+- Weighted Score: {weighted_score:.2f} / {total_weight:.2f}
+Rules breakdown:
+{rules_text}
+
+Entry/Exit Strategy:
+- Suggested Entry Range: ${entry_low:.2f} to ${entry_high:.2f} (50WMA to +{settings.retest_max:.1f}%)
+- Suggested Stop Loss: ${stop_price:.2f} (50WMA * 0.995 on a weekly closing basis)
+
+Provide a clean, direct, and actionable description of the entry and exit strategies based on these parameters. 
+CRITICAL FORMATTING INSTRUCTIONS:
+Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <li>). Do not include <html> or <body> tags, do not wrap in code blocks (like ```html), and keep the response under 150 words."""
+
+    # Try Gemini API if key is available
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }],
+                "generationConfig": {
+                    "maxOutputTokens": 300,
+                    "temperature": 0.4
+                }
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                if text:
+                    # Clean up code blocks if present
+                    if text.startswith("```html"):
+                        text = text[7:]
+                    elif text.startswith("```"):
+                        text = text[3:]
+                    if text.endswith("```"):
+                        text = text[:-3]
+                    text = text.strip()
+                    return text, "Gemini 2.5 Flash API"
+        except Exception:
+            pass
+
+    # Try OpenAI API if key is available
+    if openai_key:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {openai_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.4
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"].strip()
+                if text:
+                    # Clean up code blocks if present
+                    if text.startswith("```html"):
+                        text = text[7:]
+                    elif text.startswith("```"):
+                        text = text[3:]
+                    if text.endswith("```"):
+                        text = text[:-3]
+                    text = text.strip()
+                    return text, "GPT-4o-mini API"
+        except Exception:
+            pass
+
+    # Programmatic Rules-Based Generator Fallback
+    # Section 1: Setup Status & Proximity
+    if verdict == "COMPLETE SETUP":
+        verdict_html = f"<p>🚀 <strong>Complete Buy Setup</strong>: <strong>{name} ({ticker})</strong> has triggered a complete Holy Grail setup with a strong score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>. This indicates that a high-volume breakout from a solid base has occurred and the price is currently resting right in the high-probability retest zone near the 50-week moving average (50WMA).</p>"
+    elif verdict == "WATCHING":
+        verdict_html = f"<p>👀 <strong>On Close Watch</strong>: <strong>{name} ({ticker})</strong> is actively consolidating near its weekly support but has not yet met all criteria (score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>). The stock is currently sitting in the 50WMA retest zone, representing a potential accumulation phase, but requires a stronger momentum or volume breakout confirmation to trigger a complete setup.</p>"
+    else:
+        verdict_html = f"<p>⚠️ <strong>No Active Setup</strong>: <strong>{name} ({ticker})</strong> currently shows no active Holy Grail setup (score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>). The price is either trading below the 50-week moving average or lacks the required structural base length and volume characteristics to justify an entry at this time.</p>"
+
+    # Section 2: Technical Breakdown
+    retest_val = last_row["pct_above_50w"]
+    if np.isnan(retest_val):
+        retest_desc = "has no valid comparison against the 50-week MA due to insufficient data history"
+    else:
+        retest_desc = f"is sitting a healthy <strong>{retest_val:.1f}%</strong> above the 50WMA (${last_row['ma50w']:.2f})" if retest_val >= 0 else f"is trading <strong>{-retest_val:.1f}%</strong> below the key 50WMA (${last_row['ma50w']:.2f})"
+    
+    vol_desc = "strong volume breakout" if bool(last_row["rule2_breakout"]) else "lack of recent high-volume breakout confirmation"
+    rs_desc = f"showing positive relative strength (Mansfield RS: <strong>{last_row['mansfield_rs']:.2f}</strong>)" if (("mansfield_rs" in last_row and not np.isnan(last_row["mansfield_rs"])) and bool(last_row["rule5_mansfield"])) else "underperforming the S&P 500 on a relative basis"
+    rsi_desc = f"bullish momentum (RSI: <strong>{last_row['rsi14']:.1f}</strong>)" if bool(last_row["rule6_rsi"]) else "weak momentum (RSI: <strong>{last_row['rsi14']:.1f}</strong>)"
+    
+    analysis_html = f"<p>Technically, the price {retest_desc}. The structure shows a {vol_desc} while the stock is {rs_desc} and displaying {rsi_desc}.</p>"
+
+    # Section 3: Actionable Entry/Exit
+    entry_html = f"<p><strong>Execution Strategy</strong>:<br/>" \
+                 f"• <strong>Entry Plan</strong>: Optimal entry is established between <strong>${entry_low:.2f} and ${entry_high:.2f}</strong> (from the 50WMA up to {settings.retest_max:.1f}%). Entering close to the lower end of this range significantly improves the risk-to-reward ratio.<br/>" \
+                 f"• <strong>Exit Plan (Stop Loss)</strong>: A strict defensive stop-loss is set at <strong>${stop_price:.2f}</strong> (representing the 50WMA close multiplied by 0.995). A weekly close below this level invalidates the bullish structure and triggers an exit.</p>"
+
+    fallback_html = f"{verdict_html}{analysis_html}{entry_html}"
+    return fallback_html, "Local Expert System"
 
 
 def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
