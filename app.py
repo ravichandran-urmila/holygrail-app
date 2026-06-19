@@ -21,41 +21,48 @@ from indicator import HGSettings, compute
 st.set_page_config(page_title="Holy Grail — Retest Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
-# --- Header -----------------------------------------------------------------
-st.markdown(
-    "## 🏆 Holy Grail — Green Cloud Retest Scanner\n"
-    "Weekly-timeframe scanner. Data: Yahoo Finance (free)."
-)
+# --- Header & Settings ------------------------------------------------------
+col_title, col_settings = st.columns([3, 1])
 
-# --- Sidebar: search + settings --------------------------------------------
+with col_title:
+    st.markdown(
+        "## 🏆 Holy Grail — Green Cloud Retest Scanner\n"
+        "Weekly-timeframe scanner. Data: Yahoo Finance (free)."
+    )
+
+with col_settings:
+    st.write("")  # Vertical alignment spacer
+    with st.popover("⚙️ Settings & Thresholds", use_container_width=True):
+        show_cloud = st.checkbox("Show EMA cloud", True)
+        
+        with st.expander("EMA / MA", expanded=False):
+            ema_fast = st.number_input("EMA Fast", 1, 200, 5)
+            ema_mid = st.number_input("EMA Mid", 1, 200, 9)
+            ema_slow = st.number_input("EMA Slow", 1, 200, 21)
+            ma50w = st.number_input("50-Week MA", 1, 400, 50)
+            
+        with st.expander("Rules", expanded=False):
+            rsi_len = st.number_input("RSI Length", 2, 100, 14)
+            vol_mult = st.number_input("Breakout Vol Multiplier", 0.1, 10.0, 1.5, 0.1)
+            vol_lookbk = st.number_input("Vol Avg Lookback (wks)", 1, 200, 10)
+            retest_max = st.number_input("Max % Above 50WMA for Retest", 0.5, 100.0, 10.0, 0.5)
+            base_min = st.number_input("Min Base Length (wks)", 1, 200, 15)
+            
+        with st.expander("Weights & Thresholds", expanded=False):
+            w1 = st.number_input("W1 Retest", 0.0, 1.0, 0.15, 0.05)
+            w2 = st.number_input("W2 Breakout", 0.0, 1.0, 0.10, 0.05)
+            w3 = st.number_input("W3 Base Length", 0.0, 1.0, 0.10, 0.05)
+            w4 = st.number_input("W4 Green Cloud", 0.0, 1.0, 0.25, 0.05)
+            w5 = st.number_input("W5 Mansfield RS", 0.0, 1.0, 0.30, 0.05)
+            w6 = st.number_input("W6 RSI > 50", 0.0, 1.0, 0.10, 0.05)
+            partial_thresh = st.number_input("Partial threshold", 0.0, 2.0, 0.35, 0.05)
+            full_thresh = st.number_input("Full threshold", 0.0, 2.0, 0.70, 0.05)
+
+# --- Sidebar: search --------------------------------------------------------
 with st.sidebar:
     st.header("🔎 Ticker")
     ticker = st.text_input("Symbol", value="ARM", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
     history_choice = st.selectbox("History", ["3 Months", "YTD", "6 Months", "1 Year", "5 Years"], index=3)
-
-    st.header("⚙️ Settings")
-    with st.expander("EMA / MA", expanded=False):
-        ema_fast = st.number_input("EMA Fast", 1, 200, 5)
-        ema_mid = st.number_input("EMA Mid", 1, 200, 9)
-        ema_slow = st.number_input("EMA Slow", 1, 200, 21)
-        ma50w = st.number_input("50-Week MA", 1, 400, 50)
-    with st.expander("Rules", expanded=False):
-        rsi_len = st.number_input("RSI Length", 2, 100, 14)
-        vol_mult = st.number_input("Breakout Vol Multiplier", 0.1, 10.0, 1.5, 0.1)
-        vol_lookbk = st.number_input("Vol Avg Lookback (wks)", 1, 200, 10)
-        retest_max = st.number_input("Max % Above 50WMA for Retest", 0.5, 100.0, 10.0, 0.5)
-        base_min = st.number_input("Min Base Length (wks)", 1, 200, 15)
-    with st.expander("Weights & Thresholds", expanded=False):
-        w1 = st.number_input("W1 Retest", 0.0, 1.0, 0.15, 0.05)
-        w2 = st.number_input("W2 Breakout", 0.0, 1.0, 0.10, 0.05)
-        w3 = st.number_input("W3 Base Length", 0.0, 1.0, 0.10, 0.05)
-        w4 = st.number_input("W4 Green Cloud", 0.0, 1.0, 0.25, 0.05)
-        w5 = st.number_input("W5 Mansfield RS", 0.0, 1.0, 0.30, 0.05)
-        w6 = st.number_input("W6 RSI > 50", 0.0, 1.0, 0.10, 0.05)
-        partial_thresh = st.number_input("Partial threshold", 0.0, 2.0, 0.35, 0.05)
-        full_thresh = st.number_input("Full threshold", 0.0, 2.0, 0.70, 0.05)
-
-    show_cloud = st.checkbox("Show EMA cloud", True)
     go_btn = st.button("Scan", type="primary", use_container_width=True)
 
 
