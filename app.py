@@ -45,7 +45,7 @@ with col_settings:
             rsi_len = st.number_input("RSI Length", 2, 100, 14)
             vol_mult = st.number_input("Breakout Vol Multiplier", 0.1, 10.0, 1.5, 0.1)
             vol_lookbk = st.number_input("Vol Avg Lookback (wks)", 1, 200, 10)
-            retest_max = st.number_input("Max % Above 50WMA for Retest", 0.5, 100.0, 10.0, 0.5)
+            retest_max = st.number_input("Max % Above 50WMA for Retest", 0.5, 100.0, 15.0, 0.5)
             base_min = st.number_input("Min Base Length (wks)", 1, 200, 15)
             
         with st.expander("Weights & Thresholds", expanded=False):
@@ -123,7 +123,7 @@ def render(ticker: str):
     verdict = sm["verdict"]
     verdict_emoji = {"COMPLETE SETUP": "🚀", "WATCHING": "👀", "NO SETUP": "—"}[verdict]
     c3.metric("Verdict", f"{verdict_emoji} {verdict}")
-    c4.metric("Entry / Stop", f"${sm['entry_price']:.2f}", f"stop ${sm['stop_price']:.2f}")
+    c4.metric("Entry Range", f"${sm['entry_price_low']:.2f} - ${sm['entry_price_high']:.2f}", f"stop ${sm['stop_price']:.2f}")
 
     if sm["full_setup"]:
         st.success("🚀 **FULL Holy Grail Setup** on the latest weekly bar.")
@@ -159,7 +159,7 @@ def render(ticker: str):
             f"→ **{verdict}**"
         )
         st.caption(
-            f"Suggested entry ${sm['entry_price']:.2f} (50WMA ×1.005) · "
+            f"Suggested entry range: ${sm['entry_price_low']:.2f} - ${sm['entry_price_high']:.2f} (50WMA to +{settings.retest_max:.1f}%) · "
             f"stop ${sm['stop_price']:.2f} (50WMA ×0.995, on weekly close)."
         )
 

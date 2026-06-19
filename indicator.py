@@ -32,7 +32,7 @@ class HGSettings:
     rsi_len: int = 14
     vol_mult: float = 1.5
     vol_lookbk: int = 10
-    retest_max: float = 10.0
+    retest_max: float = 15.0
     base_min: int = 15
     rs_window: int = 8
 
@@ -282,7 +282,8 @@ def compute(
     else:
         verdict = "NO SETUP"
 
-    entry_price = last["ma50w"] * 1.005
+    entry_price_low = last["ma50w"]
+    entry_price_high = last["ma50w"] * (1 + s.retest_max / 100.0)
     stop_price = last["ma50w"] * 0.995
 
     summary = {
@@ -291,7 +292,8 @@ def compute(
         "verdict": verdict,
         "full_setup": bool(last["full_setup"]),
         "partial_setup": bool(last["partial_setup"]),
-        "entry_price": float(entry_price),
+        "entry_price_low": float(entry_price_low),
+        "entry_price_high": float(entry_price_high),
         "stop_price": float(stop_price),
         "last_close": float(last["close"]),
         "last_date": df.index[-1],
