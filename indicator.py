@@ -252,6 +252,7 @@ def compute(
         & (df["weighted_score"] >= s.partial_thresh)
     )
     df["stop_trigger"] = crossed_under
+    df["blue_square"] = crossover(df["ema5"], df["ema21"])
 
     # --- Dashboard (last bar) ----------------------------------------------
     last = df.iloc[-1]

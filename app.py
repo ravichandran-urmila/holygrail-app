@@ -69,7 +69,8 @@ with st.sidebar:
     st.markdown("### 📖 How to read the chart")
     st.markdown(
         "* <span style='color: #00e676; font-size: 1.1rem;'>▲</span> **Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
-        "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.",
+        "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
+        "* <span style='color: #00b0ff; font-size: 1.1rem;'>■</span> **Blue Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
         unsafe_allow_html=True
     )
 
@@ -190,7 +191,7 @@ def render(ticker: str):
     with data_tab:
         cols = ["open", "high", "low", "close", "volume", "ma50w", "ema5", "ema9",
                 "ema21", "rsi14", "pct_above_50w", "mansfield_rs", "weighted_score",
-                "full_setup", "partial_setup"]
+                "full_setup", "partial_setup", "blue_square"]
         cols = [c for c in cols if c in df.columns]
         st.dataframe(df_filtered[cols].iloc[::-1], use_container_width=True)
         st.download_button(
@@ -244,6 +245,16 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
             marker=dict(symbol="circle", size=8, color="#ffd600"),
             name="Partial (watching)",
         ))
+
+    # Blue square markers (red to green cloud crossover)
+    if "blue_square" in df.columns:
+        blue_sq = df[df["blue_square"]]
+        if not blue_sq.empty:
+            fig.add_trace(go.Scatter(
+                x=blue_sq.index, y=blue_sq["low"] * 0.96, mode="markers",
+                marker=dict(symbol="square", size=10, color="#00b0ff"),
+                name="Blue Square (HR/HR)",
+            ))
 
 
 
