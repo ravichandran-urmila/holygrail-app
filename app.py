@@ -19,7 +19,7 @@ import data as datalib
 from indicator import HGSettings, compute
 
 
-st.set_page_config(page_title="Holy Grail — Retest Scanner", layout="wide",
+st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
 # --- Header & Settings ------------------------------------------------------
@@ -27,8 +27,8 @@ col_title, col_settings = st.columns([3, 1])
 
 with col_title:
     st.markdown(
-        "## 🏆 Holy Grail — Green Cloud Retest Scanner\n"
-        "Weekly-timeframe scanner. Data: Yahoo Finance (free)."
+        "## 🏆 Holygrail\n"
+        "An entertaining tool that captures long term momentum in public securities based on probabilities."
     )
 
 with col_settings:
