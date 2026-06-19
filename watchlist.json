@@ -26,5 +26,12 @@
     "price_added": 124.0,
     "verdict": "HOLD",
     "commentary": "The frontrunner of inference chips"
+  },
+  {
+    "ticker": "ZM",
+    "date_added": "2025-04-18",
+    "price_added": 92.0,
+    "verdict": "BUY",
+    "commentary": "AI virtual agent + anthropic stake"
   }
 ]
