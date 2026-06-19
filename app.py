@@ -13,6 +13,7 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import textwrap
 
 import data as datalib
 from indicator import HGSettings, compute
@@ -365,7 +366,7 @@ def render(ticker: str):
                 </tr>
                 """
             html_table += "</tbody></table></div>"
-            st.markdown(html_table, unsafe_allow_html=True)
+            st.markdown(textwrap.dedent(html_table), unsafe_allow_html=True)
 
         st.write("---")
         
