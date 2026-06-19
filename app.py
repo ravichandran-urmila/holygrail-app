@@ -123,7 +123,21 @@ def render(ticker: str):
     verdict = sm["verdict"]
     verdict_emoji = {"COMPLETE SETUP": "🚀", "WATCHING": "👀", "NO SETUP": "—"}[verdict]
     c3.metric("Verdict", f"{verdict_emoji} {verdict}")
-    c4.metric("Entry Range", f"${sm['entry_price_low']:.2f} - ${sm['entry_price_high']:.2f}", f"stop ${sm['stop_price']:.2f}")
+    with c4:
+        st.markdown(
+            f"""
+            <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
+                <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Entry Range</div>
+                <div style="font-size: 1.8rem; font-weight: 600; color: rgb(250, 250, 250); margin-bottom: 4px;">
+                    ${sm['entry_price_low']:.2f} – ${sm['entry_price_high']:.2f}
+                </div>
+                <div style="font-size: 0.85rem; color: #ea3943; font-weight: 500;">
+                    🛑 stop: ${sm['stop_price']:.2f}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     if sm["full_setup"]:
         st.success("🚀 **FULL Holy Grail Setup** on the latest weekly bar.")
