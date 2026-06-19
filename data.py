@@ -62,3 +62,14 @@ def resolve_name(ticker: str) -> str:
         return info.get("longName") or info.get("shortName") or ticker.upper()
     except Exception:
         return ticker.upper()
+
+
+@st.cache_data(show_spinner=False, ttl=1800)
+def fetch_news(ticker: str) -> list:
+    """Fetch recent news articles for a ticker from yfinance."""
+    try:
+        t = yf.Ticker(ticker)
+        return t.news or []
+    except Exception:
+        return []
+

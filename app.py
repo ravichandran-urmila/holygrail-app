@@ -95,6 +95,7 @@ def render(ticker: str):
             ohlcv = datalib.fetch_weekly(ticker, period="10y")
             spx = datalib.fetch_spx_weekly(period="10y")
             name = datalib.resolve_name(ticker)
+            news_items = datalib.fetch_news(ticker)
     except Exception as e:
         st.error(f"Could not load **{ticker}** — {e}")
         return
@@ -207,34 +208,66 @@ def render(ticker: str):
         fig = build_chart(df_filtered, ticker, show_cloud)
         st.plotly_chart(fig, use_container_width=True)
 
-        with st.spinner("Analyzing chart patterns..."):
-            ai_summary_html, source_badge = generate_ai_summary(ticker, name, res, settings)
-        
-        st.markdown(
-            f"""
-            <div style="
-                background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
-                border: 1px solid rgba(224, 64, 251, 0.2);
-                border-radius: 12px;
-                padding: 20px;
-                margin-top: 15px;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            ">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-size: 1.3rem; margin-right: 8px;">🧠</span>
-                        <span style="font-weight: 600; font-size: 1.1rem; color: #e040fb; letter-spacing: 0.5px; text-transform: uppercase;">AI Technical Analyst</span>
+        with st.spinner("Analyzing catalysts and pattern data..."):
+            ai_summary_html, tech_source = generate_ai_summary(ticker, name, res, settings)
+            narrative_html, narrative_source = generate_catalyst_narrative(ticker, name, news_items)
+
+        col_left, col_right = st.columns(2)
+        with col_left:
+            st.markdown(
+                f"""
+                <div style="
+                    background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                    border: 1px solid rgba(224, 64, 251, 0.2);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-top: 15px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                    min-height: 280px;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center;">
+                            <span style="font-size: 1.3rem; margin-right: 8px;">🧠</span>
+                            <span style="font-weight: 600; font-size: 1.1rem; color: #e040fb; letter-spacing: 0.5px; text-transform: uppercase;">AI Technical Analyst</span>
+                        </div>
+                        <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{tech_source}</span>
                     </div>
-                    <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{source_badge}</span>
+                    <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                        {ai_summary_html}
+                    </div>
                 </div>
-                <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
-                    {ai_summary_html}
+                """,
+                unsafe_allow_html=True
+            )
+
+        with col_right:
+            st.markdown(
+                f"""
+                <div style="
+                    background: linear-gradient(135deg, rgba(255, 145, 0, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                    border: 1px solid rgba(255, 145, 0, 0.2);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-top: 15px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                    min-height: 280px;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center;">
+                            <span style="font-size: 1.3rem; margin-right: 8px;">📰</span>
+                            <span style="font-weight: 600; font-size: 1.1rem; color: #ff9100; letter-spacing: 0.5px; text-transform: uppercase;">Current Narrative</span>
+                        </div>
+                        <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{narrative_source}</span>
+                    </div>
+                    <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                        {narrative_html}
+                    </div>
                 </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+                """,
+                unsafe_allow_html=True
+            )
 
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
@@ -743,6 +776,131 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <l
 
     fallback_html = f"{verdict_html}{analysis_html}{entry_html}"
     return fallback_html, "Local Expert System"
+
+
+def generate_catalyst_narrative(ticker: str, name: str, news_items: list) -> tuple[str, str]:
+    import requests
+    import json
+    import re
+
+    # Filter out empty or invalid items
+    valid_news = []
+    if news_items:
+        for item in news_items:
+            title = item.get("title")
+            publisher = item.get("publisher")
+            link = item.get("link")
+            if title:
+                valid_news.append({
+                    "title": title,
+                    "publisher": publisher or "Unknown",
+                    "link": link or "#"
+                })
+
+    # Limit to top 5 news items for prompt
+    news_subset = valid_news[:5]
+
+    # Format news items for the LLM
+    news_text = ""
+    for idx, item in enumerate(news_subset):
+        news_text += f"{idx+1}. \"{item['title']}\" (published by {item['publisher']})\n"
+
+    # If no news is available, we return a fallback message
+    if not news_subset:
+        msg = f"<p>No recent news catalysts were found for <strong>{name} ({ticker})</strong> in Yahoo Finance. The stock's narrative is currently driven by standard macroeconomic updates and historical sector trends.</p>"
+        return msg, "Local System"
+
+    # Determine if API keys are available in st.secrets
+    gemini_key = None
+    openai_key = None
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            gemini_key = st.secrets["GEMINI_API_KEY"]
+        if "OPENAI_API_KEY" in st.secrets:
+            openai_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        pass
+
+    prompt = f"""You are a professional financial journalist and stock market catalyst analyst. 
+Analyze the following recent news headlines for {name} ({ticker}) and synthesize them into a concise, unified "current narrative" summary (max 120 words). 
+Identify what key catalyst (e.g., earnings, product launch, regulatory news, macroeconomic trends, analyst upgrades) is potentially moving the stock.
+
+Recent News Headlines for {ticker}:
+{news_text}
+
+CRITICAL FORMATTING INSTRUCTIONS:
+Format your response in raw HTML (using tags like <p>, <strong>, <br/>). Do not include <html> or <body> tags, do not wrap in code blocks (like ```html), and keep the response under 120 words."""
+
+    # Try Gemini API if key is available
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }],
+                "generationConfig": {
+                    "maxOutputTokens": 300,
+                    "temperature": 0.4
+                }
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                if text:
+                    # Clean up code blocks if present
+                    if text.startswith("```html"):
+                        text = text[7:]
+                    elif text.startswith("```"):
+                        text = text[3:]
+                    if text.endswith("```"):
+                        text = text[:-3]
+                    text = text.strip()
+                    return text, "Gemini 2.5 Flash API"
+        except Exception:
+            pass
+
+    # Try OpenAI API if key is available
+    if openai_key:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {openai_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.4
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"].strip()
+                if text:
+                    # Clean up code blocks if present
+                    if text.startswith("```html"):
+                        text = text[7:]
+                    elif text.startswith("```"):
+                        text = text[3:]
+                    if text.endswith("```"):
+                        text = text[:-3]
+                    text = text.strip()
+                    return text, "GPT-4o-mini API"
+        except Exception:
+            pass
+
+    # Programmatic Fallback: List of top 3 news items with direct links
+    fallback_html = f"<p>Recent news headlines indicating potential catalysts for <strong>{name} ({ticker})</strong>:</p>"
+    fallback_html += "<ul style='margin-left: 15px; padding-left: 0;'>"
+    for item in valid_news[:3]:
+        fallback_html += f"<li style='margin-bottom: 8px;'><a href='{item['link']}' target='_blank' style='color: #ff9100; text-decoration: underline;'>{item['title']}</a> <span style='color: rgba(255, 255, 255, 0.5); font-size: 0.85rem;'>({item['publisher']})</span></li>"
+    fallback_html += "</ul>"
+
+    return fallback_html, "Recent Yahoo News"
 
 
 def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
