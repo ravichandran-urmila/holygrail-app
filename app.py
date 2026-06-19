@@ -200,8 +200,7 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
             name="Partial (watching)",
         ))
 
-    # Retest-zone background shading
-    _add_retest_bands(fig, df)
+
 
     fig.update_layout(
         height=640, template="plotly_dark",
@@ -263,29 +262,11 @@ def _add_ema_cloud(fig: go.Figure, df: pd.DataFrame):
         legend_seen.add(key)
 
 
-def _add_retest_bands(fig: go.Figure, df: pd.DataFrame):
-    """Shade contiguous weeks where price sits in the retest zone."""
-    in_zone = df["rule1_retest"].fillna(False).to_numpy()
-    idx = df.index
-    start = None
-    for i, flag in enumerate(in_zone):
-        if flag and start is None:
-            start = idx[i]
-        elif not flag and start is not None:
-            fig.add_vrect(x0=start, x1=idx[i], fillcolor="rgba(22,199,132,0.08)",
-                          line_width=0, layer="below")
-            start = None
-    if start is not None:
-        fig.add_vrect(x0=start, x1=idx[-1], fillcolor="rgba(22,199,132,0.08)",
-                      line_width=0, layer="below")
+
 
 
 # --- Entry point ------------------------------------------------------------
 # Render on load (default ticker) or whenever Scan is pressed.
 render(ticker)
 
-st.caption(
-    "⚠️ Educational tool, not financial advice. TradingView has no public API for custom "
-    "Pine indicators or raw data — this app re-implements the indicator and uses Yahoo Finance. "
-    "Mansfield RS uses ^GSPC (S&P 500) as the benchmark."
-)
+
