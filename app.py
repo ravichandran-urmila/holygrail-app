@@ -68,8 +68,9 @@ with st.sidebar:
     st.write("---")
     st.markdown("### 📖 How to read the chart")
     st.markdown(
-        "* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
-        "* **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock."
+        "* <span style='color: #00e676; font-size: 1.1rem;'>▲</span> **Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
+        "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.",
+        unsafe_allow_html=True
     )
 
 

@@ -25,7 +25,7 @@ Each rule has a specific weight. The sum of these weights produces a **Weighted 
 
 ## How to Read the Chart
 
-* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.
+* **▲ Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.
 * **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.
 
 ## Files
