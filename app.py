@@ -32,7 +32,7 @@ st.markdown(
 with st.sidebar:
     st.header("🔎 Ticker")
     ticker = st.text_input("Symbol", value="AAPL", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
-    period = st.selectbox("History", ["5y", "10y", "max"], index=1)
+    history_choice = st.selectbox("History", ["3 Months", "YTD", "6 Months", "1 Year", "5 Years"], index=3)
 
     st.header("⚙️ Settings")
     with st.expander("EMA / MA", expanded=False):
@@ -76,8 +76,8 @@ def render(ticker: str):
 
     try:
         with st.spinner(f"Fetching weekly data for {ticker}…"):
-            ohlcv = datalib.fetch_weekly(ticker, period=period)
-            spx = datalib.fetch_spx_weekly(period=period)
+            ohlcv = datalib.fetch_weekly(ticker, period="10y")
+            spx = datalib.fetch_spx_weekly(period="10y")
             name = datalib.resolve_name(ticker)
     except Exception as e:
         st.error(f"Could not load **{ticker}** — {e}")
@@ -92,6 +92,22 @@ def render(ticker: str):
     res = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
     df = res.df
     sm = res.summary
+
+    # Filter data for display (chart and data table)
+    import datetime
+    now = datetime.datetime.now()
+    if history_choice == "3 Months":
+        start_date = now - datetime.timedelta(days=90)
+    elif history_choice == "YTD":
+        start_date = datetime.datetime(now.year, 1, 1)
+    elif history_choice == "6 Months":
+        start_date = now - datetime.timedelta(days=180)
+    elif history_choice == "1 Year":
+        start_date = now - datetime.timedelta(days=365)
+    else: # "5 Years"
+        start_date = now - datetime.timedelta(days=5 * 365)
+
+    df_filtered = df[df.index >= start_date]
 
     # ---- Top verdict banner ------------------------------------------------
     st.subheader(f"{name}  ·  {ticker}")
@@ -112,7 +128,7 @@ def render(ticker: str):
 
     # ---- Chart -------------------------------------------------------------
     with chart_tab:
-        fig = build_chart(df, ticker, show_cloud)
+        fig = build_chart(df_filtered, ticker, show_cloud)
         st.plotly_chart(fig, use_container_width=True)
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
@@ -147,7 +163,7 @@ def render(ticker: str):
                 "ema21", "rsi14", "pct_above_50w", "mansfield_rs", "weighted_score",
                 "full_setup", "partial_setup"]
         cols = [c for c in cols if c in df.columns]
-        st.dataframe(df[cols].tail(60).iloc[::-1], use_container_width=True)
+        st.dataframe(df_filtered[cols].iloc[::-1], use_container_width=True)
         st.download_button(
             "Download full series (CSV)",
             df[cols].to_csv().encode(),
