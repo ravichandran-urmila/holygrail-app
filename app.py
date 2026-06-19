@@ -264,10 +264,13 @@ def render(ticker: str):
             if os.path.exists(WATCHLIST_FILE):
                 try:
                     with open(WATCHLIST_FILE, "r") as f:
-                        return json.load(f)
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            return {"verdict": "NEUTRAL", "commentary": "", "items": data}
+                        return data
                 except Exception:
-                    return []
-            return []
+                    return {"verdict": "NEUTRAL", "commentary": "", "items": []}
+            return {"verdict": "NEUTRAL", "commentary": "", "items": []}
 
         # Save watchlist helper
         def save_wl(data):
@@ -279,7 +282,10 @@ def render(ticker: str):
                 st.error(f"Failed to save watchlist: {e}")
                 return False
 
-        watchlist = load_wl()
+        watchlist_data = load_wl()
+        watchlist = watchlist_data.get("items", [])
+        wl_verdict = watchlist_data.get("verdict", "NEUTRAL")
+        wl_commentary = watchlist_data.get("commentary", "")
 
         if not watchlist:
             st.info("Watchlist is currently empty. Add tickers in the Admin Panel below.")
@@ -326,6 +332,30 @@ def render(ticker: str):
 
             st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
+        # Display Verdict & Commentary section
+        st.write("") # Spacer
+        st.markdown("### 📢 Expert Verdict & Commentary")
+        
+        v_emoji = {"BULLISH": "🐂", "NEUTRAL": "⚖️", "BEARISH": "🐻", "CAUTION": "⚠️"}.get(wl_verdict, "⚖️")
+        v_color = {"BULLISH": "#00e676", "NEUTRAL": "#888888", "BEARISH": "#ea3943", "CAUTION": "#ffd600"}.get(wl_verdict, "#888888")
+        
+        st.markdown(
+            f"""
+            <div style="padding: 15px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;">
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-right: 10px;">Market Verdict:</span>
+                    <span style="font-size: 0.95rem; padding: 4px 10px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: {v_color}; font-weight: 600; vertical-align: middle;">
+                        {v_emoji} {wl_verdict}
+                    </span>
+                </div>
+                <div style="font-size: 1rem; color: rgb(220, 220, 220); line-height: 1.5; white-space: pre-wrap;">
+                    {wl_commentary if wl_commentary else "No commentary provided yet."}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
         st.write("---")
         
         # Admin controls section
@@ -335,10 +365,24 @@ def render(ticker: str):
             
             if admin_pass == correct_pass:
                 st.success("Authorized!")
+                
+                # Form to edit Verdict & Commentary
+                st.markdown("#### 📝 Edit Market Verdict & Commentary")
+                new_verdict = st.selectbox("Current Market Verdict", ["BULLISH", "NEUTRAL", "BEARISH", "CAUTION"], index=["BULLISH", "NEUTRAL", "BEARISH", "CAUTION"].index(wl_verdict))
+                new_comm = st.text_area("Expert Commentary Notes", value=wl_commentary, height=120)
+                
+                if st.button("Update Verdict & Commentary", type="primary"):
+                    watchlist_data["verdict"] = new_verdict
+                    watchlist_data["commentary"] = new_comm
+                    if save_wl(watchlist_data):
+                        st.toast("Updated commentary successfully!", icon="📝")
+                        st.rerun()
+
+                st.write("---")
                 col_add, col_del = st.columns(2)
                 
                 with col_add:
-                    st.markdown("#### ➕ Add to Watchlist")
+                    st.markdown("#### ➕ Add Ticker to Watchlist")
                     add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
                     add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
                     
@@ -380,7 +424,8 @@ def render(ticker: str):
                             # check if already exists
                             watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
                             watchlist.append(new_item)
-                            if save_wl(watchlist):
+                            watchlist_data["items"] = watchlist
+                            if save_wl(watchlist_data):
                                 st.toast(f"Added {add_ticker} to watchlist!", icon="🚀")
                                 st.rerun()
                 
@@ -393,7 +438,8 @@ def render(ticker: str):
                         if st.button("Remove Selected", type="secondary", use_container_width=True):
                             if tickers_to_remove:
                                 watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
-                                if save_wl(watchlist):
+                                watchlist_data["items"] = watchlist
+                                if save_wl(watchlist_data):
                                     st.toast(f"Removed {', '.join(tickers_to_remove)} from watchlist!", icon="🗑️")
                                     st.rerun()
                             else:
@@ -406,7 +452,7 @@ def render(ticker: str):
                     "persists permanently on Streamlit Community Cloud (and doesn't reset when the container restarts), "
                     "please copy the configuration below and commit it to your GitHub repository."
                 )
-                st.code(json.dumps(watchlist, indent=2), language="json")
+                st.code(json.dumps(watchlist_data, indent=2), language="json")
             elif admin_pass:
                 st.error("Incorrect password.")
 
