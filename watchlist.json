@@ -5,5 +5,12 @@
     "price_added": 296.0,
     "verdict": "BUY",
     "commentary": "INTC partnership is the catalyst"
+  },
+  {
+    "ticker": "HPE",
+    "date_added": "2026-03-25",
+    "price_added": 25.0,
+    "verdict": "HOLD",
+    "commentary": "CPU shortage and Space data centers long term"
   }
 ]
