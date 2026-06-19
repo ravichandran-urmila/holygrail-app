@@ -213,7 +213,7 @@ def render(ticker: str):
     elif sm["partial_setup"]:
         st.warning("⚠️ **Entering the 50WMA retest zone** with an elevated weighted score.")
 
-    chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner"])
+    chart_tab, dash_tab, data_tab, watchlist_tab, guide_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner", "📖 Guide"])
 
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
@@ -642,6 +642,111 @@ def render(ticker: str):
                     )
             elif admin_pass:
                 st.error("Incorrect password.")
+
+    # ---- Guide Tab ---------------------------------------------------------
+    with guide_tab:
+        st.markdown("### 📖 How to Read the Charts")
+        st.markdown(
+            "This educational section uses three historical case studies to show when it is a high-probability "
+            "time to enter a stock based on momentum rules, and when it is a trap."
+        )
+        st.write("---")
+        
+        # Helper to fetch guide data safely
+        def fetch_guide_data(ticker_symbol: str):
+            try:
+                ohlcv = datalib.fetch_weekly(ticker_symbol, period="10y")
+                spx = datalib.fetch_spx_weekly(period="10y")
+                res_guide = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
+                return res_guide.df
+            except Exception as e_guide:
+                st.error(f"Error loading {ticker_symbol} historical data: {e_guide}")
+                return None
+
+        # 1. Adobe Example
+        st.markdown("#### 1. Adobe (ADBE) — The Value Trap (April – June 2025)")
+        col_text, col_chart = st.columns([2, 3])
+        with col_text:
+            st.markdown(
+                """
+                **What Happened:**
+                Adobe was beaten down into the low **$330s** in April 2025. Over the next two months, the price staged a rapid, massive rally back to the **$450s**. 
+                
+                **The Psychology:**
+                Retail investors and 'value hunters' piled in aggressively during this recovery, believing the stock was severely undervalued and that a bottom was locked in.
+                
+                **The Reality (HG Rules):**
+                - 🛑 **No Momentum Shift:** The price remained **below** the declining 50-week Moving Average (50WMA).
+                - 🛑 **Mansfield RS Red:** The Mansfield Relative Strength index was deeply negative (red), indicating that Adobe was still heavily underperforming the S&P 500.
+                - 🛑 **The Result:** The momentum never shifted. Because the indicators were weak, the stock collapsed back to the **$340s** in July/August, leaving value-buyers trapped.
+                """
+            )
+        with col_chart:
+            df_adbe = fetch_guide_data("ADBE")
+            if df_adbe is not None:
+                df_adbe_filtered = df_adbe.loc['2024-10-01':'2025-08-01']
+                fig_adbe = build_chart(df_adbe_filtered, "ADBE", show_cloud=True)
+                fig_adbe.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+                st.plotly_chart(fig_adbe, use_container_width=True, key="guide_adbe_chart")
+                
+        st.write("---")
+        
+        # 2. AMD Example
+        st.markdown("#### 2. AMD (AMD) — The Trend Reversal Setup (Early 2023)")
+        col_text, col_chart = st.columns([2, 3])
+        with col_text:
+            st.markdown(
+                """
+                **What Happened:**
+                Similar to Adobe, AMD bottomed out in late 2022 and recovered in early 2023. However, the structural momentum profile of AMD was completely different.
+                
+                **The Recovery:**
+                On **January 30, 2023**, AMD successfully broke out and closed **above the 50-week Moving Average ($86.09 vs $84.05 WMA)**.
+                
+                **The Setup (HG Rules):**
+                - ✅ **50WMA Breakout & Retest:** In March 2023, the price pulled back to retest the 50WMA (trading at **$82.67** vs the WMA at **$80.76**), forming a valid retest zone.
+                - ✅ **Mansfield RS Green:** During the breakout, the Mansfield Relative Strength flipped positive (**0.5019**), indicating that AMD was now outperforming the broader market.
+                - ✅ **The Result:** This was a high-probability trend reversal setup. AMD launched out of this retest zone and rocketed to **$127** by May 2023!
+                """
+            )
+        with col_chart:
+            df_amd = fetch_guide_data("AMD")
+            if df_amd is not None:
+                df_amd_filtered = df_amd.loc['2022-10-01':'2023-08-01']
+                fig_amd = build_chart(df_amd_filtered, "AMD", show_cloud=True)
+                fig_amd.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+                st.plotly_chart(fig_amd, use_container_width=True, key="guide_amd_chart")
+                
+        st.write("---")
+        
+        # 3. ARM Example
+        st.markdown("#### 3. ARM Holdings (ARM) — The Holy Grail Setup (March – April 2026)")
+        col_text, col_chart = st.columns([2, 3])
+        with col_text:
+            st.markdown(
+                """
+                **What Happened:**
+                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026. 
+                
+                **The Setup (HG Rules):**
+                - 🔥 **Full Setup Trigger (HG Triangle):** On **March 30, 2026** and **April 6, 2026**, ARM triggered a **Full Holy Grail Setup** (score of **0.75**) at **$149**.
+                - 🔥 **Perfect Confluence:** 
+                  - The price sat directly in the retest zone of the rising 50WMA.
+                  - The EMA cloud flipped green (5/9/21 compression crossover).
+                  - The Mansfield RS was highly positive.
+                  - RSI was above 50.
+                - 🔥 **The Result:** This perfect setup led to a legendary momentum launch. ARM surged from **$149** to **$353** by late May 2026—a **+135% gain in under 2 months**!
+                """
+            )
+        with col_chart:
+            df_arm = fetch_guide_data("ARM")
+            if df_arm is not None:
+                df_arm_filtered = df_arm.loc['2025-08-01':'2026-06-01']
+                fig_arm = build_chart(df_arm_filtered, "ARM", show_cloud=True)
+                fig_arm.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+                st.plotly_chart(fig_arm, use_container_width=True, key="guide_arm_chart")
+
+
 
 
 def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str]:
