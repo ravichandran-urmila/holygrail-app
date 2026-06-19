@@ -23,6 +23,11 @@ Each rule has a specific weight. The sum of these weights produces a **Weighted 
 * **Full Setup (Score ≥ 0.70)**: The ideal, fully-validated breakout and retest signal.
 * **Watching / Close to Full Setup (Score ≥ 0.35)**: **Anything close to a full setup represents an excellent entry point.** Because the stock is actively in the 50WMA retest zone, entering during a partial setup allows you to buy the stock closer to the structural support level (the 50WMA), resulting in a tighter stop-loss and a higher reward-to-risk ratio.
 
+## How to Read the Chart
+
+* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.
+* **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.
+
 ## Files
 
 | File | Purpose |

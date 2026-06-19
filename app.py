@@ -150,6 +150,12 @@ def render(ticker: str):
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
         st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("### 📖 How to read the chart")
+        st.markdown(
+            "* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
+            "* **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock."
+        )
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
     with dash_tab:
