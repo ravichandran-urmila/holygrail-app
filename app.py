@@ -60,9 +60,20 @@ with col_settings:
             full_thresh = st.number_input("Full threshold", 0.0, 2.0, 0.70, 0.05)
 
 # --- Sidebar: search --------------------------------------------------------
+default_ticker = "ARM"
+if "ticker" in st.query_params:
+    val = st.query_params["ticker"]
+    if val:
+        default_ticker = str(val).strip().upper()
+
 with st.sidebar:
     st.header("🔎 Ticker")
-    ticker = st.text_input("Symbol", value="ARM", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+    ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+    
+    # Sync query parameters with the active ticker
+    if ticker and st.query_params.get("ticker") != ticker:
+        st.query_params["ticker"] = ticker
+        
     history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
     go_btn = st.button("Scan", type="primary", use_container_width=True)
 
@@ -202,7 +213,7 @@ def render(ticker: str):
     elif sm["partial_setup"]:
         st.warning("⚠️ **Entering the 50WMA retest zone** with an elevated weighted score.")
 
-    chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Watchlist"])
+    chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner"])
 
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
@@ -310,10 +321,10 @@ def render(ticker: str):
             mime="text/csv",
         )
 
-    # ---- Expert Watchlist --------------------------------------------------
+    # ---- Expert Corner --------------------------------------------------
     with watchlist_tab:
-        st.markdown("### 🌟 Expert Watchlist")
-        st.markdown("This watchlist is curated by the admin and displays specific tickers, entry prices, and current returns.")
+        st.markdown("### 🌟 Expert Corner")
+        st.markdown("This list is curated by the admin and displays specific tickers, entry prices, and current returns.")
 
         import base64
         import json
@@ -432,10 +443,10 @@ def render(ticker: str):
                 st.error(f"Failed to save watchlist locally: {e}")
                 return False
 
-        watchlist = sorted(load_wl(), key=lambda x: x.get("date_added", ""))
+        watchlist = sorted(load_wl(), key=lambda x: x.get("date_added", ""), reverse=True)
 
         if not watchlist:
-            st.info("Watchlist is currently empty. Add tickers in the Admin Panel below.")
+            st.info("Expert Corner is currently empty. Add tickers in the Admin Panel below.")
         else:
             wl_rows = []
             with st.spinner("Fetching current prices for watchlist..."):
@@ -487,7 +498,7 @@ def render(ticker: str):
                 rows_html += (
                     "<tr>"
                     + "<td style='padding:14px 12px;color:rgba(250,250,250,0.75);font-size:0.9rem;'>" + row["date_added"] + "</td>"
-                    + "<td style='padding:14px 12px;font-weight:700;font-size:1rem;color:#fff;'>" + row["ticker"] + "</td>"
+                    + "<td style='padding:14px 12px;font-weight:700;font-size:1rem;'><a href='?ticker=" + row["ticker"] + "' target='_parent'>" + row["ticker"] + "</a></td>"
                     + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>$" + f"{row['price_added']:.2f}" + "</td>"
                     + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>" + curr_price_str + "</td>"
                     + "<td style='padding:14px 12px;'><span title='" + tooltip + "' style='color:" + v_color + ";font-weight:700;"
@@ -510,6 +521,8 @@ def render(ticker: str):
                 "tr{border-bottom:1px solid rgba(255,255,255,0.06);}"
                 "tr:last-child{border-bottom:none;}"
                 "tr:hover td{background:rgba(255,255,255,0.025);}"
+                "a{color:#38b6ff;text-decoration:none;font-weight:700;}"
+                "a:hover{color:#00e676;text-decoration:underline;}"
                 "</style>"
                 "<table>"
                 "<thead><tr>"
@@ -526,7 +539,7 @@ def render(ticker: str):
         st.write("---")
         
         # Admin controls section
-        with st.expander("🛠️ Admin Watchlist Controls", expanded=False):
+        with st.expander("🛠️ Admin Expert Corner Controls", expanded=False):
             admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
             try:
                 correct_pass = st.secrets.get("admin_password", "holygrail")
@@ -538,7 +551,7 @@ def render(ticker: str):
                 col_add, col_del = st.columns(2)
                 
                 with col_add:
-                    st.markdown("#### ➕ Add Ticker to Watchlist")
+                    st.markdown("#### ➕ Add Ticker to Expert Corner")
                     add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
                     add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
                     
@@ -568,7 +581,7 @@ def render(ticker: str):
                     
                     add_price = st.number_input("Price Added", value=st.session_state["fetched_price"], format="%.2f", key="wl_add_price")
                     
-                    if st.button("Save to Watchlist", type="primary", use_container_width=True):
+                    if st.button("Save to Expert Corner", type="primary", use_container_width=True):
                         if not add_ticker:
                             st.error("Please enter a ticker symbol.")
                         elif add_price <= 0:
@@ -586,20 +599,20 @@ def render(ticker: str):
                             watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
                             watchlist.append(new_item)
                             if save_wl(watchlist):
-                                st.toast(f"Saved {add_ticker} to watchlist!", icon="🚀")
+                                st.toast(f"Saved {add_ticker} to Expert Corner!", icon="🚀")
                                 st.rerun()
                 
                 with col_del:
-                    st.markdown("#### ❌ Remove from Watchlist")
+                    st.markdown("#### ❌ Remove from Expert Corner")
                     if not watchlist:
-                        st.info("Watchlist is empty.")
+                        st.info("Expert Corner is empty.")
                     else:
                         tickers_to_remove = st.multiselect("Select Ticker(s) to Remove", options=[x["ticker"] for x in watchlist])
                         if st.button("Remove Selected", type="secondary", use_container_width=True):
                             if tickers_to_remove:
                                 watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
                                 if save_wl(watchlist):
-                                    st.toast(f"Removed {', '.join(tickers_to_remove)} from watchlist!", icon="🗑️")
+                                    st.toast(f"Removed {', '.join(tickers_to_remove)} from Expert Corner!", icon="🗑️")
                                     st.rerun()
                             else:
                                 st.warning("Please select at least one ticker to remove.")

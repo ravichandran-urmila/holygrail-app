@@ -23,7 +23,7 @@
 6. [Chart Markers & Visual Signals](#6-chart-markers--visual-signals)
 7. [AI Technical Analyst Feature](#7-ai-technical-analyst-feature)
 8. [Current Narrative (News Catalyst) Feature](#8-current-narrative-news-catalyst-feature)
-9. [Expert Watchlist & Admin Panel](#9-expert-watchlist--admin-panel)
+9. [Expert Corner & Admin Panel](#9-expert-corner--admin-panel)
 10. [Streamlit Cloud Secrets Configuration](#10-streamlit-cloud-secrets-configuration)
 11. [Deployment Instructions](#11-deployment-instructions)
 12. [Color Palette & Design Tokens](#12-color-palette--design-tokens)
@@ -39,7 +39,7 @@ The Holy Grail app is a **weekly-timeframe stock scanner** that identifies high-
 - Computes 6 weighted rules (retest zone, breakout volume, base length, EMA cloud, Mansfield RS, RSI)
 - Overlays candlestick charts with signal markers and an EMA cloud
 - Provides AI-powered technical analysis and news catalyst summaries
-- Includes an admin-curated expert watchlist with GitHub-backed persistence
+- Includes an admin-curated expert corner with GitHub-backed persistence
 
 **Live URL**: Deployed on Streamlit Community Cloud, auto-deploys from `master` branch of `ravichandran-urmila/holygrail-app`.
 
@@ -190,7 +190,7 @@ Called once at the bottom of the file: `render(ticker)`. Flow:
    - Weighted score
    - Gain from HG Signal (gain % since last full setup, with entry date)
    - Entry Range + stop price
-6. **Tabs**: `📈 Chart` | `📋 Dashboard` | `🔢 Data` | `🌟 Expert Watchlist`
+6. **Tabs**: `📈 Chart` | `📋 Dashboard` | `🔢 Data` | `🌟 Expert Corner`
 
 #### Chart Tab
 - Plotly candlestick chart via `build_chart(df_filtered, ticker, show_cloud)`
@@ -207,8 +207,8 @@ Called once at the bottom of the file: `render(ticker)`. Flow:
 - Full DataFrame with columns: open, high, low, close, volume, ma50w, ema5, ema9, ema21, rsi14, pct_above_50w, mansfield_rs, weighted_score, full_setup, partial_setup, blue_square
 - CSV download button
 
-#### Expert Watchlist Tab
-- See [Section 9](#9-expert-watchlist--admin-panel)
+#### Expert Corner Tab
+- See [Section 9](#9-expert-corner--admin-panel)
 
 #### `build_chart()` function
 Builds a Plotly `go.Figure` with:
@@ -344,14 +344,15 @@ All three markers have `hoverinfo="skip"` to suppress incorrect price tooltips (
 
 ---
 
-## 9. Expert Watchlist & Admin Panel
+## 9. Expert Corner & Admin Panel
 
-### Watchlist Display
+### Expert Corner Display
 - Rendered via `st.components.v1.html()` (bypasses Streamlit's markdown parser for complex HTML)
 - Table columns: Date Added | Ticker | Price Added | Current Price | Verdict | Gain/Loss
+- Tickers are clickable links (`target="_parent"` targeting the URL query parameter `?ticker=XYZ`), which reloads the page on the default Chart tab for the clicked stock
 - Current prices fetched live from yfinance (`fetch_weekly(ticker, period="1mo")`)
 - Verdicts are color-coded badges with hover tooltips showing admin commentary
-- Sorted ascending by `date_added`
+- Sorted descending by `date_added` (most recent first)
 
 ### Verdict Colors
 | Verdict | Color |
@@ -517,11 +518,10 @@ Always unwrap `content = item.get("content", item)` for backward compatibility.
     □ Date filtering for display
     □ Verdict banner with styled badge
     □ 4-column metrics row (close, score, gain from HG, entry range)
-    □ 4 tabs: Chart, Dashboard, Data, Expert Watchlist
-    □ Chart tab: Plotly chart + 2-column AI panels
+    □ 4 tabs: Chart, Dashboard, Data, Expert Corner
+    □ Expert Corner tab: HTML table + admin panel
     □ Dashboard tab: Rules table + score summary
     □ Data tab: Raw DataFrame + CSV download
-    □ Watchlist tab: HTML table + admin panel
   □ generate_ai_summary() — Gemini/OpenAI/fallback
   □ generate_catalyst_narrative() — news parsing + Gemini/OpenAI/fallback
   □ build_chart() — candlestick + EMA cloud + MA + signal markers
