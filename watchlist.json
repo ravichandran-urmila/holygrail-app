@@ -19,5 +19,12 @@
     "price_added": 120.0,
     "verdict": "BUY",
     "commentary": "ARKG and biotech seems like the next momentum sector"
+  },
+  {
+    "ticker": "AMD",
+    "date_added": "2025-06-23",
+    "price_added": 124.0,
+    "verdict": "HOLD",
+    "commentary": "The frontrunner of inference chips"
   }
 ]
