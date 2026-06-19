@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "ticker": "AAPL",
+    "date_added": "2026-06-19",
+    "price_added": 296.0,
+    "verdict": "BUY",
+    "commentary": "INTC partnership is the catalyst"
+  }
+]
