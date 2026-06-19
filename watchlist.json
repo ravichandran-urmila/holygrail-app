@@ -14,6 +14,13 @@
     "commentary": "CPU shortage and Space data centers long term"
   },
   {
+    "ticker": "ZM",
+    "date_added": "2026-04-20",
+    "price_added": 92.0,
+    "verdict": "BUY",
+    "commentary": "Virtual agents + anthropic stake in the company"
+  },
+  {
     "ticker": "ILMN",
     "date_added": "2026-05-27",
     "price_added": 120.0,
@@ -28,10 +35,10 @@
     "commentary": "INTC partnership is the catalyst"
   },
   {
-    "ticker": "ZM",
-    "date_added": "2026-04-20",
-    "price_added": 92.0,
-    "verdict": "BUY",
-    "commentary": "Virtual agents + anthropic stake in the company"
+    "ticker": "OSCR",
+    "date_added": "2025-05-22",
+    "price_added": 14.0,
+    "verdict": "WATCH",
+    "commentary": "Insurance business that builds a centralized data model for AI training with the goal to reduce the cost of care for small and medium companies"
   }
 ]
