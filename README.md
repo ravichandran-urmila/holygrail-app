@@ -1,22 +1,27 @@
 # 🏆 Holy Grail — Green Cloud Retest Scanner (app)
 
-A Streamlit app that lets you **search a ticker**, pulls up its **weekly candlestick
-chart**, and overlays the **Holy Grail — Green Cloud Retest** indicator (ported 1:1
-from the TradingView Pine v6 script in `../core`).
+This Streamlit application implements the **Holy Grail — Green Cloud Retest** trading system (ported 1:1 from the TradingView Pine v6 script).
 
-## Why it doesn't "use the TradingView API"
+## What is the Holy Grail Setup?
 
-TradingView has **no public API** for pulling raw market data or for running a
-*custom* Pine Script indicator inside a third-party app. Their embeddable chart
-widgets only support TradingView's *built-in* indicators. So this app instead:
+The **Holy Grail** is a weekly-timeframe trend-following and momentum breakout system designed to identify high-probability entry points for leading stocks. It scans for stocks that have built a long accumulation base and are beginning a major markup phase.
 
-1. **Re-implements** the indicator logic in Python (`indicator.py`) — exactly
-   matching the Pine rules, weighted score, and dashboard.
-2. Pulls **weekly OHLCV** from Yahoo Finance via `yfinance` (free, no key).
-3. Renders candlesticks + EMA cloud + 50WMA + signal markers with Plotly, and
-   shows the same dashboard the Pine script draws on TradingView.
+The system evaluates **6 key rules** on the weekly chart:
+1. **Retest Zone**: Price pulls back to the rising 50-week Moving Average (50WMA) — within a 0% to 10% range.
+2. **Breakout + Volume**: A recent breakout above the 50WMA accompanied by above-average weekly volume.
+3. **Base Length**: Prior to breakout, the price spent at least 15 weeks consolidating below the 50WMA (signaling accumulation).
+4. **Green Cloud**: The short-term EMAs (5, 9, 21) are compressed, above the 50WMA, and in a green alignment.
+5. **Mansfield Relative Strength (RS)**: Outperformance against the S&P 500 (`^GSPC`), showing market leadership.
+6. **Momentum (RSI > 50)**: Standard weekly momentum confirmation.
 
-The S&P 500 benchmark for Mansfield RS (`SPX` in Pine) maps to `^GSPC` on Yahoo.
+Each rule has a specific weight. The sum of these weights produces a **Weighted Score** (up to 1.0).
+
+---
+
+## Optimal Entry Strategy
+
+* **Full Setup (Score ≥ 0.70)**: The ideal, fully-validated breakout and retest signal.
+* **Watching / Close to Full Setup (Score ≥ 0.35)**: **Anything close to a full setup represents an excellent entry point.** Because the stock is actively in the 50WMA retest zone, entering during a partial setup allows you to buy the stock closer to the structural support level (the 50WMA), resulting in a tighter stop-loss and a higher reward-to-risk ratio.
 
 ## Files
 
