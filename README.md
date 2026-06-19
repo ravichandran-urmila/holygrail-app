@@ -1,6 +1,6 @@
 # 🏆 Holy Grail — Green Cloud Retest Scanner (app)
 
-This Streamlit application implements the **Holy Grail — Green Cloud Retest** trading system (ported 1:1 from the TradingView Pine v6 script).
+This Streamlit application implements the **Holy Grail — Green Cloud Retest** trading system.
 
 ## What is the Holy Grail Setup?
 

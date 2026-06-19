@@ -24,8 +24,7 @@ st.set_page_config(page_title="Holy Grail — Retest Scanner", layout="wide",
 # --- Header -----------------------------------------------------------------
 st.markdown(
     "## 🏆 Holy Grail — Green Cloud Retest Scanner\n"
-    "Weekly-timeframe scanner. Data: Yahoo Finance (free). "
-    "Indicator logic ported 1:1 from the TradingView Pine v6 script."
+    "Weekly-timeframe scanner. Data: Yahoo Finance (free)."
 )
 
 # --- Sidebar: search + settings --------------------------------------------
