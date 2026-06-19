@@ -371,7 +371,7 @@ def render(ticker: str):
                 st.error(f"Failed to save watchlist locally: {e}")
                 return False
 
-        watchlist = load_wl()
+        watchlist = sorted(load_wl(), key=lambda x: x.get("date_added", ""))
 
         if not watchlist:
             st.info("Watchlist is currently empty. Add tickers in the Admin Panel below.")
