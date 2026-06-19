@@ -603,6 +603,7 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
             marker=dict(symbol="triangle-up", size=16, color="#00e676"),
             text=["HG"] * len(full), textposition="bottom center",
             textfont=dict(color="#00e676", size=11), name="Full Setup",
+            hoverinfo="skip",
         ))
 
     # Partial setup dots
@@ -612,6 +613,7 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
             x=part.index, y=part["low"] * 0.98, mode="markers",
             marker=dict(symbol="circle", size=8, color="#ffd600"),
             name="Partial (watching)",
+            hoverinfo="skip",
         ))
 
     # Blue square markers (red to green cloud crossover)
@@ -622,6 +624,7 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
                 x=blue_sq.index, y=blue_sq["low"] * 0.96, mode="markers",
                 marker=dict(symbol="square", size=10, color="#00b0ff"),
                 name="Blue Square (HR/HR)",
+                hoverinfo="skip",
             ))
 
 
