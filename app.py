@@ -71,7 +71,7 @@ with st.sidebar:
     st.markdown(
         "* <span style='color: #00e676; font-size: 1.1rem;'>▲</span> **Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
         "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
-        "* <span style='color: #00b0ff; font-size: 1.1rem;'>■</span> **Blue Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
+        "* <span style='color: #e040fb; font-size: 1.1rem;'>■</span> **Purple Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
         unsafe_allow_html=True
     )
 
@@ -616,14 +616,14 @@ def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
             hoverinfo="skip",
         ))
 
-    # Blue square markers (red to green cloud crossover)
+    # Purple square markers (red to green cloud crossover)
     if "blue_square" in df.columns:
         blue_sq = df[df["blue_square"]]
         if not blue_sq.empty:
             fig.add_trace(go.Scatter(
                 x=blue_sq.index, y=blue_sq["low"] * 0.96, mode="markers",
-                marker=dict(symbol="square", size=10, color="#00b0ff"),
-                name="Blue Square (HR/HR)",
+                marker=dict(symbol="square", size=10, color="#e040fb"),
+                name="Purple Square (HR/HR)",
                 hoverinfo="skip",
             ))
 

@@ -27,7 +27,7 @@ Each rule has a specific weight. The sum of these weights produces a **Weighted 
 
 * **▲ Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.
 * **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.
-* **■ Blue Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.
+* **■ Purple Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.
 
 ## Files
 
