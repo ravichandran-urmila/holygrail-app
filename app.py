@@ -313,60 +313,67 @@ def render(ticker: str):
                         "current_price": p_curr,
                         "verdict": v_word,
                         "commentary": comm,
-                        "gain": gain
+                        "gain": gain,
                     })
-            
-            # Generate the premium HTML table with tooltips
-            html_table = """
-            <div style="overflow-x: auto; margin-top: 15px; margin-bottom: 25px;">
-            <table style="width:100%; border-collapse: collapse; font-family: inherit;">
-              <thead>
-                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Date Added</th>
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Ticker</th>
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Price Added</th>
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Current Price</th>
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Verdict (hover for details)</th>
-                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Gain / Loss</th>
-                </tr>
-              </thead>
-              <tbody>
-            """
+
+            # Render table via st.components.v1.html — bypasses Markdown entirely.
+            import streamlit.components.v1 as components
+
+            VERDICT_COLOR = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}
+
+            rows_html = ""
             for row in wl_rows:
-                # Color code verdict
-                v_color = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}.get(row["verdict"], "#888888")
-                
-                # Gain formatting
+                v_color = VERDICT_COLOR.get(row["verdict"], "#888888")
                 gain_val = row["gain"]
                 if gain_val is None:
                     gain_str = "N/A"
-                    gain_style = "color: rgba(250,250,250,0.4);"
+                    gain_color = "rgba(250,250,250,0.4)"
                 else:
-                    gain_sign = "+" if gain_val >= 0 else ""
-                    gain_str = f"{gain_sign}{gain_val:.2f}%"
-                    gain_style = "color: #16c784; font-weight: bold;" if gain_val >= 0 else "color: #ea3943; font-weight: bold;"
-                
-                curr_price_str = f"${row['current_price']:.2f}" if row["current_price"] is not None else "N/A"
-                
-                # Tooltip title escapes
-                tooltip = row["commentary"].replace('"', '&quot;')
-                
-                html_table += f"""
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.95rem;">
-                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">{row['date_added']}</td>
-                  <td style="padding: 12px 10px; font-weight: bold; color: rgb(250,250,250);">{row['ticker']}</td>
-                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">${row['price_added']:.2f}</td>
-                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">{curr_price_str}</td>
-                  <td style="padding: 12px 10px;">
-                    <span title="{tooltip}" style="text-decoration: underline dotted; cursor: help; color: {v_color}; font-weight: bold; padding: 4px 8px; border-radius: 4px; background-color: rgba(255,255,255,0.04);">
-                      {row['verdict']}
-                    </span>
-                  </td>
-                  <td style="padding: 12px 10px; {gain_style}">{gain_str}</td>
-                </tr>
-                """
-            html_table += "</tbody></table></div>"
-            st.markdown(textwrap.dedent(html_table), unsafe_allow_html=True)
+                    sign = "+" if gain_val >= 0 else ""
+                    gain_str = sign + f"{gain_val:.2f}%"
+                    gain_color = "#16c784" if gain_val >= 0 else "#ea3943"
+
+                curr_price_str = ("$" + f"{row['current_price']:.2f}") if row["current_price"] is not None else "N/A"
+                tooltip = row["commentary"].replace("'", "&#39;").replace('"', "&quot;")
+
+                rows_html += (
+                    "<tr>"
+                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.75);font-size:0.9rem;'>" + row["date_added"] + "</td>"
+                    + "<td style='padding:14px 12px;font-weight:700;font-size:1rem;color:#fff;'>" + row["ticker"] + "</td>"
+                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>$" + f"{row['price_added']:.2f}" + "</td>"
+                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>" + curr_price_str + "</td>"
+                    + "<td style='padding:14px 12px;'><span title='" + tooltip + "' style='color:" + v_color + ";font-weight:700;"
+                    + "padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.05);"
+                    + "border:1px solid " + v_color + "40;text-decoration:underline dotted;cursor:help;'>"
+                    + row["verdict"] + "</span></td>"
+                    + "<td style='padding:14px 12px;font-weight:700;color:" + gain_color + ";'>" + gain_str + "</td>"
+                    + "</tr>"
+                )
+
+            full_html = (
+                "<style>"
+                "body{margin:0;padding:0;background:transparent;}"
+                "table{width:100%;border-collapse:collapse;"
+                "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}"
+                "th{padding:11px 12px;color:rgba(200,200,200,0.55);font-size:0.73rem;font-weight:600;"
+                "letter-spacing:0.09em;text-transform:uppercase;"
+                "border-bottom:2px solid rgba(255,255,255,0.12);text-align:left;}"
+                "td{font-size:0.94rem;}"
+                "tr{border-bottom:1px solid rgba(255,255,255,0.06);}"
+                "tr:last-child{border-bottom:none;}"
+                "tr:hover td{background:rgba(255,255,255,0.025);}"
+                "</style>"
+                "<table>"
+                "<thead><tr>"
+                "<th>Date Added</th><th>Ticker</th><th>Price Added</th>"
+                "<th>Current Price</th><th>Verdict</th><th>Gain / Loss</th>"
+                "</tr></thead>"
+                "<tbody>" + rows_html + "</tbody>"
+                "</table>"
+            )
+
+            components.html(full_html, height=55 + len(wl_rows) * 56, scrolling=False)
+
 
         st.write("---")
         
