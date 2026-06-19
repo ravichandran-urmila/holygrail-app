@@ -128,13 +128,47 @@ def render(ticker: str):
 
     # ---- Top verdict banner ------------------------------------------------
     st.subheader(f"{name}  ·  {ticker}")
-    c1, c2, c3, c4 = st.columns([1.0, 1.0, 1.2, 1.8])
+    c1, c2, c3, c4, c5 = st.columns([1.0, 1.0, 1.1, 1.3, 1.6])
     c1.metric("Last weekly close", f"${sm['last_close']:.2f}")
     c2.metric("Weighted score", f"{sm['weighted_score']:.2f} / {sm['total_weight']:.2f}")
     verdict = sm["verdict"]
     verdict_emoji = {"COMPLETE SETUP": "🚀", "WATCHING": "👀", "NO SETUP": "—"}[verdict]
     c3.metric("Verdict", f"{verdict_emoji} {verdict}")
     with c4:
+        if sm["last_hg_date"] is not None:
+            gain_pct = sm["last_hg_gain_pct"]
+            gain_color = "#16c784" if gain_pct >= 0 else "#ea3943"
+            gain_sign = "+" if gain_pct >= 0 else ""
+            st.markdown(
+                f"""
+                <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
+                    <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Gain from HG Signal</div>
+                    <div style="font-size: 1.8rem; font-weight: 600; color: {gain_color}; margin-bottom: 4px;">
+                        {gain_sign}{gain_pct:.2f}%
+                    </div>
+                    <div style="font-size: 0.85rem; color: rgba(250, 250, 250, 0.6); font-weight: 500;">
+                        at ${sm['last_hg_entry']:.2f} ({sm['last_hg_date'].strftime('%Y-%m-%d')})
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f"""
+                <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
+                    <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Gain from HG Signal</div>
+                    <div style="font-size: 1.8rem; font-weight: 600; color: rgba(250, 250, 250, 0.4); margin-bottom: 4px;">
+                        N/A
+                    </div>
+                    <div style="font-size: 0.85rem; color: rgba(250, 250, 250, 0.4); font-weight: 500;">
+                        No signals in history
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    with c5:
         st.markdown(
             f"""
             <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">

@@ -287,6 +287,22 @@ def compute(
     entry_price_high = last["ma50w"] * (1 + s.retest_max / 100.0)
     stop_price = last["ma50w"] * 0.995
 
+    full_setup_indices = df[df["full_setup"]].index
+    if not full_setup_indices.empty:
+        last_hg_date = full_setup_indices[-1]
+        last_hg_row = df.loc[last_hg_date]
+        hg_entry_price = float(last_hg_row["ma50w"])
+        current_close = float(last["close"])
+        hg_gain_pct = ((current_close - hg_entry_price) / hg_entry_price) * 100.0
+        
+        last_hg_date_val = last_hg_date
+        last_hg_entry_val = hg_entry_price
+        last_hg_gain_pct_val = hg_gain_pct
+    else:
+        last_hg_date_val = None
+        last_hg_entry_val = None
+        last_hg_gain_pct_val = None
+
     summary = {
         "weighted_score": ws,
         "total_weight": s.total_weight,
@@ -298,6 +314,9 @@ def compute(
         "stop_price": float(stop_price),
         "last_close": float(last["close"]),
         "last_date": df.index[-1],
+        "last_hg_date": last_hg_date_val,
+        "last_hg_entry": last_hg_entry_val,
+        "last_hg_gain_pct": last_hg_gain_pct_val,
     }
 
     return HGResult(df=df, settings=s, dashboard=dashboard, summary=summary)
