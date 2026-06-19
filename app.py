@@ -117,7 +117,7 @@ def render(ticker: str):
 
     # ---- Top verdict banner ------------------------------------------------
     st.subheader(f"{name}  ·  {ticker}")
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns([1.0, 1.0, 1.2, 1.8])
     c1.metric("Last weekly close", f"${sm['last_close']:.2f}")
     c2.metric("Weighted score", f"{sm['weighted_score']:.2f} / {sm['total_weight']:.2f}")
     verdict = sm["verdict"]
