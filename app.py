@@ -782,15 +782,23 @@ def generate_catalyst_narrative(ticker: str, name: str, news_items: list) -> tup
     import requests
     import json
     import re
+    import time
 
-    # Filter out empty or invalid items
+    # Filter out empty/invalid items and items older than 14 days (2 weeks)
     valid_news = []
+    cutoff_time = time.time() - (14 * 24 * 3600)
+    
     if news_items:
         for item in news_items:
             title = item.get("title")
             publisher = item.get("publisher")
             link = item.get("link")
+            publish_time = item.get("providerPublishTime")
+            
             if title:
+                # Exclude news items older than 2 weeks
+                if publish_time and publish_time < cutoff_time:
+                    continue
                 valid_news.append({
                     "title": title,
                     "publisher": publisher or "Unknown",
