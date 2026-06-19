@@ -254,34 +254,121 @@ def render(ticker: str):
         st.markdown("### 🌟 Expert Watchlist")
         st.markdown("This watchlist is curated by the admin and displays specific tickers, entry prices, and current returns.")
 
+        import base64
         import json
         import os
         import datetime
-        
-        WATCHLIST_FILE = "watchlist.json"
+        import requests as _requests
 
-        # Load watchlist helper (always returns a list of dictionaries now)
+        WATCHLIST_FILE = "watchlist.json"
+        _GH_API = "https://api.github.com"
+
+        # ------------------------------------------------------------------
+        # GitHub-backed persistence helpers
+        # ------------------------------------------------------------------
+        # Set these four secrets in Streamlit Cloud → App Settings → Secrets:
+        #   GITHUB_TOKEN      = "ghp_xxxxxxxxxxxx"   (fine-grained PAT, contents:write)
+        #   GITHUB_REPO       = "ravichandran-urmila/holygrail-app"
+        #   GITHUB_BRANCH     = "master"
+        #   GITHUB_FILE_PATH  = "watchlist.json"
+        # When the secrets are absent (local dev) the helpers fall back to
+        # reading/writing the local watchlist.json file.
+        # ------------------------------------------------------------------
+
+        def _gh_cfg():
+            """Return (token, repo, branch, path) or None if not configured."""
+            try:
+                token  = st.secrets.get("GITHUB_TOKEN", "")
+                repo   = st.secrets.get("GITHUB_REPO", "")
+                branch = st.secrets.get("GITHUB_BRANCH", "master")
+                path   = st.secrets.get("GITHUB_FILE_PATH", "watchlist.json")
+                if token and repo:
+                    return token, repo, branch, path
+            except Exception:
+                pass
+            return None
+
         def load_wl():
-            if os.path.exists(WATCHLIST_FILE):
+            """Load watchlist — GitHub first, local file as fallback."""
+            cfg = _gh_cfg()
+            if cfg:
+                token, repo, branch, path = cfg
                 try:
-                    with open(WATCHLIST_FILE, "r") as f:
-                        data = json.load(f)
-                        # If data is a dictionary (old format), extract the items
+                    headers = {
+                        "Authorization": f"token {token}",
+                        "Accept": "application/vnd.github.v3+json",
+                    }
+                    r = _requests.get(
+                        f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                        headers=headers, timeout=10,
+                    )
+                    if r.status_code == 200:
+                        raw = base64.b64decode(r.json()["content"]).decode("utf-8")
+                        data = json.loads(raw)
                         if isinstance(data, dict):
                             return data.get("items", [])
                         return data
                 except Exception:
-                    return []
+                    pass  # fall through to local file
+
+            # Local fallback (dev mode)
+            if os.path.exists(WATCHLIST_FILE):
+                try:
+                    with open(WATCHLIST_FILE, "r") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            return data.get("items", [])
+                        return data
+                except Exception:
+                    pass
             return []
 
-        # Save watchlist helper
         def save_wl(data):
+            """Save watchlist — commits directly to GitHub so it survives re-deploys."""
+            payload_str = json.dumps(data, indent=2)
+            cfg = _gh_cfg()
+
+            if cfg:
+                token, repo, branch, path = cfg
+                headers = {
+                    "Authorization": f"token {token}",
+                    "Accept": "application/vnd.github.v3+json",
+                }
+                try:
+                    # Need the file's current SHA to update it
+                    r_get = _requests.get(
+                        f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                        headers=headers, timeout=10,
+                    )
+                    sha = r_get.json().get("sha", "") if r_get.status_code == 200 else ""
+
+                    body = {
+                        "message": "chore: update watchlist via admin panel",
+                        "content": base64.b64encode(payload_str.encode()).decode(),
+                        "branch": branch,
+                    }
+                    if sha:
+                        body["sha"] = sha
+
+                    r_put = _requests.put(
+                        f"{_GH_API}/repos/{repo}/contents/{path}",
+                        headers=headers, json=body, timeout=15,
+                    )
+                    if r_put.status_code in (200, 201):
+                        return True
+                    st.error(f"GitHub save failed ({r_put.status_code}): {r_put.json().get('message', r_put.text)}")
+                    return False
+                except Exception as e:
+                    st.error(f"GitHub save error: {e}")
+                    return False
+
+            # Local fallback (dev mode)
             try:
                 with open(WATCHLIST_FILE, "w") as f:
                     json.dump(data, f, indent=2)
                 return True
             except Exception as e:
-                st.error(f"Failed to save watchlist: {e}")
+                st.error(f"Failed to save watchlist locally: {e}")
                 return False
 
         watchlist = load_wl()
@@ -457,13 +544,28 @@ def render(ticker: str):
                                 st.warning("Please select at least one ticker to remove.")
                 
                 st.write("---")
-                st.markdown("##### 💡 Persistent Deployment Instructions")
-                st.info(
-                    "Changes made here update the local `watchlist.json` file. To ensure your watchlist "
-                    "persists permanently on Streamlit Community Cloud (and doesn't reset when the container restarts), "
-                    "please copy the configuration below and commit it to your GitHub repository."
-                )
-                st.code(json.dumps(watchlist, indent=2), language="json")
+                # Show persistence status
+                if _gh_cfg():
+                    st.success(
+                        "✅ **GitHub persistence is active.** All changes are committed directly "
+                        "to your repository and will survive every re-deployment."
+                    )
+                else:
+                    st.warning(
+                        "⚠️ **GitHub persistence is NOT configured.** Changes save to the local "
+                        "file only and will be lost on the next deployment.\n\n"
+                        "Add these four keys to your Streamlit Cloud **Secrets** to enable "
+                        "permanent persistence:\n"
+                        "```toml\n"
+                        'GITHUB_TOKEN     = "ghp_your_token_here"\n'
+                        'GITHUB_REPO      = "ravichandran-urmila/holygrail-app"\n'
+                        'GITHUB_BRANCH    = "master"\n'
+                        'GITHUB_FILE_PATH = "watchlist.json"\n'
+                        "```\n"
+                        "Generate a token at **GitHub → Settings → Developer settings → "
+                        "Fine-grained personal access tokens** with *Contents: Read & write* "
+                        "permission on this repository."
+                    )
             elif admin_pass:
                 st.error("Incorrect password.")
 
