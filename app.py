@@ -200,7 +200,7 @@ def render(ticker: str):
     elif sm["partial_setup"]:
         st.warning("⚠️ **Entering the 50WMA retest zone** with an elevated weighted score.")
 
-    chart_tab, dash_tab, data_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data"])
+    chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Watchlist"])
 
     # ---- Chart -------------------------------------------------------------
     with chart_tab:
@@ -247,6 +247,168 @@ def render(ticker: str):
             file_name=f"{ticker}_holygrail.csv",
             mime="text/csv",
         )
+
+    # ---- Expert Watchlist --------------------------------------------------
+    with watchlist_tab:
+        st.markdown("### 🌟 Expert Watchlist")
+        st.markdown("This watchlist is curated by the admin and displays specific tickers, entry prices, and current returns.")
+
+        import json
+        import os
+        import datetime
+        
+        WATCHLIST_FILE = "watchlist.json"
+
+        # Load watchlist helper
+        def load_wl():
+            if os.path.exists(WATCHLIST_FILE):
+                try:
+                    with open(WATCHLIST_FILE, "r") as f:
+                        return json.load(f)
+                except Exception:
+                    return []
+            return []
+
+        # Save watchlist helper
+        def save_wl(data):
+            try:
+                with open(WATCHLIST_FILE, "w") as f:
+                    json.dump(data, f, indent=2)
+                return True
+            except Exception as e:
+                st.error(f"Failed to save watchlist: {e}")
+                return False
+
+        watchlist = load_wl()
+
+        if not watchlist:
+            st.info("Watchlist is currently empty. Add tickers in the Admin Panel below.")
+        else:
+            wl_rows = []
+            with st.spinner("Fetching current prices for watchlist..."):
+                for item in watchlist:
+                    t = item["ticker"]
+                    d_add = item["date_added"]
+                    p_add = item["price_added"]
+                    try:
+                        # Fetch the latest price from yfinance (cached via fetch_weekly)
+                        p_curr = float(datalib.fetch_weekly(t, period="1mo")["close"].iloc[-1])
+                        gain = ((p_curr - p_add) / p_add) * 100.0
+                    except Exception:
+                        p_curr = None
+                        gain = None
+                    
+                    wl_rows.append({
+                        "Date Added": d_add,
+                        "Ticker": t,
+                        "Price Added": p_add,
+                        "Current Price": p_curr,
+                        "Gain / Loss": gain
+                    })
+            
+            df_wl = pd.DataFrame(wl_rows)
+            
+            # Format and Style the table
+            def _style_wl(row):
+                gain = row["Gain / Loss"]
+                if pd.isna(gain):
+                    style = ""
+                else:
+                    color = "color: #16c784; font-weight: bold;" if gain >= 0 else "color: #ea3943; font-weight: bold;"
+                    style = color
+                return ["", "", "", "", style]
+
+            styled_df = df_wl.style.format({
+                "Price Added": "${:.2f}",
+                "Current Price": lambda x: f"${x:.2f}" if not pd.isna(x) else "N/A",
+                "Gain / Loss": lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%" if not pd.isna(x) else "N/A"
+            }).apply(_style_wl, axis=1)
+
+            st.dataframe(styled_df, use_container_width=True, hide_index=True)
+
+        st.write("---")
+        
+        # Admin controls section
+        with st.expander("🛠️ Admin Watchlist Controls", expanded=False):
+            admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
+            correct_pass = st.secrets.get("admin_password", "holygrail")
+            
+            if admin_pass == correct_pass:
+                st.success("Authorized!")
+                col_add, col_del = st.columns(2)
+                
+                with col_add:
+                    st.markdown("#### ➕ Add to Watchlist")
+                    add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
+                    add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
+                    
+                    # Fetch price helper
+                    if "fetched_price" not in st.session_state:
+                        st.session_state["fetched_price"] = 0.0
+                    
+                    if st.button("🔍 Auto-fetch Close Price for Date", use_container_width=True):
+                        if add_ticker:
+                            with st.spinner(f"Fetching close price for {add_ticker} around {add_date}..."):
+                                try:
+                                    import yfinance as yf
+                                    start_t = datetime.datetime.combine(add_date, datetime.time.min)
+                                    end_t = start_t + datetime.timedelta(days=7)
+                                    hist = yf.Ticker(add_ticker).history(start=start_t.strftime('%Y-%m-%d'), end=end_t.strftime('%Y-%m-%d'))
+                                    if not hist.empty:
+                                        fetched = float(hist["Close"].iloc[0])
+                                        st.session_state["fetched_price"] = fetched
+                                        st.toast(f"Successfully fetched price: ${fetched:.2f}", icon="✅")
+                                    else:
+                                        st.error("No trading data found for this date. Market might have been closed.")
+                                except Exception as e:
+                                    st.error(f"Error fetching price: {e}")
+                    
+                    add_price = st.number_input("Price Added", value=st.session_state["fetched_price"], format="%.2f", key="wl_add_price")
+                    
+                    if st.button("Save to Watchlist", type="primary", use_container_width=True):
+                        if not add_ticker:
+                            st.error("Please enter a ticker symbol.")
+                        elif add_price <= 0:
+                            st.error("Please enter a valid price (> 0).")
+                        else:
+                            # Add to json
+                            new_item = {
+                                "ticker": add_ticker,
+                                "date_added": add_date.strftime("%Y-%m-%d"),
+                                "price_added": float(add_price)
+                            }
+                            # check if already exists
+                            watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
+                            watchlist.append(new_item)
+                            if save_wl(watchlist):
+                                st.toast(f"Added {add_ticker} to watchlist!", icon="🚀")
+                                st.rerun()
+                
+                with col_del:
+                    st.markdown("#### ❌ Remove from Watchlist")
+                    if not watchlist:
+                        st.info("Watchlist is empty.")
+                    else:
+                        tickers_to_remove = st.multiselect("Select Ticker(s) to Remove", options=[x["ticker"] for x in watchlist])
+                        if st.button("Remove Selected", type="secondary", use_container_width=True):
+                            if tickers_to_remove:
+                                watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
+                                if save_wl(watchlist):
+                                    st.toast(f"Removed {', '.join(tickers_to_remove)} from watchlist!", icon="🗑️")
+                                    st.rerun()
+                            else:
+                                st.warning("Please select at least one ticker to remove.")
+                
+                st.write("---")
+                st.markdown("##### 💡 Persistent Deployment Instructions")
+                st.info(
+                    "Changes made here update the local `watchlist.json` file. To ensure your watchlist "
+                    "persists permanently on Streamlit Community Cloud (and doesn't reset when the container restarts), "
+                    "please copy the configuration below and commit it to your GitHub repository."
+                )
+                st.code(json.dumps(watchlist, indent=2), language="json")
+            elif admin_pass:
+                st.error("Incorrect password.")
 
 
 def build_chart(df: pd.DataFrame, ticker: str, show_cloud: bool) -> go.Figure:
