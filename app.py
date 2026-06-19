@@ -65,6 +65,13 @@ with st.sidebar:
     history_choice = st.selectbox("History", ["3 Months", "YTD", "6 Months", "1 Year", "5 Years"], index=3)
     go_btn = st.button("Scan", type="primary", use_container_width=True)
 
+    st.write("---")
+    st.markdown("### 📖 How to read the chart")
+    st.markdown(
+        "* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
+        "* **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock."
+    )
+
 
 settings = HGSettings(
     ema_fast=ema_fast, ema_mid=ema_mid, ema_slow=ema_slow, ma50w=ma50w,
@@ -150,12 +157,7 @@ def render(ticker: str):
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
         st.plotly_chart(fig, use_container_width=True)
-        
-        st.markdown("### 📖 How to read the chart")
-        st.markdown(
-            "* **🟢 Weekly Green Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
-            "* **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock."
-        )
+
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
     with dash_tab:
