@@ -196,7 +196,7 @@ def compute(
 
     # --- Rule 4: Green cloud birth -----------------------------------------
     ema5_cross_ema9 = crossover(df["ema5"], df["ema9"])
-    recent_cross = ema5_cross_ema9 | ema5_cross_ema9.shift(1).fillna(False) | ema5_cross_ema9.shift(2).fillna(False)
+    recent_cross = ema5_cross_ema9 | ema5_cross_ema9.shift(1, fill_value=False) | ema5_cross_ema9.shift(2, fill_value=False)
     ema9_near_21 = (df["ema9"] - df["ema21"]).abs() / df["ema21"] * 100 < 2.0
     ema5_near_9 = (df["ema5"] - df["ema9"]).abs() / df["ema9"] * 100 < 2.0
     compressed = ema5_near_9 & ema9_near_21
