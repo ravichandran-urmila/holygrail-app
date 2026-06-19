@@ -12,5 +12,12 @@
     "price_added": 25.0,
     "verdict": "HOLD",
     "commentary": "CPU shortage and Space data centers long term"
+  },
+  {
+    "ticker": "ILMN",
+    "date_added": "2026-05-27",
+    "price_added": 120.0,
+    "verdict": "BUY",
+    "commentary": "ARKG and biotech seems like the next momentum sector"
   }
 ]
