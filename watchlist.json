@@ -26,5 +26,12 @@
     "price_added": 296.0,
     "verdict": "BUY",
     "commentary": "INTC partnership is the catalyst"
+  },
+  {
+    "ticker": "ZM",
+    "date_added": "2026-04-20",
+    "price_added": 92.0,
+    "verdict": "BUY",
+    "commentary": "Virtual agents + anthropic stake in the company"
   }
 ]
