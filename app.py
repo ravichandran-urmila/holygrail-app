@@ -30,7 +30,7 @@ st.markdown(
 # --- Sidebar: search + settings --------------------------------------------
 with st.sidebar:
     st.header("🔎 Ticker")
-    ticker = st.text_input("Symbol", value="AAPL", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+    ticker = st.text_input("Symbol", value="ARM", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
     history_choice = st.selectbox("History", ["3 Months", "YTD", "6 Months", "1 Year", "5 Years"], index=3)
 
     st.header("⚙️ Settings")
