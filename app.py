@@ -783,27 +783,56 @@ def generate_catalyst_narrative(ticker: str, name: str, news_items: list) -> tup
     import json
     import re
     import time
+    from datetime import datetime, timezone, timedelta
 
     # Filter out empty/invalid items and items older than 14 days (2 weeks)
     valid_news = []
-    cutoff_time = time.time() - (14 * 24 * 3600)
-    
+    cutoff_dt = datetime.now(timezone.utc) - timedelta(days=14)
+
     if news_items:
         for item in news_items:
-            title = item.get("title")
-            publisher = item.get("publisher")
-            link = item.get("link")
-            publish_time = item.get("providerPublishTime")
-            
-            if title:
-                # Exclude news items older than 2 weeks
-                if publish_time and publish_time < cutoff_time:
-                    continue
-                valid_news.append({
-                    "title": title,
-                    "publisher": publisher or "Unknown",
-                    "link": link or "#"
-                })
+            # yfinance now nests everything inside a "content" sub-dict
+            content = item.get("content", item)  # fallback to item itself for legacy format
+
+            title = content.get("title")
+            if not title:
+                continue
+
+            # Publisher: nested provider dict OR flat "publisher" key
+            provider = content.get("provider") or {}
+            publisher = provider.get("displayName") if isinstance(provider, dict) else None
+            publisher = publisher or content.get("publisher") or "Unknown"
+
+            # Link: canonicalUrl dict OR clickThroughUrl dict OR flat "link" key
+            canon = content.get("canonicalUrl") or {}
+            click = content.get("clickThroughUrl") or {}
+            link = (canon.get("url") if isinstance(canon, dict) else None) \
+                or (click.get("url") if isinstance(click, dict) else None) \
+                or content.get("link") or "#"
+
+            # Date filter: pubDate (ISO string) OR providerPublishTime (unix ts)
+            pub_date_str = content.get("pubDate")
+            pub_ts = content.get("providerPublishTime")
+
+            if pub_date_str:
+                try:
+                    pub_dt = datetime.fromisoformat(pub_date_str.replace("Z", "+00:00"))
+                    if pub_dt < cutoff_dt:
+                        continue
+                except Exception:
+                    pass
+            elif pub_ts:
+                try:
+                    if float(pub_ts) < cutoff_dt.timestamp():
+                        continue
+                except Exception:
+                    pass
+
+            valid_news.append({
+                "title": title,
+                "publisher": publisher,
+                "link": link,
+            })
 
     # Limit to top 5 news items for prompt
     news_subset = valid_news[:5]
