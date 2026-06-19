@@ -127,14 +127,25 @@ def render(ticker: str):
     df_filtered = df[df.index >= start_date]
 
     # ---- Top verdict banner ------------------------------------------------
-    st.subheader(f"{name}  ·  {ticker}")
-    c1, c2, c3, c4, c5 = st.columns([1.0, 1.0, 1.1, 1.3, 1.6])
-    c1.metric("Last weekly close", f"${sm['last_close']:.2f}")
-    c2.metric("Weighted score", f"{sm['weighted_score']:.2f} / {sm['total_weight']:.2f}")
+    # ---- Verdict parsing ---------------------------------------------------
     verdict = sm["verdict"]
     verdict_emoji = {"COMPLETE SETUP": "🚀", "WATCHING": "👀", "NO SETUP": "—"}[verdict]
-    c3.metric("Verdict", f"{verdict_emoji} {verdict}")
-    with c4:
+    verdict_color = {"COMPLETE SETUP": "#00e676", "WATCHING": "#ffd600", "NO SETUP": "#888888"}[verdict]
+
+    # ---- Top verdict banner ------------------------------------------------
+    st.markdown(
+        f"<h3>{name} &middot; {ticker} &nbsp;&nbsp;&nbsp;&nbsp; "
+        f"<span style='font-size: 1.05rem; padding: 5px 12px; border-radius: 6px; "
+        f"background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); "
+        f"color: {verdict_color}; vertical-align: middle; font-weight: 600;'>{verdict_emoji} {verdict}</span></h3>",
+        unsafe_allow_html=True
+    )
+    st.write("") # Spacing
+
+    c1, c2, c3, c4 = st.columns([1.0, 1.0, 1.3, 1.7])
+    c1.metric("Last weekly close", f"${sm['last_close']:.2f}")
+    c2.metric("Weighted score", f"{sm['weighted_score']:.2f} / {sm['total_weight']:.2f}")
+    with c3:
         if sm["last_hg_date"] is not None:
             gain_pct = sm["last_hg_gain_pct"]
             gain_color = "#16c784" if gain_pct >= 0 else "#ea3943"
@@ -168,7 +179,7 @@ def render(ticker: str):
                 """,
                 unsafe_allow_html=True
             )
-    with c5:
+    with c4:
         st.markdown(
             f"""
             <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
