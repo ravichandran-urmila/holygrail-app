@@ -1,21 +1,23 @@
-{
-  "verdict": "BULLISH",
-  "commentary": "Most tech leaders are pulling back to the weekly 50WMA and finding support. Keep an eye on ARM and NVDA as prime low-risk setup retests.",
-  "items": [
-    {
-      "ticker": "ARM",
-      "date_added": "2026-03-12",
-      "price_added": 130.0
-    },
-    {
-      "ticker": "NVDA",
-      "date_added": "2026-01-15",
-      "price_added": 120.0
-    },
-    {
-      "ticker": "AAPL",
-      "date_added": "2025-10-10",
-      "price_added": 220.0
-    }
-  ]
-}
+[
+  {
+    "ticker": "ARM",
+    "date_added": "2026-03-12",
+    "price_added": 130.0,
+    "verdict": "BUY",
+    "commentary": "Solid breakout from 15-week base, retesting 50WMA with high relative strength."
+  },
+  {
+    "ticker": "NVDA",
+    "date_added": "2026-01-15",
+    "price_added": 120.0,
+    "verdict": "WATCH",
+    "commentary": "Entering the 50WMA retest zone, waiting for volume breakout confirmation."
+  },
+  {
+    "ticker": "AAPL",
+    "date_added": "2025-10-10",
+    "price_added": 220.0,
+    "verdict": "HOLD",
+    "commentary": "Consolidating near historical highs. Hold positions with stop loss at 50WMA."
+  }
+]

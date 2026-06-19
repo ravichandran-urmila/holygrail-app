@@ -259,18 +259,19 @@ def render(ticker: str):
         
         WATCHLIST_FILE = "watchlist.json"
 
-        # Load watchlist helper
+        # Load watchlist helper (always returns a list of dictionaries now)
         def load_wl():
             if os.path.exists(WATCHLIST_FILE):
                 try:
                     with open(WATCHLIST_FILE, "r") as f:
                         data = json.load(f)
-                        if isinstance(data, list):
-                            return {"verdict": "NEUTRAL", "commentary": "", "items": data}
+                        # If data is a dictionary (old format), extract the items
+                        if isinstance(data, dict):
+                            return data.get("items", [])
                         return data
                 except Exception:
-                    return {"verdict": "NEUTRAL", "commentary": "", "items": []}
-            return {"verdict": "NEUTRAL", "commentary": "", "items": []}
+                    return []
+            return []
 
         # Save watchlist helper
         def save_wl(data):
@@ -282,10 +283,7 @@ def render(ticker: str):
                 st.error(f"Failed to save watchlist: {e}")
                 return False
 
-        watchlist_data = load_wl()
-        watchlist = watchlist_data.get("items", [])
-        wl_verdict = watchlist_data.get("verdict", "NEUTRAL")
-        wl_commentary = watchlist_data.get("commentary", "")
+        watchlist = load_wl()
 
         if not watchlist:
             st.info("Watchlist is currently empty. Add tickers in the Admin Panel below.")
@@ -296,6 +294,9 @@ def render(ticker: str):
                     t = item["ticker"]
                     d_add = item["date_added"]
                     p_add = item["price_added"]
+                    v_word = item.get("verdict", "WATCH")
+                    comm = item.get("commentary", "")
+                    
                     try:
                         # Fetch the latest price from yfinance (cached via fetch_weekly)
                         p_curr = float(datalib.fetch_weekly(t, period="1mo")["close"].iloc[-1])
@@ -305,86 +306,88 @@ def render(ticker: str):
                         gain = None
                     
                     wl_rows.append({
-                        "Date Added": d_add,
-                        "Ticker": t,
-                        "Price Added": p_add,
-                        "Current Price": p_curr,
-                        "Gain / Loss": gain
+                        "ticker": t,
+                        "date_added": d_add,
+                        "price_added": p_add,
+                        "current_price": p_curr,
+                        "verdict": v_word,
+                        "commentary": comm,
+                        "gain": gain
                     })
             
-            df_wl = pd.DataFrame(wl_rows)
-            
-            # Format and Style the table
-            def _style_wl(row):
-                gain = row["Gain / Loss"]
-                if pd.isna(gain):
-                    style = ""
+            # Generate the premium HTML table with tooltips
+            html_table = """
+            <div style="overflow-x: auto; margin-top: 15px; margin-bottom: 25px;">
+            <table style="width:100%; border-collapse: collapse; font-family: inherit;">
+              <thead>
+                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Date Added</th>
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Ticker</th>
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Price Added</th>
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Current Price</th>
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Verdict (hover for details)</th>
+                  <th style="padding: 12px 10px; color: rgba(250,250,250,0.6); font-size: 0.875rem; font-weight: 500;">Gain / Loss</th>
+                </tr>
+              </thead>
+              <tbody>
+            """
+            for row in wl_rows:
+                # Color code verdict
+                v_color = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}.get(row["verdict"], "#888888")
+                
+                # Gain formatting
+                gain_val = row["gain"]
+                if gain_val is None:
+                    gain_str = "N/A"
+                    gain_style = "color: rgba(250,250,250,0.4);"
                 else:
-                    color = "color: #16c784; font-weight: bold;" if gain >= 0 else "color: #ea3943; font-weight: bold;"
-                    style = color
-                return ["", "", "", "", style]
-
-            styled_df = df_wl.style.format({
-                "Price Added": "${:.2f}",
-                "Current Price": lambda x: f"${x:.2f}" if not pd.isna(x) else "N/A",
-                "Gain / Loss": lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%" if not pd.isna(x) else "N/A"
-            }).apply(_style_wl, axis=1)
-
-            st.dataframe(styled_df, use_container_width=True, hide_index=True)
-
-        # Display Verdict & Commentary section
-        st.write("") # Spacer
-        st.markdown("### 📢 Expert Verdict & Commentary")
-        
-        v_emoji = {"BULLISH": "🐂", "NEUTRAL": "⚖️", "BEARISH": "🐻", "CAUTION": "⚠️"}.get(wl_verdict, "⚖️")
-        v_color = {"BULLISH": "#00e676", "NEUTRAL": "#888888", "BEARISH": "#ea3943", "CAUTION": "#ffd600"}.get(wl_verdict, "#888888")
-        
-        st.markdown(
-            f"""
-            <div style="padding: 15px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;">
-                <div style="margin-bottom: 10px;">
-                    <span style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-right: 10px;">Market Verdict:</span>
-                    <span style="font-size: 0.95rem; padding: 4px 10px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: {v_color}; font-weight: 600; vertical-align: middle;">
-                        {v_emoji} {wl_verdict}
+                    gain_sign = "+" if gain_val >= 0 else ""
+                    gain_str = f"{gain_sign}{gain_val:.2f}%"
+                    gain_style = "color: #16c784; font-weight: bold;" if gain_val >= 0 else "color: #ea3943; font-weight: bold;"
+                
+                curr_price_str = f"${row['current_price']:.2f}" if row["current_price"] is not None else "N/A"
+                
+                # Tooltip title escapes
+                tooltip = row["commentary"].replace('"', '&quot;')
+                
+                html_table += f"""
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.95rem;">
+                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">{row['date_added']}</td>
+                  <td style="padding: 12px 10px; font-weight: bold; color: rgb(250,250,250);">{row['ticker']}</td>
+                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">${row['price_added']:.2f}</td>
+                  <td style="padding: 12px 10px; color: rgba(250,250,250,0.85);">{curr_price_str}</td>
+                  <td style="padding: 12px 10px;">
+                    <span title="{tooltip}" style="text-decoration: underline dotted; cursor: help; color: {v_color}; font-weight: bold; padding: 4px 8px; border-radius: 4px; background-color: rgba(255,255,255,0.04);">
+                      {row['verdict']}
                     </span>
-                </div>
-                <div style="font-size: 1rem; color: rgb(220, 220, 220); line-height: 1.5; white-space: pre-wrap;">
-                    {wl_commentary if wl_commentary else "No commentary provided yet."}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+                  </td>
+                  <td style="padding: 12px 10px; {gain_style}">{gain_str}</td>
+                </tr>
+                """
+            html_table += "</tbody></table></div>"
+            st.markdown(html_table, unsafe_allow_html=True)
 
         st.write("---")
         
         # Admin controls section
         with st.expander("🛠️ Admin Watchlist Controls", expanded=False):
             admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
-            correct_pass = st.secrets.get("admin_password", "holygrail")
+            try:
+                correct_pass = st.secrets.get("admin_password", "holygrail")
+            except Exception:
+                correct_pass = "holygrail"
             
             if admin_pass == correct_pass:
                 st.success("Authorized!")
-                
-                # Form to edit Verdict & Commentary
-                st.markdown("#### 📝 Edit Market Verdict & Commentary")
-                new_verdict = st.selectbox("Current Market Verdict", ["BULLISH", "NEUTRAL", "BEARISH", "CAUTION"], index=["BULLISH", "NEUTRAL", "BEARISH", "CAUTION"].index(wl_verdict))
-                new_comm = st.text_area("Expert Commentary Notes", value=wl_commentary, height=120)
-                
-                if st.button("Update Verdict & Commentary", type="primary"):
-                    watchlist_data["verdict"] = new_verdict
-                    watchlist_data["commentary"] = new_comm
-                    if save_wl(watchlist_data):
-                        st.toast("Updated commentary successfully!", icon="📝")
-                        st.rerun()
-
-                st.write("---")
                 col_add, col_del = st.columns(2)
                 
                 with col_add:
                     st.markdown("#### ➕ Add Ticker to Watchlist")
                     add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
                     add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
+                    
+                    add_verdict = st.selectbox("Ticker Verdict", ["BUY", "WATCH", "HOLD", "AVOID"], index=1, key="wl_add_verd")
+                    add_comm = st.text_area("Ticker Commentary (Hover Tooltip)", value="", placeholder="Enter detailed commentary that users will see on hover...", key="wl_add_comm")
                     
                     # Fetch price helper
                     if "fetched_price" not in st.session_state:
@@ -419,14 +422,15 @@ def render(ticker: str):
                             new_item = {
                                 "ticker": add_ticker,
                                 "date_added": add_date.strftime("%Y-%m-%d"),
-                                "price_added": float(add_price)
+                                "price_added": float(add_price),
+                                "verdict": add_verdict,
+                                "commentary": add_comm
                             }
                             # check if already exists
                             watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
                             watchlist.append(new_item)
-                            watchlist_data["items"] = watchlist
-                            if save_wl(watchlist_data):
-                                st.toast(f"Added {add_ticker} to watchlist!", icon="🚀")
+                            if save_wl(watchlist):
+                                st.toast(f"Saved {add_ticker} to watchlist!", icon="🚀")
                                 st.rerun()
                 
                 with col_del:
@@ -438,8 +442,7 @@ def render(ticker: str):
                         if st.button("Remove Selected", type="secondary", use_container_width=True):
                             if tickers_to_remove:
                                 watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
-                                watchlist_data["items"] = watchlist
-                                if save_wl(watchlist_data):
+                                if save_wl(watchlist):
                                     st.toast(f"Removed {', '.join(tickers_to_remove)} from watchlist!", icon="🗑️")
                                     st.rerun()
                             else:
@@ -452,7 +455,7 @@ def render(ticker: str):
                     "persists permanently on Streamlit Community Cloud (and doesn't reset when the container restarts), "
                     "please copy the configuration below and commit it to your GitHub repository."
                 )
-                st.code(json.dumps(watchlist_data, indent=2), language="json")
+                st.code(json.dumps(watchlist, indent=2), language="json")
             elif admin_pass:
                 st.error("Incorrect password.")
 
