@@ -692,27 +692,24 @@ def render(ticker: str):
         st.write("---")
         
         # 2. AMD Example
-        st.markdown("#### 2. AMD (AMD) — The Trend Reversal Setup (Early 2023)")
+        st.markdown("#### 2. AMD (AMD) — The Trend Reversal Setup (June 2025 – Present)")
         col_text, col_chart = st.columns([2, 3])
         with col_text:
             st.markdown(
                 """
                 **What Happened:**
-                Similar to Adobe, AMD bottomed out in late 2022 and recovered in early 2023. However, the structural momentum profile of AMD was completely different.
-                
-                **The Recovery:**
-                On **January 30, 2023**, AMD successfully broke out and closed **above the 50-week Moving Average ($86.09 vs $84.05 WMA)**.
+                AMD consolidated and established a solid support base above its rising 50WMA during early 2025. 
                 
                 **The Setup (HG Rules):**
-                - ✅ **50WMA Breakout & Retest:** In March 2023, the price pulled back to retest the 50WMA (trading at **$82.67** vs the WMA at **$80.76**), forming a valid retest zone.
-                - ✅ **Mansfield RS Green:** During the breakout, the Mansfield Relative Strength flipped positive (**0.5019**), indicating that AMD was now outperforming the broader market.
-                - ✅ **The Result:** This was a high-probability trend reversal setup. AMD launched out of this retest zone and rocketed to **$127** by May 2023!
+                - ✅ **HG Setup Triggered:** On **June 23, 2025**, AMD triggered a **Full Holy Grail Setup (score of 0.75)** at a close price of **$143.81** (resting on a 50WMA of **$126.60**).
+                - ✅ **Mansfield RS Green:** At the trigger point, the Mansfield Relative Strength flipped firmly positive (**0.4469**), confirming that AMD's relative momentum vs. the S&P 500 had shifted in its favor.
+                - ✅ **The Result (Momentum Gain):** Over the next year, AMD embarked on a historic rally, surging to a massive close of **$537.37** by June 2026. This represents an incredible **+273% return (a 3.7x gain) in just 1 year** after the HG setup!
                 """
             )
         with col_chart:
             df_amd = fetch_guide_data("AMD")
             if df_amd is not None:
-                df_amd_filtered = df_amd.loc['2022-10-01':'2023-08-01']
+                df_amd_filtered = df_amd.loc['2025-01-01':'2026-06-19']
                 fig_amd = build_chart(df_amd_filtered, "AMD", show_cloud=True)
                 fig_amd.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
                 st.plotly_chart(fig_amd, use_container_width=True, key="guide_amd_chart")
