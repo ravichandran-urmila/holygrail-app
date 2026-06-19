@@ -62,7 +62,7 @@ with col_settings:
 with st.sidebar:
     st.header("🔎 Ticker")
     ticker = st.text_input("Symbol", value="ARM", help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
-    history_choice = st.selectbox("History", ["3 Months", "YTD", "6 Months", "1 Year", "5 Years"], index=3)
+    history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
     go_btn = st.button("Scan", type="primary", use_container_width=True)
 
     st.write("---")
@@ -113,12 +113,14 @@ def render(ticker: str):
     now = datetime.datetime.now()
     if history_choice == "3 Months":
         start_date = now - datetime.timedelta(days=90)
-    elif history_choice == "YTD":
-        start_date = datetime.datetime(now.year, 1, 1)
     elif history_choice == "6 Months":
         start_date = now - datetime.timedelta(days=180)
+    elif history_choice == "YTD":
+        start_date = datetime.datetime(now.year, 1, 1)
     elif history_choice == "1 Year":
         start_date = now - datetime.timedelta(days=365)
+    elif history_choice == "2 Years":
+        start_date = now - datetime.timedelta(days=2 * 365)
     else: # "5 Years"
         start_date = now - datetime.timedelta(days=5 * 365)
 
