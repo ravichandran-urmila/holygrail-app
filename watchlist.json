@@ -33,5 +33,12 @@
     "price_added": 124.0,
     "verdict": "HOLD",
     "commentary": "The frontrunner of inference chips"
+  },
+  {
+    "ticker": "OSCR",
+    "date_added": "2025-05-22",
+    "price_added": 14.0,
+    "verdict": "WATCH",
+    "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   }
 ]
