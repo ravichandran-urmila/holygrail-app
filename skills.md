@@ -216,9 +216,9 @@ Builds a Plotly `go.Figure` with:
 2. **EMA cloud** (if enabled): green/red fill between EMA5 and EMA21 via `_add_ema_cloud()`
 3. **EMA lines**: EMA21 (blue), EMA9 (teal), EMA5 (green)
 4. **50-Week MA**: orange, width=3
-5. **Full Setup markers**: green triangle-up at `low * 0.97` with "HG" text, `hoverinfo="skip"`
+5. **Full Setup markers**: dark blue triangle-up at `low * 0.97` with "HG" text (with corresponding weekly green vertical shading), `hoverinfo="skip"`
 6. **Partial Setup markers**: yellow circle at `low * 0.98`, `hoverinfo="skip"`
-7. **Purple Square markers**: purple square at `low * 0.96`, `hoverinfo="skip"`
+7. **HRR (High Risk Reward) markers**: purple square at `low * 0.96`, `hoverinfo="skip"`
 8. Layout: height=640, `plotly_dark` template, horizontal legend, `hovermode="x unified"`
 
 #### `_add_ema_cloud()` function
@@ -299,9 +299,9 @@ Excludes: `__pycache__/`, `*.pyc`, `.venv/`, `venv/`, `.DS_Store`, `*.csv`, `.st
 
 | Marker | Symbol | Color | Y Position | Meaning |
 |---|---|---|---|---|
-| Full Setup (HG) | `triangle-up` + "HG" text | `#00e676` (neon green) | `low × 0.97` | Complete Holy Grail setup — best entry |
+| Full Setup (HG) | `triangle-up` + "HG" text (green vertical shade on chart) | `#1d4ed8` (dark blue) | `low × 0.97` | Complete Holy Grail setup — best entry |
 | Partial Setup | `circle` | `#ffd600` (amber) | `low × 0.98` | Watching — medium confidence |
-| Purple Square | `square` | `#e040fb` (neon purple) | `low × 0.96` | Red-to-green EMA cloud flip — high risk/reward |
+| HRR (High Risk Reward) | `square` | `#e040fb` (neon purple) | `low × 0.96` | Red-to-green EMA cloud flip — high risk/reward |
 
 All three markers have `hoverinfo="skip"` to suppress incorrect price tooltips (since Y positions are offset from actual candle data).
 
@@ -444,11 +444,12 @@ streamlit run app.py
 
 | Purpose | Color | Hex |
 |---|---|---|
-| Full Setup / Buy signals | Neon green | `#00e676` |
+| Full Setup signals | Dark blue | `#1d4ed8` |
+| Full Setup highlighting | Soft green shade | `rgba(22,199,132,0.12)` |
 | Bullish candles | Green | `#16c784` |
 | Bearish candles / Stop loss | Red | `#ea3943` |
 | Partial Setup / Watching | Amber | `#ffd600` |
-| Purple Square (cloud flip) | Neon purple | `#e040fb` |
+| HRR (High Risk Reward) | Neon purple | `#e040fb` |
 | 50-Week MA line | Orange | `orange` |
 | HOLD verdict | Light blue | `#38b6ff` |
 | EMA21 line | Blue | `rgba(41,98,255,0.7)` |
@@ -495,7 +496,7 @@ Always unwrap `content = item.get("content", item)` for backward compatibility.
 - The chart and data table are then **filtered** to the selected date range for display only
 
 ### Marker Hover Suppression
-- Chart markers (HG triangle, yellow dot, purple square) use offset Y positions (`low * 0.97/0.98/0.96`) to avoid overlapping candles
+- Chart markers (HG triangle, yellow dot, HRR square) use offset Y positions (`low * 0.97/0.98/0.96`) to avoid overlapping candles
 - Because of this, their hover tooltips showed wrong prices
 - All three traces use `hoverinfo="skip"` to suppress tooltips while remaining visible
 
