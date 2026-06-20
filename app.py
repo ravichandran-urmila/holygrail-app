@@ -658,16 +658,16 @@ def render(ticker: str):
         with col_ind1:
             st.markdown(
                 """
-                * 📈 **50-Week Moving Average (50WMA):** The spine of the system. It separates long-term bullish regimes from bearish regimes. 
-                  - **Rule:** If the candles are below the 50WMA, **there is no setup**. Period.
-                * 🔵 **Holy Grail (HG) Setup (Dark Blue Triangle):** The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
+                * 📈 50-Week Moving Average (50WMA): The spine of the system. It separates long-term bullish regimes from bearish regimes. 
+                  - Rule: If the candles are below the 50WMA, there is no setup. Period.
+                * 🔵 Holy Grail (HG) Setup (Dark Blue Triangle): The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
                 """
             )
         with col_ind2:
             st.markdown(
                 """
-                * 🟪 **HRR (High Risk Reward) (Purple Square):** Triggered when the fast EMA5 crosses above the slow EMA21 (red to green cloud flip). This is an early entry signal with high potential payoff, but it is inherently risky because the overall trend is not yet fully confirmed.
-                * 🟡 **Partial Setup (Yellow Dot):** Indicates the stock is in a retest zone with a high score, but is missing 1 or 2 core criteria. The stock is 'almost perfect', but staying patient and waiting for full confirmation is the best state.
+                * 🟪 HRR (High Risk Reward) (Purple Square): Triggered when the fast EMA5 crosses above the slow EMA21 (red to green cloud flip). This is an early entry signal with high potential payoff, but it is inherently risky because the overall trend is not yet fully confirmed.
+                * 🟡 Partial Setup (Yellow Dot): Indicates the stock is in a retest zone with a high score, but is missing 1 or 2 core criteria. The stock is 'almost perfect', but staying patient and waiting for full confirmation is the best state.
                 """
             )
         
@@ -690,18 +690,23 @@ def render(ticker: str):
         with col_text:
             st.markdown(
                 """
-                **What Happened:**
-                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026. 
-                
-                **The Setup (HG Rules):**
-                - 🔥 **Full HG Setup Triggered:** On **March 30, 2026** and **April 6, 2026**, ARM triggered a **Full Holy Grail Setup** at a close price of **$149** (with the rising 50WMA at **$135.67**).
-                - 🔥 **Confluence of Rules:** 
-                  - The price sat directly in the retest zone of the rising 50WMA.
-                  - The EMA cloud flipped green (EMA5/9/21 compression crossover).
-                  - The Mansfield RS was highly positive.
-                  - RSI was above 50.
-                - 🔥 **The Result:** This perfect confluence of indicators triggered a legendary momentum launch, with ARM surging from **$149** to **$353** by late May 2026—a **+135% gain in under 2 months**!
-                """
+                <p>What Happened:<br>
+                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026.</p>
+                <p>The Setup (HG Rules):</p>
+                <ul>
+                  <li>&#128293; Full HG Setup Triggered: On March 30, 2026 and April 6, 2026, ARM triggered a Full Holy Grail Setup at a close price of $149 (with the rising 50WMA at $135.67).</li>
+                  <li>&#128293; Confluence of Rules:
+                    <ul>
+                      <li>The price sat directly in the retest zone of the rising 50WMA.</li>
+                      <li>The EMA cloud flipped green (EMA5/9/21 compression crossover).</li>
+                      <li>The Mansfield RS was highly positive.</li>
+                      <li>RSI was above 50.</li>
+                    </ul>
+                  </li>
+                  <li>&#128293; The Result: This perfect confluence of indicators triggered a legendary momentum launch, with ARM surging from $149 to $353 by late May 2026 — a +135% gain in under 2 months!</li>
+                </ul>
+                """,
+                unsafe_allow_html=True
             )
         with col_chart:
             df_arm = fetch_guide_data("ARM")
@@ -719,14 +724,16 @@ def render(ticker: str):
         with col_text:
             st.markdown(
                 """
-                **What Happened:**
-                AMD consolidated and established a solid support base above its rising 50WMA during early 2025. 
-                
-                **The Setup (HG Rules):**
-                - ✅ **HG Setup Triggered:** On **June 23, 2025**, AMD triggered a **Full Holy Grail Setup (score of 0.75)** at a close price of **$143.81** (resting on a 50WMA of **$126.60**).
-                - ✅ **Mansfield RS Green:** The Mansfield Relative Strength turned positive (**0.4469**), confirming that AMD's relative momentum vs. the S&P 500 had shifted in its favor.
-                - ✅ **The Result:** By entering the trade in this low-risk retest zone, investors captured repeated winning trades as the stock went on to surge **+273% to $537.37** by June 2026.
-                """
+                <p>What Happened:<br>
+                AMD consolidated and established a solid support base above its rising 50WMA during early 2025.</p>
+                <p>The Setup (HG Rules):</p>
+                <ul>
+                  <li>&#9989; HG Setup Triggered: On June 23, 2025, AMD triggered a Full Holy Grail Setup (score of 0.75) at a close price of $143.81 (resting on a 50WMA of $126.60).</li>
+                  <li>&#9989; Mansfield RS Green: The Mansfield Relative Strength turned positive (0.4469), confirming that AMD's relative momentum vs. the S&amp;P 500 had shifted in its favor.</li>
+                  <li>&#9989; The Result: By entering the trade in this low-risk retest zone, investors captured repeated winning trades as the stock went on to surge +273% to $537.37 by June 2026.</li>
+                </ul>
+                """,
+                unsafe_allow_html=True
             )
         with col_chart:
             df_amd = fetch_guide_data("AMD")
@@ -744,14 +751,16 @@ def render(ticker: str):
         with col_text:
             st.markdown(
                 """
-                **What Happened:**
-                Adobe illustrates the dual lessons of HRR risk and the absolute rule of the 50WMA.
-                
-                **The Setups & Traps:**
-                - 🛑 **HRR Failure (December 2, 2024):** A HRR signal (Purple Square) triggered at **$552.96** as the EMA cloud flipped green. However, because the underlying relative strength was weak (Mansfield RS was red at `-0.91`), the setup failed immediately, dropping **-15.8% to $465.69** the very next week.
-                - 🛑 **The Value Trap (April – June 2025):** Adobe fell into the low **$330s** and staged a rapid rally back to **$417**. Value hunters piled in believing it was cheap. However, the price remained strictly **below the declining 50WMA**, and Mansfield RS remained negative. 
-                - 🛑 **The Result:** Because candles below the 50WMA mean **there is no setup**, the momentum never shifted and the stock collapsed back to the **$340s** in July, trapping buyers.
-                """
+                <p>What Happened:<br>
+                Adobe illustrates the dual lessons of HRR risk and the absolute rule of the 50WMA.</p>
+                <p>The Setups &amp; Traps:</p>
+                <ul>
+                  <li>&#128683; HRR Failure (December 2, 2024): A HRR signal (Purple Square) triggered at $552.96 as the EMA cloud flipped green. However, because the underlying relative strength was weak (Mansfield RS was red at -0.91), the setup failed immediately, dropping -15.8% to $465.69 the very next week.</li>
+                  <li>&#128683; The Value Trap (April - June 2025): Adobe fell into the low $330s and staged a rapid rally back to $417. Value hunters piled in believing it was cheap. However, the price remained strictly below the declining 50WMA, and Mansfield RS remained negative.</li>
+                  <li>&#128683; The Result: Because candles below the 50WMA mean there is no setup, the momentum never shifted and the stock collapsed back to the $340s in July, trapping buyers.</li>
+                </ul>
+                """,
+                unsafe_allow_html=True
             )
         with col_chart:
             df_adbe = fetch_guide_data("ADBE")
