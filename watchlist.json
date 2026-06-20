@@ -1,24 +1,10 @@
 [
   {
-    "ticker": "AMD",
-    "date_added": "2025-06-23",
-    "price_added": 124.0,
-    "verdict": "HOLD",
-    "commentary": "The frontrunner of inference chips"
-  },
-  {
-    "ticker": "HPE",
-    "date_added": "2026-03-25",
-    "price_added": 25.0,
-    "verdict": "HOLD",
-    "commentary": "CPU shortage and Space data centers long term"
-  },
-  {
-    "ticker": "ZM",
-    "date_added": "2026-04-20",
-    "price_added": 92.0,
+    "ticker": "AAPL",
+    "date_added": "2026-06-19",
+    "price_added": 296.0,
     "verdict": "BUY",
-    "commentary": "Virtual agents + anthropic stake in the company"
+    "commentary": "INTC partnership is the catalyst"
   },
   {
     "ticker": "ILMN",
@@ -28,17 +14,24 @@
     "commentary": "ARKG and biotech seems like the next momentum sector"
   },
   {
-    "ticker": "AAPL",
-    "date_added": "2026-06-19",
-    "price_added": 296.0,
+    "ticker": "ZM",
+    "date_added": "2026-04-20",
+    "price_added": 92.0,
     "verdict": "BUY",
-    "commentary": "INTC partnership is the catalyst"
+    "commentary": "Virtual agents + anthropic stake in the company"
   },
   {
-    "ticker": "OSCR",
-    "date_added": "2025-05-22",
-    "price_added": 14.0,
-    "verdict": "WATCH",
-    "commentary": "Insurance business that builds a centralized data model for AI training with the goal to reduce the cost of care for small and medium companies"
+    "ticker": "HPE",
+    "date_added": "2026-03-25",
+    "price_added": 25.0,
+    "verdict": "HOLD",
+    "commentary": "CPU shortage and Space data centers long term"
+  },
+  {
+    "ticker": "AMD",
+    "date_added": "2025-06-23",
+    "price_added": 124.0,
+    "verdict": "HOLD",
+    "commentary": "The frontrunner of inference chips"
   }
 ]
