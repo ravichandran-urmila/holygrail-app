@@ -647,11 +647,32 @@ def render(ticker: str):
     with guide_tab:
         st.markdown("### 📖 How to Read the Charts")
         st.markdown(
-            "This educational section uses three historical case studies to show when it is a high-probability "
-            "time to enter a stock based on momentum rules, and when it is a trap."
+            "This educational section explains the core indicators and momentum rules of the Holy Grail system, "
+            "using three real-world case studies to demonstrate high-probability entries and value traps."
         )
         st.write("---")
         
+        # 1. Indicator Definitions
+        st.markdown("#### 🛠️ Core Indicators & Momentum Rules")
+        col_ind1, col_ind2 = st.columns(2)
+        with col_ind1:
+            st.markdown(
+                """
+                * 📈 **50-Week Moving Average (50WMA):** The spine of the system. It separates long-term bullish regimes from bearish regimes. 
+                  - **Rule:** If the candles are below the 50WMA, **there is no setup**. Period.
+                * 🔵 **Holy Grail (HG) Setup (Dark Blue Triangle):** The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
+                """
+            )
+        with col_ind2:
+            st.markdown(
+                """
+                * 🟪 **HRR (High Risk Reward) (Purple Square):** Triggered when the fast EMA5 crosses above the slow EMA21 (red to green cloud flip). This is an early entry signal with high potential payoff, but it is inherently risky because the overall trend is not yet fully confirmed.
+                * 🟡 **Partial Setup (Yellow Dot):** Indicates the stock is in a retest zone with a high score, but is missing 1 or 2 core criteria. The stock is 'almost perfect', but staying patient and waiting for full confirmation is the best state.
+                """
+            )
+        
+        st.write("---")
+
         # Helper to fetch guide data safely
         def fetch_guide_data(ticker_symbol: str):
             try:
@@ -663,36 +684,37 @@ def render(ticker: str):
                 st.error(f"Error loading {ticker_symbol} historical data: {e_guide}")
                 return None
 
-        # 1. Adobe Example
-        st.markdown("#### 1. Adobe (ADBE) — The Value Trap (April – June 2025)")
+        # 2. ARM Example
+        st.markdown("#### 1. ARM Holdings (ARM) — The Apex Setup (March – April 2026)")
         col_text, col_chart = st.columns([2, 3])
         with col_text:
             st.markdown(
                 """
                 **What Happened:**
-                Adobe was beaten down into the low **$330s** in April 2025. Over the next two months, the price staged a rapid, massive rally back to the **$450s**. 
+                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026. 
                 
-                **The Psychology:**
-                Retail investors and 'value hunters' piled in aggressively during this recovery, believing the stock was severely undervalued and that a bottom was locked in.
-                
-                **The Reality (HG Rules):**
-                - 🛑 **No Momentum Shift:** The price remained **below** the declining 50-week Moving Average (50WMA).
-                - 🛑 **Mansfield RS Red:** The Mansfield Relative Strength index was deeply negative (red), indicating that Adobe was still heavily underperforming the S&P 500.
-                - 🛑 **The Result:** The momentum never shifted. Because the indicators were weak, the stock collapsed back to the **$340s** in July/August, leaving value-buyers trapped.
+                **The Setup (HG Rules):**
+                - 🔥 **Full HG Setup Triggered:** On **March 30, 2026** and **April 6, 2026**, ARM triggered a **Full Holy Grail Setup** at a close price of **$149** (with the rising 50WMA at **$135.67**).
+                - 🔥 **Confluence of Rules:** 
+                  - The price sat directly in the retest zone of the rising 50WMA.
+                  - The EMA cloud flipped green (EMA5/9/21 compression crossover).
+                  - The Mansfield RS was highly positive.
+                  - RSI was above 50.
+                - 🔥 **The Result:** This perfect confluence of indicators triggered a legendary momentum launch, with ARM surging from **$149** to **$353** by late May 2026—a **+135% gain in under 2 months**!
                 """
             )
         with col_chart:
-            df_adbe = fetch_guide_data("ADBE")
-            if df_adbe is not None:
-                df_adbe_filtered = df_adbe.loc['2024-10-01':'2025-08-01']
-                fig_adbe = build_chart(df_adbe_filtered, "ADBE", show_cloud=True)
-                fig_adbe.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
-                st.plotly_chart(fig_adbe, use_container_width=True, key="guide_adbe_chart")
+            df_arm = fetch_guide_data("ARM")
+            if df_arm is not None:
+                df_arm_filtered = df_arm.loc['2025-08-01':'2026-06-01']
+                fig_arm = build_chart(df_arm_filtered, "ARM", show_cloud=True)
+                fig_arm.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+                st.plotly_chart(fig_arm, use_container_width=True, key="guide_arm_chart")
                 
         st.write("---")
         
-        # 2. AMD Example
-        st.markdown("#### 2. AMD (AMD) — The Trend Reversal Setup (June 2025 – Present)")
+        # 3. AMD Example
+        st.markdown("#### 2. AMD (AMD) — Winning Trades Repeated (June 2025 – Present)")
         col_text, col_chart = st.columns([2, 3])
         with col_text:
             st.markdown(
@@ -702,8 +724,8 @@ def render(ticker: str):
                 
                 **The Setup (HG Rules):**
                 - ✅ **HG Setup Triggered:** On **June 23, 2025**, AMD triggered a **Full Holy Grail Setup (score of 0.75)** at a close price of **$143.81** (resting on a 50WMA of **$126.60**).
-                - ✅ **Mansfield RS Green:** At the trigger point, the Mansfield Relative Strength flipped firmly positive (**0.4469**), confirming that AMD's relative momentum vs. the S&P 500 had shifted in its favor.
-                - ✅ **The Result (Momentum Gain):** Over the next year, AMD embarked on a historic rally, surging to a massive close of **$537.37** by June 2026. This represents an incredible **+273% return (a 3.7x gain) in just 1 year** after the HG setup!
+                - ✅ **Mansfield RS Green:** The Mansfield Relative Strength turned positive (**0.4469**), confirming that AMD's relative momentum vs. the S&P 500 had shifted in its favor.
+                - ✅ **The Result:** By entering the trade in this low-risk retest zone, investors captured repeated winning trades as the stock went on to surge **+273% to $537.37** by June 2026.
                 """
             )
         with col_chart:
@@ -716,32 +738,28 @@ def render(ticker: str):
                 
         st.write("---")
         
-        # 3. ARM Example
-        st.markdown("#### 3. ARM Holdings (ARM) — The Holy Grail Setup (March – April 2026)")
+        # 4. Adobe Example
+        st.markdown("#### 3. Adobe (ADBE) — The Risks & The Traps (December 2024 – June 2025)")
         col_text, col_chart = st.columns([2, 3])
         with col_text:
             st.markdown(
                 """
                 **What Happened:**
-                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026. 
+                Adobe illustrates the dual lessons of HRR risk and the absolute rule of the 50WMA.
                 
-                **The Setup (HG Rules):**
-                - 🔥 **Full Setup Trigger (HG Triangle):** On **March 30, 2026** and **April 6, 2026**, ARM triggered a **Full Holy Grail Setup** (score of **0.75**) at **$149**.
-                - 🔥 **Perfect Confluence:** 
-                  - The price sat directly in the retest zone of the rising 50WMA.
-                  - The EMA cloud flipped green (5/9/21 compression crossover).
-                  - The Mansfield RS was highly positive.
-                  - RSI was above 50.
-                - 🔥 **The Result:** This perfect setup led to a legendary momentum launch. ARM surged from **$149** to **$353** by late May 2026—a **+135% gain in under 2 months**!
+                **The Setups & Traps:**
+                - 🛑 **HRR Failure (December 2, 2024):** A HRR signal (Purple Square) triggered at **$552.96** as the EMA cloud flipped green. However, because the underlying relative strength was weak (Mansfield RS was red at `-0.91`), the setup failed immediately, dropping **-15.8% to $465.69** the very next week.
+                - 🛑 **The Value Trap (April – June 2025):** Adobe fell into the low **$330s** and staged a rapid rally back to **$417**. Value hunters piled in believing it was cheap. However, the price remained strictly **below the declining 50WMA**, and Mansfield RS remained negative. 
+                - 🛑 **The Result:** Because candles below the 50WMA mean **there is no setup**, the momentum never shifted and the stock collapsed back to the **$340s** in July, trapping buyers.
                 """
             )
         with col_chart:
-            df_arm = fetch_guide_data("ARM")
-            if df_arm is not None:
-                df_arm_filtered = df_arm.loc['2025-08-01':'2026-06-01']
-                fig_arm = build_chart(df_arm_filtered, "ARM", show_cloud=True)
-                fig_arm.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
-                st.plotly_chart(fig_arm, use_container_width=True, key="guide_arm_chart")
+            df_adbe = fetch_guide_data("ADBE")
+            if df_adbe is not None:
+                df_adbe_filtered = df_adbe.loc['2024-10-01':'2025-08-01']
+                fig_adbe = build_chart(df_adbe_filtered, "ADBE", show_cloud=True)
+                fig_adbe.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+                st.plotly_chart(fig_adbe, use_container_width=True, key="guide_adbe_chart")
 
 
 
