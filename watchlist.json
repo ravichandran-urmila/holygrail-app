@@ -1,5 +1,12 @@
 [
   {
+    "ticker": "HUBB",
+    "date_added": "2026-06-21",
+    "price_added": 520.0,
+    "verdict": "BUY",
+    "commentary": "If you look at the AI buildout as a physical supply chain, HUBB is a primary beneficiary of the power bottleneck. Tech giants cannot scale their cluster builds without the underlying utility grid and power management components that companies like Hubbell supply, making its order books heavily tied to the pace of AI infrastructure deployment."
+  },
+  {
     "ticker": "AAPL",
     "date_added": "2026-06-19",
     "price_added": 296.0,
@@ -49,10 +56,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "HUBB",
+    "ticker": "AKAM",
     "date_added": "2026-06-21",
-    "price_added": 520.0,
+    "price_added": 124.0,
     "verdict": "BUY",
-    "commentary": "If you look at the AI buildout as a physical supply chain, HUBB is a primary beneficiary of the power bottleneck. Tech giants cannot scale their cluster builds without the underlying utility grid and power management components that companies like Hubbell supply, making its order books heavily tied to the pace of AI infrastructure deployment."
+    "commentary": "As AI evolves into multi-step \"agentic workflows\" (autonomous agents handling complex tasks like e-commerce transactions or fraud detection), two things become critical: milliseconds of response time and absolute security. Akamai leverages its market-dominant web security and API defense portfolios to protect AI models and sensitive data payloads directly at the edge, making it an all-in-one infrastructure guardrail for enterprise AI deployment."
   }
 ]
