@@ -28,6 +28,13 @@
     "commentary": "CPU shortage and Space data centers long term"
   },
   {
+    "ticker": "FCX",
+    "date_added": "2026-03-23",
+    "price_added": 57.0,
+    "verdict": "HOLD",
+    "commentary": "Copper is the clear winner of AI build out and fcx is one of the largest us supplier"
+  },
+  {
     "ticker": "AMD",
     "date_added": "2025-06-23",
     "price_added": 124.0,
@@ -42,10 +49,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "FCX",
-    "date_added": "2026-03-23",
-    "price_added": 57.0,
-    "verdict": "HOLD",
-    "commentary": "Copper is the clear winner of AI build out and fcx is one of the largest us supplier"
+    "ticker": "HUBB",
+    "date_added": "2026-06-21",
+    "price_added": 520.0,
+    "verdict": "BUY",
+    "commentary": "If you look at the AI buildout as a physical supply chain, HUBB is a primary beneficiary of the power bottleneck. Tech giants cannot scale their cluster builds without the underlying utility grid and power management components that companies like Hubbell supply, making its order books heavily tied to the pace of AI infrastructure deployment."
   }
 ]
