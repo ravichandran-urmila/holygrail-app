@@ -40,5 +40,12 @@
     "price_added": 14.0,
     "verdict": "HOLD",
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
+  },
+  {
+    "ticker": "FCX",
+    "date_added": "2026-03-23",
+    "price_added": 57.0,
+    "verdict": "HOLD",
+    "commentary": "Copper is the clear winner of AI build out and fcx is one of the largest us supplier"
   }
 ]
