@@ -674,8 +674,9 @@ def render(ticker: str):
                 """
                 * 📈 50-Week Moving Average (50WMA): The spine of the system. It separates long-term bullish regimes from bearish regimes. 
                   - Rule: If the candles are below the 50WMA, there is no setup. Period.
-                * 🔵 Holy Grail (HG) Setup (Dark Blue Triangle): The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
-                """
+                * <span style="color: #1d4ed8; font-size: 1.1rem;">▲</span> Holy Grail (HG) Setup (Dark Blue Triangle): The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
+                """,
+                unsafe_allow_html=True
             )
         with col_ind2:
             st.markdown(
