@@ -22,8 +22,18 @@ from indicator import HGSettings, compute
 st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
+if "active_tab" not in st.session_state:
+    st.session_state["active_tab"] = "📈 Chart"
+
 # --- Header & Settings ------------------------------------------------------
-col_title, col_settings = st.columns([3, 1])
+col_home, col_title, col_settings = st.columns([0.3, 5.0, 1.8])
+
+with col_home:
+    st.write("")  # vertical alignment spacer
+    st.write("")
+    if st.button("🏠", help="Go to Chart"):
+        st.session_state["active_tab"] = "📈 Chart"
+        st.rerun()
 
 with col_title:
     st.markdown(
@@ -213,7 +223,11 @@ def render(ticker: str):
     elif sm["partial_setup"]:
         st.warning("⚠️ **Entering the 50WMA retest zone** with an elevated weighted score.")
 
-    chart_tab, dash_tab, data_tab, watchlist_tab, guide_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner", "📖 Guide"])
+    guide_tab, chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(
+        ["📖 Guide", "📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner"],
+        key="active_tab",
+        default="📈 Chart"
+    )
 
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
