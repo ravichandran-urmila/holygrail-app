@@ -222,9 +222,6 @@ with st.sidebar:
         key="nav_selection",
         label_visibility="collapsed"
     )
-    st.write("---")
-
-    st.write("---")
 
     if nav_page == "🔍 Scanner":
         st.header("🔎 Ticker")
