@@ -22,9 +22,6 @@ from indicator import HGSettings, compute
 st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
-if "active_tab" not in st.session_state:
-    st.session_state["active_tab"] = "📈 Chart"
-
 # --- Header & Settings ------------------------------------------------------
 col_title, col_settings = st.columns([3, 1])
 
@@ -62,7 +59,7 @@ with col_settings:
             partial_thresh = st.number_input("Partial threshold", 0.0, 2.0, 0.35, 0.05)
             full_thresh = st.number_input("Full threshold", 0.0, 2.0, 0.70, 0.05)
 
-# --- Sidebar: search --------------------------------------------------------
+# --- Sidebar: search & navigation -------------------------------------------
 default_ticker = "ARM"
 if "ticker" in st.query_params:
     val = st.query_params["ticker"]
@@ -70,24 +67,36 @@ if "ticker" in st.query_params:
         default_ticker = str(val).strip().upper()
 
 with st.sidebar:
-    st.header("🔎 Ticker")
-    ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
-    
-    # Sync query parameters with the active ticker
-    if ticker and st.query_params.get("ticker") != ticker:
-        st.query_params["ticker"] = ticker
-        
-    history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
-    go_btn = st.button("Scan", type="primary", use_container_width=True)
-
-    st.write("---")
-    st.markdown("### 📖 How to read the chart")
-    st.markdown(
-        "* <span style='color: #1d4ed8; font-size: 1.1rem;'>▲</span> **Weekly Dark Blue Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
-        "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
-        "* <span style='color: #e040fb; font-size: 1.1rem;'>■</span> **HRR (High Risk Reward)**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
-        unsafe_allow_html=True
+    st.markdown("### 🧭 Navigation")
+    nav_page = st.radio(
+        "Navigation",
+        ["🔍 Scanner", "📖 Guide", "🌟 Expert Corner"],
+        label_visibility="collapsed"
     )
+    st.write("---")
+
+    if nav_page == "🔍 Scanner":
+        st.header("🔎 Ticker")
+        ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+        
+        # Sync query parameters with the active ticker
+        if ticker and st.query_params.get("ticker") != ticker:
+            st.query_params["ticker"] = ticker
+            
+        history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
+        go_btn = st.button("Scan", type="primary", use_container_width=True)
+
+        st.write("---")
+        st.markdown("### 📖 How to read the chart")
+        st.markdown(
+            "* <span style='color: #1d4ed8; font-size: 1.1rem;'>▲</span> **Weekly Dark Blue Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
+            "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
+            "* <span style='color: #e040fb; font-size: 1.1rem;'>■</span> **HRR (High Risk Reward)**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
+            unsafe_allow_html=True
+        )
+    else:
+        history_choice = "1 Year"
+        ticker = default_ticker
 
 
 settings = HGSettings(
@@ -97,6 +106,439 @@ settings = HGSettings(
     w1=w1, w2=w2, w3=w3, w4=w4, w5=w5, w6=w6,
     partial_thresh=partial_thresh, full_thresh=full_thresh,
 )
+
+
+def render_guide():
+    st.markdown("### 📖 How to Read the Charts")
+    st.markdown(
+        "This educational section explains the core indicators and momentum rules of the Holy Grail system, "
+        "using three real-world case studies to demonstrate high-probability entries and value traps."
+    )
+    st.write("---")
+    
+    # 1. Indicator Definitions
+    st.markdown("#### 🛠️ Core Indicators & Momentum Rules")
+    col_ind1, col_ind2 = st.columns(2)
+    with col_ind1:
+        st.markdown(
+            """
+            * <span style="display: inline-block; width: 20px; height: 3px; background-color: #ffd600; vertical-align: middle; margin-right: 8px; border-radius: 1px;"></span> 50-Week Moving Average (50WMA): The spine of the system. It separates long-term bullish regimes from bearish regimes. 
+              - Rule: If the candles are below the 50WMA, there is no setup. Period.
+            * <span style="color: #1d4ed8; font-size: 1.5rem; vertical-align: middle; margin-right: 6px;">▲</span> Holy Grail (HG) Setup (Dark Blue Triangle): The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
+            """,
+            unsafe_allow_html=True
+        )
+    with col_ind2:
+        st.markdown(
+            """
+            * 🟪 HRR (High Risk Reward) (Purple Square): Triggered when the fast EMA5 crosses above the slow EMA21 (red to green cloud flip). This is an early entry signal with high potential payoff, but it is inherently risky because the overall trend is not yet fully confirmed.
+            * 🟡 Partial Setup (Yellow Dot): Indicates the stock is in a retest zone with a high score, but is missing 1 or 2 core criteria. The stock is 'almost perfect', but staying patient and waiting for full confirmation is the best state.
+            """
+        )
+    
+    st.write("---")
+
+    # Helper to fetch guide data safely
+    def fetch_guide_data(ticker_symbol: str):
+        try:
+            ohlcv = datalib.fetch_weekly(ticker_symbol, period="10y")
+            spx = datalib.fetch_spx_weekly(period="10y")
+            res_guide = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
+            return res_guide.df
+        except Exception as e_guide:
+            st.error(f"Error loading {ticker_symbol} historical data: {e_guide}")
+            return None
+
+    # 2. ARM Example
+    st.markdown("#### 1. ARM Holdings (ARM) — The Apex Setup (March – April 2026)")
+    col_text, col_chart = st.columns([2, 3])
+    with col_text:
+        st.markdown(
+            """
+            <p>What Happened:<br>
+            ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026.</p>
+            <p>The Setup (HG Rules):</p>
+            <ul>
+              <li>&#128293; Full HG Setup Triggered: On March 30, 2026 and April 6, 2026, ARM triggered a Full Holy Grail Setup at a close price of $149 (with the rising 50WMA at $135.67).</li>
+              <li>&#128293; Confluence of Rules:
+                <ul>
+                  <li>The price sat directly in the retest zone of the rising 50WMA.</li>
+                  <li>The EMA cloud flipped green (EMA5/9/21 compression crossover).</li>
+                  <li>The Mansfield RS was highly positive.</li>
+                  <li>RSI was above 50.</li>
+                </ul>
+              </li>
+              <li>&#128293; The Result: This perfect confluence of indicators triggered a legendary momentum launch, with ARM surging from $149 to $353 by late May 2026 — a +135% gain in under 2 months!</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+    with col_chart:
+        df_arm = fetch_guide_data("ARM")
+        if df_arm is not None:
+            df_arm_filtered = df_arm.loc['2025-08-01':'2026-06-01']
+            fig_arm = build_chart(df_arm_filtered, "ARM", show_cloud=True)
+            fig_arm.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+            st.plotly_chart(fig_arm, use_container_width=True, key="guide_arm_chart")
+            
+    st.write("---")
+    
+    # 3. AMD Example
+    st.markdown("#### 2. AMD (AMD) — Winning Trades Repeated (June 2025 – Present)")
+    col_text, col_chart = st.columns([2, 3])
+    with col_text:
+        st.markdown(
+            """
+            <p>What Happened:<br>
+            AMD consolidated and established a solid support base above its rising 50WMA during early 2025.</p>
+            <p>The Setup (HG Rules):</p>
+            <ul>
+              <li>&#9989; HG Setup Triggered: On June 23, 2025, AMD triggered a Full Holy Grail Setup (score of 0.75) at a close price of $143.81 (resting on a 50WMA of $126.60).</li>
+              <li>&#9989; Mansfield RS Green: The Mansfield Relative Strength turned positive (0.4469), confirming that AMD's relative momentum vs. the S&amp;P 500 had shifted in its favor.</li>
+              <li>&#9989; The Result: By entering the trade in this low-risk retest zone, investors captured repeated winning trades as the stock went on to surge +273% to $537.37 by June 2026.</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+    with col_chart:
+        df_amd = fetch_guide_data("AMD")
+        if df_amd is not None:
+            df_amd_filtered = df_amd.loc['2025-01-01':'2026-06-19']
+            fig_amd = build_chart(df_amd_filtered, "AMD", show_cloud=True)
+            fig_amd.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+            st.plotly_chart(fig_amd, use_container_width=True, key="guide_amd_chart")
+            
+    st.write("---")
+    
+    # 4. Adobe Example
+    st.markdown("#### 3. Adobe (ADBE) — The Risks & The Traps (December 2024 – June 2025)")
+    col_text, col_chart = st.columns([2, 3])
+    with col_text:
+        st.markdown(
+            """
+            <p>What Happened:<br>
+            Adobe illustrates the dual lessons of HRR risk and the absolute rule of the 50WMA.</p>
+            <p>The Setups &amp; Traps:</p>
+            <ul>
+              <li>&#128683; HRR Failure (December 2, 2024): A HRR signal (Purple Square) triggered at $552.96 as the EMA cloud flipped green. However, because the underlying relative strength was weak (Mansfield RS was red at -0.91), the setup failed immediately, dropping -15.8% to $465.69 the very next week.</li>
+              <li>&#128683; The Value Trap (April - June 2025): Adobe fell into the low $330s and staged a rapid rally back to $417. Value hunters piled in believing it was cheap. However, the price remained strictly below the declining 50WMA, and Mansfield RS remained negative.</li>
+              <li>&#128683; The Result: Because candles below the 50WMA mean there is no setup, the momentum never shifted and the stock collapsed back to the $340s in July, trapping buyers.</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+    with col_chart:
+        df_adbe = fetch_guide_data("ADBE")
+        if df_adbe is not None:
+            df_adbe_filtered = df_adbe.loc['2024-10-01':'2025-08-01']
+            fig_adbe = build_chart(df_adbe_filtered, "ADBE", show_cloud=True)
+            fig_adbe.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
+            st.plotly_chart(fig_adbe, use_container_width=True, key="guide_adbe_chart")
+
+
+def render_expert_corner():
+    st.markdown("### 🌟 Expert Corner")
+    st.markdown("This list is curated by the admin and displays specific tickers, entry prices, and current returns.")
+
+    import base64
+    import json
+    import os
+    import datetime
+    import requests as _requests
+
+    WATCHLIST_FILE = "watchlist.json"
+    _GH_API = "https://api.github.com"
+
+    def _gh_cfg():
+        """Return (token, repo, branch, path) or None if not configured."""
+        try:
+            token  = st.secrets.get("GITHUB_TOKEN", "")
+            repo   = st.secrets.get("GITHUB_REPO", "")
+            branch = st.secrets.get("GITHUB_BRANCH", "master")
+            path   = st.secrets.get("GITHUB_FILE_PATH", "watchlist.json")
+            if token and repo:
+                return token, repo, branch, path
+        except Exception:
+            pass
+        return None
+
+    def load_wl():
+        """Load watchlist — GitHub first, local file as fallback."""
+        cfg = _gh_cfg()
+        if cfg:
+            token, repo, branch, path = cfg
+            try:
+                headers = {
+                    "Authorization": f"token {token}",
+                    "Accept": "application/vnd.github.v3+json",
+                }
+                r = _requests.get(
+                    f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                    headers=headers, timeout=10,
+                )
+                if r.status_code == 200:
+                    raw = base64.b64decode(r.json()["content"]).decode("utf-8")
+                    data = json.loads(raw)
+                    if isinstance(data, dict):
+                        return data.get("items", [])
+                    return data
+            except Exception:
+                pass  # fall through to local file
+
+        # Local fallback (dev mode)
+        if os.path.exists(WATCHLIST_FILE):
+            try:
+                with open(WATCHLIST_FILE, "r") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        return data.get("items", [])
+                    return data
+            except Exception:
+                pass
+        return []
+
+    def save_wl(data):
+        """Save watchlist — commits directly to GitHub so it survives re-deploys."""
+        payload_str = json.dumps(data, indent=2)
+        cfg = _gh_cfg()
+
+        if cfg:
+            token, repo, branch, path = cfg
+            headers = {
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.v3+json",
+            }
+            try:
+                # Need the file's current SHA to update it
+                r_get = _requests.get(
+                    f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                    headers=headers, timeout=10,
+                )
+                sha = r_get.json().get("sha", "") if r_get.status_code == 200 else ""
+
+                body = {
+                    "message": "chore: update watchlist via admin panel",
+                    "content": base64.b64encode(payload_str.encode()).decode(),
+                    "branch": branch,
+                }
+                if sha:
+                    body["sha"] = sha
+
+                r_put = _requests.put(
+                    f"{_GH_API}/repos/{repo}/contents/{path}",
+                    headers=headers, json=body, timeout=15,
+                )
+                if r_put.status_code in (200, 201):
+                    return True
+                st.error(f"GitHub save failed ({r_put.status_code}): {r_put.json().get('message', r_put.text)}")
+                return False
+            except Exception as e:
+                st.error(f"GitHub save error: {e}")
+                return False
+
+        # Local fallback (dev mode)
+        try:
+            with open(WATCHLIST_FILE, "w") as f:
+                json.dump(data, f, indent=2)
+            return True
+        except Exception as e:
+            st.error(f"Failed to save watchlist locally: {e}")
+            return False
+
+    watchlist = sorted(load_wl(), key=lambda x: x.get("date_added", ""), reverse=True)
+
+    if not watchlist:
+        st.info("Expert Corner is currently empty. Add tickers in the Admin Panel below.")
+    else:
+        wl_rows = []
+        with st.spinner("Fetching current prices for watchlist..."):
+            for item in watchlist:
+                t = item["ticker"]
+                d_add = item["date_added"]
+                p_add = item["price_added"]
+                v_word = item.get("verdict", "WATCH")
+                comm = item.get("commentary", "")
+                
+                try:
+                    # Fetch the latest price from yfinance (cached via fetch_weekly)
+                    p_curr = float(datalib.fetch_weekly(t, period="1mo")["close"].iloc[-1])
+                    gain = ((p_curr - p_add) / p_add) * 100.0
+                except Exception:
+                    p_curr = None
+                    gain = None
+                
+                wl_rows.append({
+                    "ticker": t,
+                    "date_added": d_add,
+                    "price_added": p_add,
+                    "current_price": p_curr,
+                    "verdict": v_word,
+                    "commentary": comm,
+                    "gain": gain,
+                })
+
+        # Render table via st.components.v1.html — bypasses Markdown entirely.
+        import streamlit.components.v1 as components
+
+        VERDICT_COLOR = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}
+
+        rows_html = ""
+        for row in wl_rows:
+            v_color = VERDICT_COLOR.get(row["verdict"], "#888888")
+            gain_val = row["gain"]
+            if gain_val is None:
+                gain_str = "N/A"
+                gain_color = "rgba(250,250,250,0.4)"
+            else:
+                sign = "+" if gain_val >= 0 else ""
+                gain_str = sign + f"{gain_val:.2f}%"
+                gain_color = "#16c784" if gain_val >= 0 else "#ea3943"
+
+            curr_price_str = ("$" + f"{row['current_price']:.2f}") if row["current_price"] is not None else "N/A"
+            tooltip = row["commentary"].replace("'", "&#39;").replace('"', "&quot;")
+
+            rows_html += (
+                "<tr>"
+                + "<td style='padding:14px 12px;color:rgba(250,250,250,0.75);font-size:0.9rem;'>" + row["date_added"] + "</td>"
+                + "<td style='padding:14px 12px;font-weight:700;font-size:1rem;'><a href='?ticker=" + row["ticker"] + "' target='_parent'>" + row["ticker"] + "</a></td>"
+                + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>$" + f"{row['price_added']:.2f}" + "</td>"
+                + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>" + curr_price_str + "</td>"
+                + "<td style='padding:14px 12px;'><span title='" + tooltip + "' style='color:" + v_color + ";font-weight:700;"
+                + "padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.05);"
+                + "border:1px solid " + v_color + "40;text-decoration:underline dotted;cursor:help;'>"
+                + row["verdict"] + "</span></td>"
+                + "<td style='padding:14px 12px;font-weight:700;color:" + gain_color + ";'>" + gain_str + "</td>"
+                + "</tr>"
+            )
+
+        full_html = (
+            "<style>"
+            "body{margin:0;padding:0;background:transparent;}"
+            "table{width:100%;border-collapse:collapse;"
+            "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}"
+            "th{padding:11px 12px;color:rgba(200,200,200,0.55);font-size:0.73rem;font-weight:600;"
+            "letter-spacing:0.09em;text-transform:uppercase;"
+            "border-bottom:2px solid rgba(255,255,255,0.12);text-align:left;}"
+            "td{font-size:0.94rem;}"
+            "tr{border-bottom:1px solid rgba(255,255,255,0.06);}"
+            "tr:last-child{border-bottom:none;}"
+            "tr:hover td{background:rgba(255,255,255,0.025);}"
+            "a{color:#38b6ff;text-decoration:none;font-weight:700;}"
+            "a:hover{color:#00e676;text-decoration:underline;}"
+            "</style>"
+            "<table>"
+            "<thead><tr>"
+            "<th>Date Added</th><th>Ticker</th><th>Price Added</th>"
+            "<th>Current Price</th><th>Verdict</th><th>Gain / Loss</th>"
+            "</tr></thead>"
+            "<tbody>" + rows_html + "</tbody>"
+            "</table>"
+        )
+
+        components.html(full_html, height=55 + len(wl_rows) * 56, scrolling=False)
+
+    st.write("---")
+    
+    # Admin controls section
+    with st.expander("🛠️ Admin Expert Corner Controls", expanded=False):
+        admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
+        try:
+            correct_pass = st.secrets.get("admin_password", "holygrail")
+        except Exception:
+            correct_pass = "holygrail"
+        
+        if admin_pass == correct_pass:
+            st.success("Authorized!")
+            col_add, col_del = st.columns(2)
+            
+            with col_add:
+                st.markdown("#### ➕ Add Ticker to Expert Corner")
+                add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
+                add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
+                
+                add_verdict = st.selectbox("Ticker Verdict", ["BUY", "WATCH", "HOLD", "AVOID"], index=1, key="wl_add_verd")
+                add_comm = st.text_area("Ticker Commentary (Hover Tooltip)", value="", placeholder="Enter detailed commentary that users will see on hover...", key="wl_add_comm")
+                
+                if "fetched_price" not in st.session_state:
+                    st.session_state["fetched_price"] = 0.0
+                
+                if st.button("🔍 Auto-fetch Close Price for Date", use_container_width=True):
+                    if add_ticker:
+                        with st.spinner(f"Fetching close price for {add_ticker} around {add_date}..."):
+                            try:
+                                import yfinance as yf
+                                start_t = datetime.datetime.combine(add_date, datetime.time.min)
+                                end_t = start_t + datetime.timedelta(days=7)
+                                hist = yf.Ticker(add_ticker).history(start=start_t.strftime('%Y-%m-%d'), end=end_t.strftime('%Y-%m-%d'))
+                                if not hist.empty:
+                                    fetched = float(hist["Close"].iloc[0])
+                                    st.session_state["fetched_price"] = fetched
+                                    st.toast(f"Successfully fetched price: ${fetched:.2f}", icon="✅")
+                                else:
+                                    st.error("No trading data found for this date. Market might have been closed.")
+                            except Exception as e:
+                                st.error(f"Error fetching price: {e}")
+                
+                add_price = st.number_input("Price Added", value=st.session_state["fetched_price"], format="%.2f", key="wl_add_price")
+                
+                if st.button("Save to Expert Corner", type="primary", use_container_width=True):
+                    if not add_ticker:
+                        st.error("Please enter a ticker symbol.")
+                    elif add_price <= 0:
+                        st.error("Please enter a valid price (> 0).")
+                    else:
+                        new_item = {
+                            "ticker": add_ticker,
+                            "date_added": add_date.strftime("%Y-%m-%d"),
+                            "price_added": float(add_price),
+                            "verdict": add_verdict,
+                            "commentary": add_comm
+                        }
+                        watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
+                        watchlist.append(new_item)
+                        if save_wl(watchlist):
+                            st.toast(f"Saved {add_ticker} to Expert Corner!", icon="🚀")
+                            st.rerun()
+            
+            with col_del:
+                st.markdown("#### ❌ Remove from Expert Corner")
+                if not watchlist:
+                    st.info("Expert Corner is empty.")
+                else:
+                    tickers_to_remove = st.multiselect("Select Ticker(s) to Remove", options=[x["ticker"] for x in watchlist])
+                    if st.button("Remove Selected", type="secondary", use_container_width=True):
+                        if tickers_to_remove:
+                            watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
+                            if save_wl(watchlist):
+                                st.toast(f"Removed {', '.join(tickers_to_remove)} from Expert Corner!", icon="🗑️")
+                                st.rerun()
+                        else:
+                            st.warning("Please select at least one ticker to remove.")
+            
+            st.write("---")
+            if _gh_cfg():
+                st.success(
+                    "✅ **GitHub persistence is active.** All changes are committed directly "
+                    "to your repository and will survive every re-deployment."
+                )
+            else:
+                st.warning(
+                    "⚠️ **GitHub persistence is NOT configured.** Changes save to the local "
+                    "file only and will be lost on the next deployment.\n\n"
+                    "Add these four keys to your Streamlit Cloud **Secrets** to enable "
+                    "permanent persistence:\n"
+                    "```toml\n"
+                    'GITHUB_TOKEN     = "ghp_your_token_here"\n'
+                    'GITHUB_REPO      = "ravichandran-urmila/holygrail-app"\n'
+                    'GITHUB_BRANCH    = "master"\n'
+                    'GITHUB_FILE_PATH = "watchlist.json"\n'
+                    "```\n"
+                    "Generate a token at **GitHub → Settings → Developer settings → "
+                    "Fine-grained personal access tokens** with *Contents: Read & write* "
+                    "permission on this repository."
+                )
+        elif admin_pass:
+            st.error("Incorrect password.")
 
 
 def render(ticker: str):
@@ -216,11 +658,7 @@ def render(ticker: str):
     elif sm["partial_setup"]:
         st.warning("⚠️ **Entering the 50WMA retest zone** with an elevated weighted score.")
 
-    guide_tab, chart_tab, dash_tab, data_tab, watchlist_tab = st.tabs(
-        ["📖 Guide", "📈 Chart", "📋 Dashboard", "🔢 Data", "🌟 Expert Corner"],
-        key="active_tab",
-        default="📈 Chart"
-    )
+    chart_tab, dash_tab, data_tab = st.tabs(["📈 Chart", "📋 Dashboard", "🔢 Data"])
 
     with chart_tab:
         fig = build_chart(df_filtered, ticker, show_cloud)
@@ -327,459 +765,6 @@ def render(ticker: str):
             file_name=f"{ticker}_holygrail.csv",
             mime="text/csv",
         )
-
-    # ---- Expert Corner --------------------------------------------------
-    with watchlist_tab:
-        st.markdown("### 🌟 Expert Corner")
-        st.markdown("This list is curated by the admin and displays specific tickers, entry prices, and current returns.")
-
-        import base64
-        import json
-        import os
-        import datetime
-        import requests as _requests
-
-        WATCHLIST_FILE = "watchlist.json"
-        _GH_API = "https://api.github.com"
-
-        # ------------------------------------------------------------------
-        # GitHub-backed persistence helpers
-        # ------------------------------------------------------------------
-        # Set these four secrets in Streamlit Cloud → App Settings → Secrets:
-        #   GITHUB_TOKEN      = "ghp_xxxxxxxxxxxx"   (fine-grained PAT, contents:write)
-        #   GITHUB_REPO       = "ravichandran-urmila/holygrail-app"
-        #   GITHUB_BRANCH     = "master"
-        #   GITHUB_FILE_PATH  = "watchlist.json"
-        # When the secrets are absent (local dev) the helpers fall back to
-        # reading/writing the local watchlist.json file.
-        # ------------------------------------------------------------------
-
-        def _gh_cfg():
-            """Return (token, repo, branch, path) or None if not configured."""
-            try:
-                token  = st.secrets.get("GITHUB_TOKEN", "")
-                repo   = st.secrets.get("GITHUB_REPO", "")
-                branch = st.secrets.get("GITHUB_BRANCH", "master")
-                path   = st.secrets.get("GITHUB_FILE_PATH", "watchlist.json")
-                if token and repo:
-                    return token, repo, branch, path
-            except Exception:
-                pass
-            return None
-
-        def load_wl():
-            """Load watchlist — GitHub first, local file as fallback."""
-            cfg = _gh_cfg()
-            if cfg:
-                token, repo, branch, path = cfg
-                try:
-                    headers = {
-                        "Authorization": f"token {token}",
-                        "Accept": "application/vnd.github.v3+json",
-                    }
-                    r = _requests.get(
-                        f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
-                        headers=headers, timeout=10,
-                    )
-                    if r.status_code == 200:
-                        raw = base64.b64decode(r.json()["content"]).decode("utf-8")
-                        data = json.loads(raw)
-                        if isinstance(data, dict):
-                            return data.get("items", [])
-                        return data
-                except Exception:
-                    pass  # fall through to local file
-
-            # Local fallback (dev mode)
-            if os.path.exists(WATCHLIST_FILE):
-                try:
-                    with open(WATCHLIST_FILE, "r") as f:
-                        data = json.load(f)
-                        if isinstance(data, dict):
-                            return data.get("items", [])
-                        return data
-                except Exception:
-                    pass
-            return []
-
-        def save_wl(data):
-            """Save watchlist — commits directly to GitHub so it survives re-deploys."""
-            payload_str = json.dumps(data, indent=2)
-            cfg = _gh_cfg()
-
-            if cfg:
-                token, repo, branch, path = cfg
-                headers = {
-                    "Authorization": f"token {token}",
-                    "Accept": "application/vnd.github.v3+json",
-                }
-                try:
-                    # Need the file's current SHA to update it
-                    r_get = _requests.get(
-                        f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
-                        headers=headers, timeout=10,
-                    )
-                    sha = r_get.json().get("sha", "") if r_get.status_code == 200 else ""
-
-                    body = {
-                        "message": "chore: update watchlist via admin panel",
-                        "content": base64.b64encode(payload_str.encode()).decode(),
-                        "branch": branch,
-                    }
-                    if sha:
-                        body["sha"] = sha
-
-                    r_put = _requests.put(
-                        f"{_GH_API}/repos/{repo}/contents/{path}",
-                        headers=headers, json=body, timeout=15,
-                    )
-                    if r_put.status_code in (200, 201):
-                        return True
-                    st.error(f"GitHub save failed ({r_put.status_code}): {r_put.json().get('message', r_put.text)}")
-                    return False
-                except Exception as e:
-                    st.error(f"GitHub save error: {e}")
-                    return False
-
-            # Local fallback (dev mode)
-            try:
-                with open(WATCHLIST_FILE, "w") as f:
-                    json.dump(data, f, indent=2)
-                return True
-            except Exception as e:
-                st.error(f"Failed to save watchlist locally: {e}")
-                return False
-
-        watchlist = sorted(load_wl(), key=lambda x: x.get("date_added", ""), reverse=True)
-
-        if not watchlist:
-            st.info("Expert Corner is currently empty. Add tickers in the Admin Panel below.")
-        else:
-            wl_rows = []
-            with st.spinner("Fetching current prices for watchlist..."):
-                for item in watchlist:
-                    t = item["ticker"]
-                    d_add = item["date_added"]
-                    p_add = item["price_added"]
-                    v_word = item.get("verdict", "WATCH")
-                    comm = item.get("commentary", "")
-                    
-                    try:
-                        # Fetch the latest price from yfinance (cached via fetch_weekly)
-                        p_curr = float(datalib.fetch_weekly(t, period="1mo")["close"].iloc[-1])
-                        gain = ((p_curr - p_add) / p_add) * 100.0
-                    except Exception:
-                        p_curr = None
-                        gain = None
-                    
-                    wl_rows.append({
-                        "ticker": t,
-                        "date_added": d_add,
-                        "price_added": p_add,
-                        "current_price": p_curr,
-                        "verdict": v_word,
-                        "commentary": comm,
-                        "gain": gain,
-                    })
-
-            # Render table via st.components.v1.html — bypasses Markdown entirely.
-            import streamlit.components.v1 as components
-
-            VERDICT_COLOR = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}
-
-            rows_html = ""
-            for row in wl_rows:
-                v_color = VERDICT_COLOR.get(row["verdict"], "#888888")
-                gain_val = row["gain"]
-                if gain_val is None:
-                    gain_str = "N/A"
-                    gain_color = "rgba(250,250,250,0.4)"
-                else:
-                    sign = "+" if gain_val >= 0 else ""
-                    gain_str = sign + f"{gain_val:.2f}%"
-                    gain_color = "#16c784" if gain_val >= 0 else "#ea3943"
-
-                curr_price_str = ("$" + f"{row['current_price']:.2f}") if row["current_price"] is not None else "N/A"
-                tooltip = row["commentary"].replace("'", "&#39;").replace('"', "&quot;")
-
-                rows_html += (
-                    "<tr>"
-                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.75);font-size:0.9rem;'>" + row["date_added"] + "</td>"
-                    + "<td style='padding:14px 12px;font-weight:700;font-size:1rem;'><a href='?ticker=" + row["ticker"] + "' target='_parent'>" + row["ticker"] + "</a></td>"
-                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>$" + f"{row['price_added']:.2f}" + "</td>"
-                    + "<td style='padding:14px 12px;color:rgba(250,250,250,0.85);'>" + curr_price_str + "</td>"
-                    + "<td style='padding:14px 12px;'><span title='" + tooltip + "' style='color:" + v_color + ";font-weight:700;"
-                    + "padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.05);"
-                    + "border:1px solid " + v_color + "40;text-decoration:underline dotted;cursor:help;'>"
-                    + row["verdict"] + "</span></td>"
-                    + "<td style='padding:14px 12px;font-weight:700;color:" + gain_color + ";'>" + gain_str + "</td>"
-                    + "</tr>"
-                )
-
-            full_html = (
-                "<style>"
-                "body{margin:0;padding:0;background:transparent;}"
-                "table{width:100%;border-collapse:collapse;"
-                "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}"
-                "th{padding:11px 12px;color:rgba(200,200,200,0.55);font-size:0.73rem;font-weight:600;"
-                "letter-spacing:0.09em;text-transform:uppercase;"
-                "border-bottom:2px solid rgba(255,255,255,0.12);text-align:left;}"
-                "td{font-size:0.94rem;}"
-                "tr{border-bottom:1px solid rgba(255,255,255,0.06);}"
-                "tr:last-child{border-bottom:none;}"
-                "tr:hover td{background:rgba(255,255,255,0.025);}"
-                "a{color:#38b6ff;text-decoration:none;font-weight:700;}"
-                "a:hover{color:#00e676;text-decoration:underline;}"
-                "</style>"
-                "<table>"
-                "<thead><tr>"
-                "<th>Date Added</th><th>Ticker</th><th>Price Added</th>"
-                "<th>Current Price</th><th>Verdict</th><th>Gain / Loss</th>"
-                "</tr></thead>"
-                "<tbody>" + rows_html + "</tbody>"
-                "</table>"
-            )
-
-            components.html(full_html, height=55 + len(wl_rows) * 56, scrolling=False)
-
-
-        st.write("---")
-        
-        # Admin controls section
-        with st.expander("🛠️ Admin Expert Corner Controls", expanded=False):
-            admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
-            try:
-                correct_pass = st.secrets.get("admin_password", "holygrail")
-            except Exception:
-                correct_pass = "holygrail"
-            
-            if admin_pass == correct_pass:
-                st.success("Authorized!")
-                col_add, col_del = st.columns(2)
-                
-                with col_add:
-                    st.markdown("#### ➕ Add Ticker to Expert Corner")
-                    add_ticker = st.text_input("Ticker Symbol", value="NVDA", key="wl_add_tick").strip().upper()
-                    add_date = st.date_input("Date Added", value=datetime.date.today(), key="wl_add_date")
-                    
-                    add_verdict = st.selectbox("Ticker Verdict", ["BUY", "WATCH", "HOLD", "AVOID"], index=1, key="wl_add_verd")
-                    add_comm = st.text_area("Ticker Commentary (Hover Tooltip)", value="", placeholder="Enter detailed commentary that users will see on hover...", key="wl_add_comm")
-                    
-                    # Fetch price helper
-                    if "fetched_price" not in st.session_state:
-                        st.session_state["fetched_price"] = 0.0
-                    
-                    if st.button("🔍 Auto-fetch Close Price for Date", use_container_width=True):
-                        if add_ticker:
-                            with st.spinner(f"Fetching close price for {add_ticker} around {add_date}..."):
-                                try:
-                                    import yfinance as yf
-                                    start_t = datetime.datetime.combine(add_date, datetime.time.min)
-                                    end_t = start_t + datetime.timedelta(days=7)
-                                    hist = yf.Ticker(add_ticker).history(start=start_t.strftime('%Y-%m-%d'), end=end_t.strftime('%Y-%m-%d'))
-                                    if not hist.empty:
-                                        fetched = float(hist["Close"].iloc[0])
-                                        st.session_state["fetched_price"] = fetched
-                                        st.toast(f"Successfully fetched price: ${fetched:.2f}", icon="✅")
-                                    else:
-                                        st.error("No trading data found for this date. Market might have been closed.")
-                                except Exception as e:
-                                    st.error(f"Error fetching price: {e}")
-                    
-                    add_price = st.number_input("Price Added", value=st.session_state["fetched_price"], format="%.2f", key="wl_add_price")
-                    
-                    if st.button("Save to Expert Corner", type="primary", use_container_width=True):
-                        if not add_ticker:
-                            st.error("Please enter a ticker symbol.")
-                        elif add_price <= 0:
-                            st.error("Please enter a valid price (> 0).")
-                        else:
-                            # Add to json
-                            new_item = {
-                                "ticker": add_ticker,
-                                "date_added": add_date.strftime("%Y-%m-%d"),
-                                "price_added": float(add_price),
-                                "verdict": add_verdict,
-                                "commentary": add_comm
-                            }
-                            # check if already exists
-                            watchlist = [x for x in watchlist if x["ticker"] != add_ticker]
-                            watchlist.append(new_item)
-                            if save_wl(watchlist):
-                                st.toast(f"Saved {add_ticker} to Expert Corner!", icon="🚀")
-                                st.rerun()
-                
-                with col_del:
-                    st.markdown("#### ❌ Remove from Expert Corner")
-                    if not watchlist:
-                        st.info("Expert Corner is empty.")
-                    else:
-                        tickers_to_remove = st.multiselect("Select Ticker(s) to Remove", options=[x["ticker"] for x in watchlist])
-                        if st.button("Remove Selected", type="secondary", use_container_width=True):
-                            if tickers_to_remove:
-                                watchlist = [x for x in watchlist if x["ticker"] not in tickers_to_remove]
-                                if save_wl(watchlist):
-                                    st.toast(f"Removed {', '.join(tickers_to_remove)} from Expert Corner!", icon="🗑️")
-                                    st.rerun()
-                            else:
-                                st.warning("Please select at least one ticker to remove.")
-                
-                st.write("---")
-                # Show persistence status
-                if _gh_cfg():
-                    st.success(
-                        "✅ **GitHub persistence is active.** All changes are committed directly "
-                        "to your repository and will survive every re-deployment."
-                    )
-                else:
-                    st.warning(
-                        "⚠️ **GitHub persistence is NOT configured.** Changes save to the local "
-                        "file only and will be lost on the next deployment.\n\n"
-                        "Add these four keys to your Streamlit Cloud **Secrets** to enable "
-                        "permanent persistence:\n"
-                        "```toml\n"
-                        'GITHUB_TOKEN     = "ghp_your_token_here"\n'
-                        'GITHUB_REPO      = "ravichandran-urmila/holygrail-app"\n'
-                        'GITHUB_BRANCH    = "master"\n'
-                        'GITHUB_FILE_PATH = "watchlist.json"\n'
-                        "```\n"
-                        "Generate a token at **GitHub → Settings → Developer settings → "
-                        "Fine-grained personal access tokens** with *Contents: Read & write* "
-                        "permission on this repository."
-                    )
-            elif admin_pass:
-                st.error("Incorrect password.")
-
-    # ---- Guide Tab ---------------------------------------------------------
-    with guide_tab:
-        st.markdown("### 📖 How to Read the Charts")
-        st.markdown(
-            "This educational section explains the core indicators and momentum rules of the Holy Grail system, "
-            "using three real-world case studies to demonstrate high-probability entries and value traps."
-        )
-        st.write("---")
-        
-        # 1. Indicator Definitions
-        st.markdown("#### 🛠️ Core Indicators & Momentum Rules")
-        col_ind1, col_ind2 = st.columns(2)
-        with col_ind1:
-            st.markdown(
-                """
-                * <span style="display: inline-block; width: 20px; height: 3px; background-color: #ffd600; vertical-align: middle; margin-right: 8px; border-radius: 1px;"></span> 50-Week Moving Average (50WMA): The spine of the system. It separates long-term bullish regimes from bearish regimes. 
-                  - Rule: If the candles are below the 50WMA, there is no setup. Period.
-                * <span style="color: #1d4ed8; font-size: 1.5rem; vertical-align: middle; margin-right: 6px;">▲</span> Holy Grail (HG) Setup (Dark Blue Triangle): The apex setup. It represents the ultimate confluence of momentum rules (price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS, and RSI > 50). This signal has the highest probability of capturing a structural trend change.
-                """,
-                unsafe_allow_html=True
-            )
-        with col_ind2:
-            st.markdown(
-                """
-                * 🟪 HRR (High Risk Reward) (Purple Square): Triggered when the fast EMA5 crosses above the slow EMA21 (red to green cloud flip). This is an early entry signal with high potential payoff, but it is inherently risky because the overall trend is not yet fully confirmed.
-                * 🟡 Partial Setup (Yellow Dot): Indicates the stock is in a retest zone with a high score, but is missing 1 or 2 core criteria. The stock is 'almost perfect', but staying patient and waiting for full confirmation is the best state.
-                """
-            )
-        
-        st.write("---")
-
-        # Helper to fetch guide data safely
-        def fetch_guide_data(ticker_symbol: str):
-            try:
-                ohlcv = datalib.fetch_weekly(ticker_symbol, period="10y")
-                spx = datalib.fetch_spx_weekly(period="10y")
-                res_guide = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
-                return res_guide.df
-            except Exception as e_guide:
-                st.error(f"Error loading {ticker_symbol} historical data: {e_guide}")
-                return None
-
-        # 2. ARM Example
-        st.markdown("#### 1. ARM Holdings (ARM) — The Apex Setup (March – April 2026)")
-        col_text, col_chart = st.columns([2, 3])
-        with col_text:
-            st.markdown(
-                """
-                <p>What Happened:<br>
-                ARM formed a prolonged consolidation and base above the 50WMA throughout late 2025 and early 2026.</p>
-                <p>The Setup (HG Rules):</p>
-                <ul>
-                  <li>&#128293; Full HG Setup Triggered: On March 30, 2026 and April 6, 2026, ARM triggered a Full Holy Grail Setup at a close price of $149 (with the rising 50WMA at $135.67).</li>
-                  <li>&#128293; Confluence of Rules:
-                    <ul>
-                      <li>The price sat directly in the retest zone of the rising 50WMA.</li>
-                      <li>The EMA cloud flipped green (EMA5/9/21 compression crossover).</li>
-                      <li>The Mansfield RS was highly positive.</li>
-                      <li>RSI was above 50.</li>
-                    </ul>
-                  </li>
-                  <li>&#128293; The Result: This perfect confluence of indicators triggered a legendary momentum launch, with ARM surging from $149 to $353 by late May 2026 — a +135% gain in under 2 months!</li>
-                </ul>
-                """,
-                unsafe_allow_html=True
-            )
-        with col_chart:
-            df_arm = fetch_guide_data("ARM")
-            if df_arm is not None:
-                df_arm_filtered = df_arm.loc['2025-08-01':'2026-06-01']
-                fig_arm = build_chart(df_arm_filtered, "ARM", show_cloud=True)
-                fig_arm.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
-                st.plotly_chart(fig_arm, use_container_width=True, key="guide_arm_chart")
-                
-        st.write("---")
-        
-        # 3. AMD Example
-        st.markdown("#### 2. AMD (AMD) — Winning Trades Repeated (June 2025 – Present)")
-        col_text, col_chart = st.columns([2, 3])
-        with col_text:
-            st.markdown(
-                """
-                <p>What Happened:<br>
-                AMD consolidated and established a solid support base above its rising 50WMA during early 2025.</p>
-                <p>The Setup (HG Rules):</p>
-                <ul>
-                  <li>&#9989; HG Setup Triggered: On June 23, 2025, AMD triggered a Full Holy Grail Setup (score of 0.75) at a close price of $143.81 (resting on a 50WMA of $126.60).</li>
-                  <li>&#9989; Mansfield RS Green: The Mansfield Relative Strength turned positive (0.4469), confirming that AMD's relative momentum vs. the S&amp;P 500 had shifted in its favor.</li>
-                  <li>&#9989; The Result: By entering the trade in this low-risk retest zone, investors captured repeated winning trades as the stock went on to surge +273% to $537.37 by June 2026.</li>
-                </ul>
-                """,
-                unsafe_allow_html=True
-            )
-        with col_chart:
-            df_amd = fetch_guide_data("AMD")
-            if df_amd is not None:
-                df_amd_filtered = df_amd.loc['2025-01-01':'2026-06-19']
-                fig_amd = build_chart(df_amd_filtered, "AMD", show_cloud=True)
-                fig_amd.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
-                st.plotly_chart(fig_amd, use_container_width=True, key="guide_amd_chart")
-                
-        st.write("---")
-        
-        # 4. Adobe Example
-        st.markdown("#### 3. Adobe (ADBE) — The Risks & The Traps (December 2024 – June 2025)")
-        col_text, col_chart = st.columns([2, 3])
-        with col_text:
-            st.markdown(
-                """
-                <p>What Happened:<br>
-                Adobe illustrates the dual lessons of HRR risk and the absolute rule of the 50WMA.</p>
-                <p>The Setups &amp; Traps:</p>
-                <ul>
-                  <li>&#128683; HRR Failure (December 2, 2024): A HRR signal (Purple Square) triggered at $552.96 as the EMA cloud flipped green. However, because the underlying relative strength was weak (Mansfield RS was red at -0.91), the setup failed immediately, dropping -15.8% to $465.69 the very next week.</li>
-                  <li>&#128683; The Value Trap (April - June 2025): Adobe fell into the low $330s and staged a rapid rally back to $417. Value hunters piled in believing it was cheap. However, the price remained strictly below the declining 50WMA, and Mansfield RS remained negative.</li>
-                  <li>&#128683; The Result: Because candles below the 50WMA mean there is no setup, the momentum never shifted and the stock collapsed back to the $340s in July, trapping buyers.</li>
-                </ul>
-                """,
-                unsafe_allow_html=True
-            )
-        with col_chart:
-            df_adbe = fetch_guide_data("ADBE")
-            if df_adbe is not None:
-                df_adbe_filtered = df_adbe.loc['2024-10-01':'2025-08-01']
-                fig_adbe = build_chart(df_adbe_filtered, "ADBE", show_cloud=True)
-                fig_adbe.update_layout(height=400, margin=dict(l=10, r=10, t=30, b=10))
-                st.plotly_chart(fig_adbe, use_container_width=True, key="guide_adbe_chart")
-
-
-
 
 def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str]:
     import json
@@ -1225,6 +1210,11 @@ def _add_ema_cloud(fig: go.Figure, df: pd.DataFrame):
 
 # --- Entry point ------------------------------------------------------------
 # Render on load (default ticker) or whenever Scan is pressed.
-render(ticker)
+if nav_page == "🔍 Scanner":
+    render(ticker)
+elif nav_page == "📖 Guide":
+    render_guide()
+elif nav_page == "🌟 Expert Corner":
+    render_expert_corner()
 
 
