@@ -58,6 +58,13 @@ with col_settings:
             w6 = st.number_input("W6 RSI > 50", 0.0, 1.0, 0.10, 0.05)
             partial_thresh = st.number_input("Partial threshold", 0.0, 2.0, 0.35, 0.05)
             full_thresh = st.number_input("Full threshold", 0.0, 2.0, 0.70, 0.05)
+            
+    st.markdown(
+        "<div style='text-align: right; font-size: 0.72rem; font-style: italic; color: rgba(250, 250, 250, 0.45); margin-top: 4px;'>"
+        "For best experience, switch to dark mode by clicking the 3-dot button"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 # --- Sidebar: search & navigation -------------------------------------------
 default_ticker = "ARM"
