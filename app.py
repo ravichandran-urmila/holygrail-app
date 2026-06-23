@@ -19,6 +19,11 @@ import data as datalib
 from indicator import HGSettings, compute
 
 
+def select_ticker_callback(ticker_val):
+    st.session_state["nav_selection"] = "🔍 Scanner"
+    st.query_params["ticker"] = ticker_val
+
+
 st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
@@ -716,10 +721,14 @@ def render_expert_corner():
             col_d.markdown(f"<div style='padding-top: 6px;'>{row['date_added']}</div>", unsafe_allow_html=True)
             
             # 2. Ticker (as a button that switches to the ticker in the scanner)
-            if col_t.button(row["ticker"], key=f"wl_btn_{row['ticker']}_{i}", type="secondary", use_container_width=True):
-                st.session_state["nav_selection"] = "🔍 Scanner"
-                st.query_params["ticker"] = row["ticker"]
-                st.rerun()
+            col_t.button(
+                row["ticker"],
+                key=f"wl_btn_{row['ticker']}_{i}",
+                type="secondary",
+                use_container_width=True,
+                on_click=select_ticker_callback,
+                args=(row["ticker"],)
+            )
                 
             # 3. Price Added
             col_pa.markdown(f"<div style='padding-top: 6px;'>${row['price_added']:.2f}</div>", unsafe_allow_html=True)
