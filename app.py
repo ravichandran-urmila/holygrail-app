@@ -74,7 +74,146 @@ if "ticker" in st.query_params:
         default_ticker = str(val).strip().upper()
 
 with st.sidebar:
-    st.markdown("### 🧭 Navigation")
+    col_nav, col_bell = st.columns([4, 1])
+    with col_nav:
+        st.markdown("### 🧭 Navigation")
+    with col_bell:
+        st.components.v1.html(
+            """
+            <div class="bell-container">
+              <button id="bell-btn" class="bell-btn" onclick="toggleNotifications()" title="Toggle Alerts">
+                <svg viewBox="0 0 24 24" id="bell-svg" class="bell-svg">
+                  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                </svg>
+              </button>
+            </div>
+
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                overflow: hidden;
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                height: 100vh;
+              }
+              .bell-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 32px;
+                width: 32px;
+              }
+              .bell-btn {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                padding: 0;
+                outline: none;
+              }
+              .bell-btn:hover {
+                background: rgba(255, 255, 255, 0.08);
+                border-color: rgba(255, 255, 255, 0.2);
+              }
+              .bell-svg {
+                width: 16px;
+                height: 16px;
+                fill: rgba(250, 250, 250, 0.45);
+                transition: fill 0.2s ease;
+              }
+              .bell-btn:hover .bell-svg {
+                fill: rgba(250, 250, 250, 0.8);
+              }
+              .bell-btn.active {
+                background: rgba(0, 230, 118, 0.1);
+                border-color: rgba(0, 230, 118, 0.3);
+              }
+              .bell-btn.active .bell-svg {
+                fill: #00e676;
+              }
+            </style>
+
+            <script>
+              let notifyEnabled = localStorage.getItem("hg_alerts_enabled") === "true";
+              const bellBtn = document.getElementById("bell-btn");
+
+              function updateVisuals() {
+                if (notifyEnabled) {
+                  bellBtn.classList.add("active");
+                } else {
+                  bellBtn.classList.remove("active");
+                }
+              }
+
+              updateVisuals();
+
+              function playAlertSound() {
+                try {
+                  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                  const osc = audioCtx.createOscillator();
+                  const gain = audioCtx.createGain();
+                  osc.connect(gain);
+                  gain.connect(audioCtx.destination);
+                  osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+                  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                  osc.start(audioCtx.currentTime);
+                  osc.stop(audioCtx.currentTime + 0.3);
+                  setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime);
+                    gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc2.start(audioCtx.currentTime);
+                    osc2.stop(audioCtx.currentTime + 0.4);
+                  }, 120);
+                } catch (e) {
+                  console.log("Audio play blocked", e);
+                }
+              }
+
+              function toggleNotifications() {
+                if (notifyEnabled) {
+                  notifyEnabled = false;
+                  localStorage.setItem("hg_alerts_enabled", "false");
+                } else {
+                  notifyEnabled = true;
+                  localStorage.setItem("hg_alerts_enabled", "true");
+                  playAlertSound();
+                  
+                  if ("Notification" in window) {
+                    Notification.requestPermission();
+                  }
+                }
+                updateVisuals();
+                window.dispatchEvent(new Event('storage'));
+              }
+
+              window.addEventListener('storage', () => {
+                const val = localStorage.getItem("hg_alerts_enabled") === "true";
+                if (val !== notifyEnabled) {
+                  notifyEnabled = val;
+                  updateVisuals();
+                }
+              });
+            </script>
+            """,
+            height=40,
+            scrolling=False
+        )
+
     if "nav_selection" not in st.session_state:
         st.session_state["nav_selection"] = "🔍 Scanner"
     nav_page = st.radio(
@@ -85,22 +224,41 @@ with st.sidebar:
     )
     st.write("---")
 
-    # --- Alerts / Notifications Component ---
+    st.write("---")
+
+    if nav_page == "🔍 Scanner":
+        st.header("🔎 Ticker")
+        ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+        
+        # Sync query parameters with the active ticker
+        if ticker and st.query_params.get("ticker") != ticker:
+            st.query_params["ticker"] = ticker
+            
+        history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
+        go_btn = st.button("Scan", type="primary", use_container_width=True)
+
+        st.write("---")
+        st.markdown("### 📖 How to read the chart")
+        st.markdown(
+            "* <span style='color: #1d4ed8; font-size: 1.1rem;'>▲</span> **Weekly Dark Blue Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
+            "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
+            "* <span style='color: #e040fb; font-size: 1.1rem;'>■</span> **HRR (High Risk Reward)**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
+            unsafe_allow_html=True
+        )
+    else:
+        history_choice = "1 Year"
+        ticker = default_ticker
+
+    # --- Alerts / Notifications Worker ---
     st.components.v1.html(
         """
-        <div class="notification-container">
-          <button id="bell-btn" class="bell-btn" onclick="toggleNotifications()">
-            <span class="bell-icon">🔔</span>
-            <span id="bell-text" class="bell-text">Enable Alerts</span>
-          </button>
-          <div id="alert-box" class="alert-box hidden">
-            <div class="alert-header">
-              <span class="alert-icon">⚡</span>
-              <span class="alert-title">Expert Corner Update</span>
-              <button class="dismiss-btn" onclick="dismissAlert()">×</button>
-            </div>
-            <div id="alert-body" class="alert-body"></div>
+        <div id="alert-box" class="alert-box hidden">
+          <div class="alert-header">
+            <span class="alert-icon">⚡</span>
+            <span class="alert-title">Expert Corner Update</span>
+            <button class="dismiss-btn" onclick="dismissAlert()">×</button>
           </div>
+          <div id="alert-body" class="alert-body"></div>
         </div>
 
         <style>
@@ -112,42 +270,6 @@ with st.sidebar:
             color: rgba(250, 250, 250, 0.95);
             overflow: hidden;
           }
-          .notification-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 2px;
-          }
-          .bell-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: rgba(250, 250, 250, 0.85);
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            width: 100%;
-            outline: none;
-          }
-          .bell-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-          }
-          .bell-btn.active {
-            background: rgba(0, 230, 118, 0.1);
-            border-color: rgba(0, 230, 118, 0.3);
-            color: #00e676;
-            font-weight: 600;
-          }
-          .bell-icon {
-            font-size: 1.1rem;
-          }
           .alert-box {
             background: linear-gradient(135deg, rgba(224, 64, 251, 0.18) 0%, rgba(22, 199, 132, 0.08) 100%);
             border: 1px solid rgba(224, 64, 251, 0.4);
@@ -158,6 +280,7 @@ with st.sidebar:
             gap: 6px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             animation: slideIn 0.3s ease forwards;
+            margin-top: 10px;
           }
           .hidden {
             display: none !important;
@@ -205,78 +328,34 @@ with st.sidebar:
         </style>
 
         <script>
-          let notifyEnabled = localStorage.getItem("hg_alerts_enabled") === "true";
-          const bellBtn = document.getElementById("bell-btn");
-          const bellText = document.getElementById("bell-text");
           const alertBox = document.getElementById("alert-box");
           const alertBody = document.getElementById("alert-body");
-
-          if (notifyEnabled) {
-            bellBtn.classList.add("active");
-            bellText.innerText = "Alerts Active";
-          }
 
           function playAlertSound() {
             try {
               const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              
-              // Note 1 (E5)
-              const osc1 = audioCtx.createOscillator();
-              const gain1 = audioCtx.createGain();
-              osc1.connect(gain1);
-              gain1.connect(audioCtx.destination);
-              osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-              gain1.gain.setValueAtTime(0.2, audioCtx.currentTime);
-              gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-              osc1.start(audioCtx.currentTime);
-              osc1.stop(audioCtx.currentTime + 0.3);
-              
-              // Note 2 (A5)
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+              osc.start(audioCtx.currentTime);
+              osc.stop(audioCtx.currentTime + 0.3);
               setTimeout(() => {
                 const osc2 = audioCtx.createOscillator();
                 const gain2 = audioCtx.createGain();
                 osc2.connect(gain2);
                 gain2.connect(audioCtx.destination);
                 osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime);
-                gain2.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
                 gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
                 osc2.start(audioCtx.currentTime);
                 osc2.stop(audioCtx.currentTime + 0.4);
               }, 120);
-              
             } catch (e) {
-              console.log("Audio play blocked:", e);
-            }
-          }
-
-          function toggleNotifications() {
-            if (notifyEnabled) {
-              notifyEnabled = false;
-              localStorage.setItem("hg_alerts_enabled", "false");
-              bellBtn.classList.remove("active");
-              bellText.innerText = "Enable Alerts";
-            } else {
-              notifyEnabled = true;
-              localStorage.setItem("hg_alerts_enabled", "true");
-              bellBtn.classList.add("active");
-              bellText.innerText = "Alerts Active";
-              
-              playAlertSound();
-              
-              if ("Notification" in window) {
-                Notification.requestPermission().then(permission => {
-                  if (permission === "granted") {
-                    try {
-                      new Notification("Holygrail Alerts Enabled", {
-                        body: "You will receive desktop alerts when Expert Corner is updated.",
-                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
-                      });
-                    } catch (e) {
-                      console.log("Native notification failed:", e);
-                    }
-                  }
-                });
-              }
+              console.log("Audio play blocked", e);
             }
           }
 
@@ -290,7 +369,7 @@ with st.sidebar:
                   icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
                 });
               } catch (e) {
-                console.log("Native notification failed:", e);
+                console.log("Native notification failed", e);
               }
             }
             
@@ -305,6 +384,7 @@ with st.sidebar:
           const watchlistUrl = "https://raw.githubusercontent.com/ravichandran-urmila/holygrail-app/master/watchlist.json";
 
           function checkWatchlist() {
+            const notifyEnabled = localStorage.getItem("hg_alerts_enabled") === "true";
             if (!notifyEnabled) return;
             
             fetch(watchlistUrl + "?nocache=" + new Date().getTime())
@@ -337,33 +417,9 @@ with st.sidebar:
           setInterval(checkWatchlist, 30000);
         </script>
         """,
-        height=160,
+        height=120,
         scrolling=False
     )
-    st.write("---")
-
-    if nav_page == "🔍 Scanner":
-        st.header("🔎 Ticker")
-        ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
-        
-        # Sync query parameters with the active ticker
-        if ticker and st.query_params.get("ticker") != ticker:
-            st.query_params["ticker"] = ticker
-            
-        history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
-        go_btn = st.button("Scan", type="primary", use_container_width=True)
-
-        st.write("---")
-        st.markdown("### 📖 How to read the chart")
-        st.markdown(
-            "* <span style='color: #1d4ed8; font-size: 1.1rem;'>▲</span> **Weekly Dark Blue Triangle (HG)**: Indicates a **Full Holy Grail Setup** and the best time to enter a stock.\n"
-            "* 🟡 **Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.\n"
-            "* <span style='color: #e040fb; font-size: 1.1rem;'>■</span> **HRR (High Risk Reward)**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.",
-            unsafe_allow_html=True
-        )
-    else:
-        history_choice = "1 Year"
-        ticker = default_ticker
 
 
 settings = HGSettings(
