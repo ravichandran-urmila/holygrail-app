@@ -26,14 +26,7 @@ if "active_tab" not in st.session_state:
     st.session_state["active_tab"] = "📈 Chart"
 
 # --- Header & Settings ------------------------------------------------------
-col_home, col_title, col_settings = st.columns([0.3, 5.0, 1.8])
-
-with col_home:
-    st.write("")  # vertical alignment spacer
-    st.write("")
-    if st.button("🏠", help="Go to Chart"):
-        st.session_state["active_tab"] = "📈 Chart"
-        st.rerun()
+col_title, col_settings = st.columns([3, 1])
 
 with col_title:
     st.markdown(
