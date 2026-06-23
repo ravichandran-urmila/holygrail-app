@@ -75,6 +75,263 @@ with st.sidebar:
     )
     st.write("---")
 
+    # --- Alerts / Notifications Component ---
+    st.components.v1.html(
+        """
+        <div class="notification-container">
+          <button id="bell-btn" class="bell-btn" onclick="toggleNotifications()">
+            <span class="bell-icon">🔔</span>
+            <span id="bell-text" class="bell-text">Enable Alerts</span>
+          </button>
+          <div id="alert-box" class="alert-box hidden">
+            <div class="alert-header">
+              <span class="alert-icon">⚡</span>
+              <span class="alert-title">Expert Corner Update</span>
+              <button class="dismiss-btn" onclick="dismissAlert()">×</button>
+            </div>
+            <div id="alert-body" class="alert-body"></div>
+          </div>
+        </div>
+
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: rgba(250, 250, 250, 0.95);
+            overflow: hidden;
+          }
+          .notification-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 2px;
+          }
+          .bell-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: rgba(250, 250, 250, 0.85);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            width: 100%;
+            outline: none;
+          }
+          .bell-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+          }
+          .bell-btn.active {
+            background: rgba(0, 230, 118, 0.1);
+            border-color: rgba(0, 230, 118, 0.3);
+            color: #00e676;
+            font-weight: 600;
+          }
+          .bell-icon {
+            font-size: 1.1rem;
+          }
+          .alert-box {
+            background: linear-gradient(135deg, rgba(224, 64, 251, 0.18) 0%, rgba(22, 199, 132, 0.08) 100%);
+            border: 1px solid rgba(224, 64, 251, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease forwards;
+          }
+          .hidden {
+            display: none !important;
+          }
+          .alert-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: rgba(250, 250, 250, 0.6);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .alert-title {
+            flex-grow: 1;
+            margin-left: 6px;
+          }
+          .dismiss-btn {
+            background: none;
+            border: none;
+            color: rgba(250, 250, 250, 0.5);
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+          }
+          .dismiss-btn:hover {
+            color: rgba(250, 250, 250, 0.9);
+          }
+          .alert-body {
+            font-size: 0.85rem;
+            line-height: 1.4;
+          }
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(5px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        </style>
+
+        <script>
+          let notifyEnabled = localStorage.getItem("hg_alerts_enabled") === "true";
+          const bellBtn = document.getElementById("bell-btn");
+          const bellText = document.getElementById("bell-text");
+          const alertBox = document.getElementById("alert-box");
+          const alertBody = document.getElementById("alert-body");
+
+          if (notifyEnabled) {
+            bellBtn.classList.add("active");
+            bellText.innerText = "Alerts Active";
+          }
+
+          function playAlertSound() {
+            try {
+              const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              
+              // Note 1 (E5)
+              const osc1 = audioCtx.createOscillator();
+              const gain1 = audioCtx.createGain();
+              osc1.connect(gain1);
+              gain1.connect(audioCtx.destination);
+              osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+              gain1.gain.setValueAtTime(0.2, audioCtx.currentTime);
+              gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+              osc1.start(audioCtx.currentTime);
+              osc1.stop(audioCtx.currentTime + 0.3);
+              
+              // Note 2 (A5)
+              setTimeout(() => {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime);
+                gain2.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc2.start(audioCtx.currentTime);
+                osc2.stop(audioCtx.currentTime + 0.4);
+              }, 120);
+              
+            } catch (e) {
+              console.log("Audio play blocked:", e);
+            }
+          }
+
+          function toggleNotifications() {
+            if (notifyEnabled) {
+              notifyEnabled = false;
+              localStorage.setItem("hg_alerts_enabled", "false");
+              bellBtn.classList.remove("active");
+              bellText.innerText = "Enable Alerts";
+            } else {
+              notifyEnabled = true;
+              localStorage.setItem("hg_alerts_enabled", "true");
+              bellBtn.classList.add("active");
+              bellText.innerText = "Alerts Active";
+              
+              playAlertSound();
+              
+              if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                  if (permission === "granted") {
+                    try {
+                      new Notification("Holygrail Alerts Enabled", {
+                        body: "You will receive desktop alerts when Expert Corner is updated.",
+                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                      });
+                    } catch (e) {
+                      console.log("Native notification failed:", e);
+                    }
+                  }
+                });
+              }
+            }
+          }
+
+          function triggerAlert(ticker, verdict, price) {
+            playAlertSound();
+            
+            if ("Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification("Expert Corner Updated!", {
+                  body: `${ticker} updated to ${verdict} at $${price.toFixed(2)}`,
+                  icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                });
+              } catch (e) {
+                console.log("Native notification failed:", e);
+              }
+            }
+            
+            alertBody.innerHTML = `Ticker <strong>${ticker}</strong> updated to <strong>${verdict}</strong> at <strong>$${price.toFixed(2)}</strong>.`;
+            alertBox.classList.remove("hidden");
+          }
+
+          function dismissAlert() {
+            alertBox.classList.add("hidden");
+          }
+
+          const watchlistUrl = "https://raw.githubusercontent.com/ravichandran-urmila/holygrail-app/master/watchlist.json";
+
+          function checkWatchlist() {
+            if (!notifyEnabled) return;
+            
+            fetch(watchlistUrl + "?nocache=" + new Date().getTime())
+              .then(response => response.json())
+              .then(data => {
+                if (!Array.isArray(data)) return;
+                
+                const lastDataStr = localStorage.getItem("hg_watchlist_last");
+                if (!lastDataStr) {
+                  localStorage.setItem("hg_watchlist_last", JSON.stringify(data));
+                  return;
+                }
+                
+                const lastData = JSON.parse(lastDataStr);
+                localStorage.setItem("hg_watchlist_last", JSON.stringify(data));
+                
+                data.forEach(item => {
+                  const matchingLast = lastData.find(x => x.ticker === item.ticker);
+                  if (!matchingLast) {
+                    triggerAlert(item.ticker, item.verdict, item.price_added);
+                  } else if (matchingLast.price_added !== item.price_added || matchingLast.verdict !== item.verdict) {
+                    triggerAlert(item.ticker, item.verdict, item.price_added);
+                  }
+                });
+              })
+              .catch(err => console.error("Alert check error:", err));
+          }
+
+          checkWatchlist();
+          setInterval(checkWatchlist, 30000);
+        </script>
+        """,
+        height=160,
+        scrolling=False
+    )
+    st.write("---")
+
     if nav_page == "🔍 Scanner":
         st.header("🔎 Ticker")
         ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
