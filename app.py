@@ -1043,7 +1043,7 @@ def render(ticker: str):
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown(
-                f"""
+                textwrap.dedent(f"""
                 <div style="
                     background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
                     border: 1px solid rgba(224, 64, 251, 0.2);
@@ -1065,13 +1065,13 @@ def render(ticker: str):
                         {ai_summary_html}
                     </div>
                 </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
         with col_right:
             st.markdown(
-                f"""
+                textwrap.dedent(f"""
                 <div style="
                     background: linear-gradient(135deg, rgba(255, 145, 0, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
                     border: 1px solid rgba(255, 145, 0, 0.2);
@@ -1093,7 +1093,7 @@ def render(ticker: str):
                         {narrative_html}
                     </div>
                 </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
