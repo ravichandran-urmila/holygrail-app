@@ -1164,6 +1164,18 @@ def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str
     entry_high = sm["entry_price_high"]
     stop_price = sm["stop_price"]
 
+    # Calculate weeks since last Holy Grail setup (full_setup == True)
+    hg_weeks_ago = None
+    if sm.get("last_hg_date") is not None:
+        idx_list = list(df.index)
+        try:
+            pos = idx_list.index(sm["last_hg_date"])
+            hg_weeks_ago = len(idx_list) - 1 - pos
+        except ValueError:
+            pass
+
+    above_50wma = last_close >= last_row["ma50w"] if ("ma50w" in last_row and not np.isnan(last_row["ma50w"])) else False
+
     # Determine if API keys are available in st.secrets
     gemini_key = None
     openai_key = None
@@ -1175,12 +1187,29 @@ def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str
     except Exception:
         pass
 
-    prompt = f"""You are a professional stock market technical analyst. Write a concise, executive summary analyzing the stock {name} ({ticker}) based on the Holy Grail setup rules.
+    # Construct history description for prompt
+    hg_history_prompt = ""
+    if hg_weeks_ago is not None:
+        if hg_weeks_ago == 0:
+            hg_history_prompt = "A COMPLETE Holy Grail setup was triggered THIS week!"
+        else:
+            hg_history_prompt = f"A COMPLETE Holy Grail setup was triggered recently ({hg_weeks_ago} week(s) ago)."
+        
+        if above_50wma:
+            hg_history_prompt += f" Since the price is currently (${last_close:.2f}) and remains above the 50WMA (${last_row['ma50w']:.2f}), it is still a prime buying opportunity."
+        else:
+            hg_history_prompt += f" However, the price has since dropped below the 50WMA."
+    else:
+        hg_history_prompt = "No COMPLETE Holy Grail setup has been triggered in the past 8 weeks."
 
-Technical Snapshot:
+    prompt = f"""You are a professional stock market technical analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the stock {name} ({ticker}) based on the Holy Grail setup rules.
+
+Holy Grail Setup Status:
+- {hg_history_prompt}
+- Current Setup Verdict: {verdict}
 - Latest Close: ${last_close:.2f}
-- Setup Verdict: {verdict}
 - Weighted Score: {weighted_score:.2f} / {total_weight:.2f}
+
 Rules breakdown:
 {rules_text}
 
@@ -1188,9 +1217,10 @@ Entry/Exit Strategy:
 - Suggested Entry Range: ${entry_low:.2f} to ${entry_high:.2f} (50WMA to +{settings.retest_max:.1f}%)
 - Suggested Stop Loss: ${stop_price:.2f} (50WMA * 0.995 on a weekly closing basis)
 
-Provide a clean, direct, and actionable description of the entry and exit strategies based on these parameters. 
-CRITICAL FORMATTING INSTRUCTIONS:
-Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <li>). Do not include <html> or <body> tags, do not wrap in code blocks (like ```html), and keep the response under 150 words."""
+CRITICAL INSTRUCTIONS:
+1. Restructure the analysis to be concise and not wordy (use short, bulleted points or tight sentences).
+2. Acknowledge and highlight the recent Holy Grail setup if one occurred in the past 8 weeks, explaining that it is a good time to buy if the price is still above the 50WMA.
+3. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep under 120 words."""
 
     # Try Gemini API if key is available
     if gemini_key:
@@ -1211,7 +1241,6 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <l
                 data = resp.json()
                 text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
                 if text:
-                    # Clean up code blocks if present
                     if text.startswith("```html"):
                         text = text[7:]
                     elif text.startswith("```"):
@@ -1242,7 +1271,6 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <l
                 data = resp.json()
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:
-                    # Clean up code blocks if present
                     if text.startswith("```html"):
                         text = text[7:]
                     elif text.startswith("```"):
@@ -1255,33 +1283,49 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>, <ul>, <l
             pass
 
     # Programmatic Rules-Based Generator Fallback
-    # Section 1: Setup Status & Proximity
-    if verdict == "COMPLETE SETUP":
-        verdict_html = f"<p>🚀 <strong>Complete Buy Setup</strong>: <strong>{name} ({ticker})</strong> has triggered a complete Holy Grail setup with a strong score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>. This indicates that a high-volume breakout from a solid base has occurred and the price is currently resting right in the high-probability retest zone near the 50-week moving average (50WMA).</p>"
-    elif verdict == "WATCHING":
-        verdict_html = f"<p>👀 <strong>On Close Watch</strong>: <strong>{name} ({ticker})</strong> is actively consolidating near its weekly support but has not yet met all criteria (score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>). The stock is currently sitting in the 50WMA retest zone, representing a potential accumulation phase, but requires a stronger momentum or volume breakout confirmation to trigger a complete setup.</p>"
+    # Bullet 1: Setup History & Buy Signal
+    if hg_weeks_ago is not None and hg_weeks_ago <= 8:
+        if hg_weeks_ago == 0:
+            history_html = f"<li>🚀 <strong>Holy Grail Triggered</strong>: A complete buy setup was triggered <strong>this week</strong>!"
+        else:
+            history_html = f"<li>🟢 <strong>Recent Holy Grail Setup</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong>."
+        
+        if above_50wma:
+            history_html += " Since the price remains above the 50WMA, it is currently in a <strong>prime buying zone</strong>.</li>"
+        else:
+            history_html += " However, the price has dropped below the 50WMA.</li>"
     else:
-        verdict_html = f"<p>⚠️ <strong>No Active Setup</strong>: <strong>{name} ({ticker})</strong> currently shows no active Holy Grail setup (score of <strong>{weighted_score:.2f} / {total_weight:.2f}</strong>). The price is either trading below the 50-week moving average or lacks the required structural base length and volume characteristics to justify an entry at this time.</p>"
+        history_html = "<li>⚠️ <strong>No Recent Setup</strong>: No complete Holy Grail setup was triggered in the last 8 weeks.</li>"
 
-    # Section 2: Technical Breakdown
+    # Verdict Title
+    if verdict == "COMPLETE SETUP":
+        status_title = "🚀 Complete Buy Setup"
+    elif verdict == "WATCHING":
+        status_title = "👀 On Close Watch"
+    else:
+        status_title = "⚠️ No Active Setup"
+
+    verdict_html = f"<p><strong>{status_title}</strong> ({weighted_score:.2f}/{total_weight:.2f}):</p>"
+
+    # Technical Details
     retest_val = last_row["pct_above_50w"]
     if np.isnan(retest_val):
-        retest_desc = "has no valid comparison against the 50-week MA due to insufficient data history"
+        retest_desc = "Insufficient history for 50WMA."
     else:
-        retest_desc = f"is sitting a healthy <strong>{retest_val:.1f}%</strong> above the 50WMA (${last_row['ma50w']:.2f})" if retest_val >= 0 else f"is trading <strong>{-retest_val:.1f}%</strong> below the key 50WMA (${last_row['ma50w']:.2f})"
-    
-    vol_desc = "strong volume breakout" if bool(last_row["rule2_breakout"]) else "lack of recent high-volume breakout confirmation"
-    rs_desc = f"showing positive relative strength (Mansfield RS: <strong>{last_row['mansfield_rs']:.2f}</strong>)" if (("mansfield_rs" in last_row and not np.isnan(last_row["mansfield_rs"])) and bool(last_row["rule5_mansfield"])) else "underperforming the S&P 500 on a relative basis"
-    rsi_desc = f"bullish momentum (RSI: <strong>{last_row['rsi14']:.1f}</strong>)" if bool(last_row["rule6_rsi"]) else "weak momentum (RSI: <strong>{last_row['rsi14']:.1f}</strong>)"
-    
-    analysis_html = f"<p>Technically, the price {retest_desc}. The structure shows a {vol_desc} while the stock is {rs_desc} and displaying {rsi_desc}.</p>"
+        retest_desc = f"Price is <strong>{retest_val:.1f}%</strong> above the 50WMA (${last_row['ma50w']:.2f})." if retest_val >= 0 else f"Price is <strong>{-retest_val:.1f}%</strong> below the 50WMA (${last_row['ma50w']:.2f})."
 
-    # Section 3: Actionable Entry/Exit
-    entry_html = f"<p><strong>Execution Strategy</strong>:<br/>" \
-                 f"• <strong>Entry Plan</strong>: Optimal entry is established between <strong>${entry_low:.2f} and ${entry_high:.2f}</strong> (from the 50WMA up to {settings.retest_max:.1f}%). Entering close to the lower end of this range significantly improves the risk-to-reward ratio.<br/>" \
-                 f"• <strong>Exit Plan (Stop Loss)</strong>: A strict defensive stop-loss is set at <strong>${stop_price:.2f}</strong> (representing the 50WMA close multiplied by 0.995). A weekly close below this level invalidates the bullish structure and triggers an exit.</p>"
+    vol_desc = "Strong volume breakout confirmed." if bool(last_row["rule2_breakout"]) else "No recent volume breakout."
+    rs_desc = "Relative strength is bullish (Mansfield RS > 0)." if (("mansfield_rs" in last_row and not np.isnan(last_row["mansfield_rs"])) and bool(last_row["rule5_mansfield"])) else "Underperforming the S&P 500."
+    
+    technical_bullets = f"""
+    <ul>
+        {history_html}
+        <li>📊 <strong>Trend</strong>: {retest_desc} {vol_desc} {rs_desc}</li>
+        <li>🎯 <strong>Strategy</strong>: Buy between <strong>${entry_low:.2f} and ${entry_high:.2f}</strong>. Stop-loss at <strong>${stop_price:.2f}</strong> on a weekly close.</li>
+    </ul>
+    """
 
-    fallback_html = f"{verdict_html}{analysis_html}{entry_html}"
+    fallback_html = f"{verdict_html}{technical_bullets}"
     return fallback_html, "Local Expert System"
 
 
