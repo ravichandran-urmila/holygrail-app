@@ -19,11 +19,6 @@ import data as datalib
 from indicator import HGSettings, compute
 
 
-def select_ticker_callback(ticker_val):
-    st.session_state["nav_selection"] = "🔍 Scanner"
-    st.query_params["ticker"] = ticker_val
-
-
 st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
@@ -704,63 +699,115 @@ def render_expert_corner():
 
         VERDICT_COLOR = {"BUY": "#00e676", "WATCH": "#ffd600", "HOLD": "#38b6ff", "AVOID": "#ea3943"}
 
-        # Render native columns instead of cross-origin sandboxed HTML iframe
-        c_date, c_tick, c_padd, c_pcurr, c_verd, c_gain = st.columns([1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
-        c_date.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Date Added</div>", unsafe_allow_html=True)
-        c_tick.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Ticker</div>", unsafe_allow_html=True)
-        c_padd.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Price Added</div>", unsafe_allow_html=True)
-        c_pcurr.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Current Price</div>", unsafe_allow_html=True)
-        c_verd.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Verdict</div>", unsafe_allow_html=True)
-        c_gain.markdown("<div style='color: rgba(250,250,250,0.5); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;'>Gain / Loss</div>", unsafe_allow_html=True)
-        st.write("---")
-
-        for i, row in enumerate(wl_rows):
-            col_d, col_t, col_pa, col_pc, col_v, col_g = st.columns([1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
-            
-            # 1. Date Added
-            col_d.markdown(f"<div style='padding-top: 6px;'>{row['date_added']}</div>", unsafe_allow_html=True)
-            
-            # 2. Ticker (as a button that switches to the ticker in the scanner)
-            col_t.button(
-                row["ticker"],
-                key=f"wl_btn_{row['ticker']}_{i}",
-                type="secondary",
-                use_container_width=True,
-                on_click=select_ticker_callback,
-                args=(row["ticker"],)
-            )
-                
-            # 3. Price Added
-            col_pa.markdown(f"<div style='padding-top: 6px;'>${row['price_added']:.2f}</div>", unsafe_allow_html=True)
-            
-            # 4. Current Price
-            if row["current_price"] is not None:
-                col_pc.markdown(f"<div style='padding-top: 6px;'>${row['current_price']:.2f}</div>", unsafe_allow_html=True)
-            else:
-                col_pc.markdown("<div style='padding-top: 6px; color: rgba(250,250,250,0.4);'>N/A</div>", unsafe_allow_html=True)
-                
-            # 5. Verdict (with styled badge)
+        rows_html = ""
+        for row in wl_rows:
             v_color = VERDICT_COLOR.get(row["verdict"], "#888888")
             tooltip = row["commentary"].replace("'", "&#39;").replace('"', "&quot;")
-            col_v.markdown(
-                f'<div style="padding-top: 4px;">'
-                f'<span title="{tooltip}" style="color:{v_color}; font-weight:700; '
-                f'padding:4px 10px; border-radius:4px; background:rgba(255,255,255,0.05); '
-                f'border:1px solid {v_color}40; text-decoration:underline dotted; cursor:help;">'
-                f'{row["verdict"]}</span></div>',
-                unsafe_allow_html=True
-            )
             
-            # 6. Gain / Loss
             if row["gain"] is None:
-                col_g.markdown("<div style='padding-top: 6px; color: rgba(250,250,250,0.4);'>N/A</div>", unsafe_allow_html=True)
+                gain_html = "<span style='color: rgba(250,250,250,0.4);'>N/A</span>"
             else:
                 gain_val = row["gain"]
                 sign = "+" if gain_val >= 0 else ""
                 gain_color = "#16c784" if gain_val >= 0 else "#ea3943"
-                col_g.markdown(f'<div style="padding-top: 6px; color: {gain_color}; font-weight: bold;">{sign}{gain_val:.2f}%</div>', unsafe_allow_html=True)
-                
-            st.write("---")
+                gain_html = f"<span style='color: {gain_color}; font-weight: bold;'>{sign}{gain_val:.2f}%</span>"
+
+            curr_price_str = f"${row['current_price']:.2f}" if row["current_price"] is not None else "<span style='color: rgba(250,250,250,0.4);'>N/A</span>"
+            
+            rows_html += (
+                f"<tr>"
+                f"<td style='padding: 12px; color: rgba(250,250,250,0.75);'>{row['date_added']}</td>"
+                f"<td style='padding: 12px; font-weight: 700;'><a href='?ticker={row['ticker']}' target='_self'>{row['ticker']}</a></td>"
+                f"<td style='padding: 12px; color: rgba(250,250,250,0.85);'>${row['price_added']:.2f}</td>"
+                f"<td style='padding: 12px; color: rgba(250,250,250,0.85);'>{curr_price_str}</td>"
+                f"<td style='padding: 12px;'>"
+                f"<span title='{tooltip}' style='color:{v_color}; font-weight:700; "
+                f"padding:4px 10px; border-radius:4px; background:rgba(255,255,255,0.05); "
+                f"border:1px solid {v_color}40; text-decoration:underline dotted; cursor:help;'>"
+                f"{row['verdict']}</span>"
+                f"</td>"
+                f"<td style='padding: 12px;'>{gain_html}</td>"
+                f"</tr>"
+            )
+
+        table_html = f"""
+        <style>
+        .expert-table-container {{
+            overflow-x: auto;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.01);
+            margin-bottom: 20px;
+        }}
+        .expert-table {{
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            font-family: inherit;
+        }}
+        .expert-table th {{
+            padding: 12px;
+            color: rgba(250,250,250,0.5);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-bottom: 2px solid rgba(255,255,255,0.12);
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+        }}
+        .expert-table td {{
+            padding: 12px;
+            font-size: 0.92rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            vertical-align: middle;
+        }}
+        .expert-table tr:last-child td {{
+            border-bottom: none;
+        }}
+        .expert-table tr:hover td {{
+            background: rgba(255,255,255,0.02);
+        }}
+        .expert-table a {{
+            color: #38b6ff;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(56, 182, 255, 0.08);
+            border: 1px solid rgba(56, 182, 255, 0.15);
+            transition: all 0.2s ease;
+        }}
+        .expert-table a:hover {{
+            color: #00e676;
+            background: rgba(0, 230, 118, 0.08);
+            border-color: rgba(0, 230, 118, 0.2);
+            text-decoration: none;
+            box-shadow: 0 0 8px rgba(0, 230, 118, 0.1);
+        }}
+        </style>
+        <div class="expert-table-container">
+            <table class="expert-table">
+                <thead>
+                    <tr>
+                        <th>Date Added</th>
+                        <th>Ticker</th>
+                        <th>Price Added</th>
+                        <th>Current Price</th>
+                        <th>Verdict</th>
+                        <th>Gain / Loss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        """
+        st.markdown(table_html, unsafe_allow_html=True)
 
     st.write("---")
     
