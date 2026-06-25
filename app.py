@@ -1041,9 +1041,10 @@ def render(ticker: str):
 
         with st.spinner("Analyzing catalysts and pattern data..."):
             ai_summary_html, tech_source = generate_ai_summary(ticker, name, res, settings)
+            fundamental_html, fundamental_source = generate_fundamental_summary(ticker, name, news_items)
             narrative_html, narrative_source = generate_catalyst_narrative(ticker, name, news_items)
 
-        col_left, col_right = st.columns(2)
+        col_left, col_mid, col_right = st.columns(3)
         with col_left:
             render_html(f"""
             <div style="
@@ -1054,7 +1055,7 @@ def render(ticker: str):
                 margin-top: 15px;
                 margin-bottom: 20px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                min-height: 280px;
+                min-height: 330px;
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center;">
@@ -1069,6 +1070,31 @@ def render(ticker: str):
             </div>
             """)
 
+        with col_mid:
+            render_html(f"""
+            <div style="
+                background: linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                border: 1px solid rgba(0, 188, 212, 0.2);
+                border-radius: 12px;
+                padding: 20px;
+                margin-top: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                min-height: 330px;
+            ">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 1.3rem; margin-right: 8px;">📊</span>
+                        <span style="font-weight: 600; font-size: 1.1rem; color: #00bcd4; letter-spacing: 0.5px; text-transform: uppercase;">AI Fundamental Analyst</span>
+                    </div>
+                    <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{fundamental_source}</span>
+                </div>
+                <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                    {fundamental_html}
+                </div>
+            </div>
+            """)
+
         with col_right:
             render_html(f"""
             <div style="
@@ -1079,7 +1105,7 @@ def render(ticker: str):
                 margin-top: 15px;
                 margin-bottom: 20px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                min-height: 280px;
+                min-height: 330px;
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center;">
@@ -1394,6 +1420,258 @@ CRITICAL INSTRUCTIONS:
     """
 
     fallback_html = f"{verdict_html}{technical_bullets}"
+    return fallback_html, "Local Expert System"
+
+
+def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tuple[str, str]:
+    import requests
+    import json
+    import re
+    import numpy as np
+
+    # Fetch cached fundamental data
+    data = datalib.fetch_financial_info(ticker)
+    info = data.get("info") or {}
+    fcf_history = data.get("fcf_history") or []
+
+    # Extract metrics
+    ev_ebitda = info.get("enterpriseToEbitda")
+    pe = info.get("trailingPE") or info.get("forwardPE")
+    ps = info.get("priceToSalesTrailing12Months")
+    fcf = info.get("freeCashflow")
+    mcap = info.get("marketCap")
+
+    # 1. EV/EBITDA
+    ev_ebitda_desc = f"{ev_ebitda:.2f}" if ev_ebitda is not None else "N/A"
+
+    # 2. PE Ratio
+    pe_type = "Trailing" if info.get("trailingPE") else "Forward" if info.get("forwardPE") else ""
+    pe_desc = f"{pe:.2f} ({pe_type})" if pe is not None else "N/A"
+
+    # 3. PS Ratio
+    ps_desc = f"{ps:.2f}" if ps is not None else "N/A"
+
+    # 4. P/FCF
+    p_fcf = None
+    p_fcf_desc = "N/A"
+    if mcap and fcf:
+        p_fcf = mcap / fcf
+        p_fcf_desc = f"{p_fcf:.2f}"
+    elif fcf and fcf < 0:
+        p_fcf_desc = "Negative FCF"
+
+    # 5. YoY FCF Growth
+    fcf_growth_pct = None
+    fcf_growth_desc = "N/A"
+    if len(fcf_history) >= 2:
+        val0 = fcf_history[0].get("val")
+        val1 = fcf_history[1].get("val")
+        if val0 is not None and val1 is not None and val1 != 0:
+            fcf_growth_pct = ((val0 - val1) / abs(val1)) * 100.0
+            fcf_growth_desc = f"{fcf_growth_pct:+.1f}%"
+
+    # 6. P/FCF to Growth Ratio
+    p_fcf_growth_desc = "N/A"
+    if p_fcf is not None and fcf_growth_pct is not None and fcf_growth_pct > 0:
+        p_fcf_growth = p_fcf / fcf_growth_pct
+        p_fcf_growth_desc = f"{p_fcf_growth:.2f}"
+
+    # Extract news catalyst context
+    news_titles = []
+    if news_items:
+        for item in news_items[:4]:
+            content = item.get("content", item)
+            title = content.get("title")
+            if title:
+                news_titles.append(f"- {title}")
+    news_summary_text = "\n".join(news_titles) if news_titles else "No recent news items."
+
+    # Determine if API keys are available in st.secrets
+    gemini_key = None
+    openai_key = None
+    hf_token = None
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            gemini_key = st.secrets["GEMINI_API_KEY"]
+        if "OPENAI_API_KEY" in st.secrets:
+            openai_key = st.secrets["OPENAI_API_KEY"]
+        if "HF_TOKEN" in st.secrets:
+            hf_token = st.secrets["HF_TOKEN"]
+        elif "HUGGINGFACE_API_KEY" in st.secrets:
+            hf_token = st.secrets["HUGGINGFACE_API_KEY"]
+    except Exception:
+        pass
+
+    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health and recent momentum catalysts for the stock {name} ({ticker}).
+
+Key Financial Metrics:
+- EV/EBITDA: {ev_ebitda_desc}
+- PE Ratio: {pe_desc}
+- PS Ratio: {ps_desc}
+- Price to Free Cash Flow (P/FCF): {p_fcf_desc}
+- YoY Free Cash Flow Growth: {fcf_growth_desc}
+- Price to FCF Growth Ratio (P/FCF / Growth): {p_fcf_growth_desc}
+
+Recent news catalyst context:
+{news_summary_text}
+
+CRITICAL INSTRUCTIONS:
+1. Explain what these valuation and cash flow metrics mean for the stock (undervalued, fairly valued, or overvalued/extended).
+2. Acknowledge and summarize the most important recent fundamental catalyst driving momentum.
+3. Keep the analysis concise, structured (using bullet points or bold keys), and under 120 words.
+4. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep the style modern and professional."""
+
+    # Try Gemini API if key is available
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }],
+                "generationConfig": {
+                    "maxOutputTokens": 300,
+                    "temperature": 0.4
+                }
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                if text:
+                    text = clean_html_response(text)
+                    return text, "Gemini (Fundamental)"
+        except Exception:
+            pass
+
+    # Try OpenAI API if key is available
+    if openai_key:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {openai_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 250,
+                "temperature": 0.4
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"].strip()
+                if text:
+                    text = clean_html_response(text)
+                    return text, "OpenAI (Fundamental)"
+        except Exception:
+            pass
+
+    # Try Hugging Face API if token is available
+    if hf_token:
+        models = [
+            "Qwen/Qwen2.5-7B-Instruct",
+            "google/gemma-2-2b-it",
+            "microsoft/Phi-3-mini-4k-instruct",
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            "HuggingFaceH4/zephyr-7b-beta"
+        ]
+        for model in models:
+            # Try chat API first
+            try:
+                chat_url = f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 250,
+                    "temperature": 0.4
+                }
+                resp = requests.post(chat_url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    text = data["choices"][0]["message"]["content"].strip()
+                    if text:
+                        text = clean_html_response(text)
+                        return text, f"HF ({model.split('/')[-1]})"
+            except Exception:
+                pass
+
+            # Try raw endpoint
+            try:
+                std_url = f"https://api-inference.huggingface.co/models/{model}"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                formatted_input = f"<s>[INST] {prompt} [/INST]" if "mistral" in model.lower() or "zephyr" in model.lower() else prompt
+                payload = {
+                    "inputs": formatted_input,
+                    "parameters": {
+                        "max_new_tokens": 250,
+                        "temperature": 0.4,
+                        "return_full_text": False
+                    }
+                }
+                resp = requests.post(std_url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        text = data[0].get("generated_text", "").strip()
+                        if text:
+                            text = clean_html_response(text)
+                            return text, f"HF ({model.split('/')[-1]})"
+            except Exception:
+                pass
+
+    # Programmatic Rules-Based Generator Fallback
+    mcap_desc = f"${mcap/1e9:.1f}B" if mcap else "N/A"
+    
+    valuation_signals = []
+    if ev_ebitda is not None:
+        if ev_ebitda < 12.0:
+            valuation_signals.append("EV/EBITDA is low/undervalued")
+        elif ev_ebitda > 25.0:
+            valuation_signals.append("EV/EBITDA is premium-priced")
+    if pe is not None:
+        if pe < 15.0:
+            valuation_signals.append("PE ratio indicates value pricing")
+        elif pe > 40.0:
+            valuation_signals.append("PE ratio is growth-priced")
+            
+    val_verdict_str = ", ".join(valuation_signals) if valuation_signals else "Valuation ratios are within standard industry bounds."
+    
+    growth_verdict = "YoY Free Cash Flow growth is negative or unavailable, suggesting some near-term operational friction."
+    if fcf_growth_pct is not None:
+        if fcf_growth_pct > 20.0:
+            growth_verdict = f"YoY Free Cash Flow growth is very strong at <strong>{fcf_growth_desc}</strong>, indicating a powerful, expanding business model."
+        elif fcf_growth_pct > 0:
+            growth_verdict = f"YoY Free Cash Flow growth is healthy at <strong>{fcf_growth_desc}</strong>, reflecting steady business scale."
+            
+    catalyst_bullet = ""
+    if news_titles:
+        first_news = news_titles[0].replace("- ", "")
+        catalyst_bullet = f"<li>🚀 <strong>Recent Catalyst</strong>: Headlines on <em>\"{first_news}\"</em> are driving momentum.</li>"
+    else:
+        catalyst_bullet = "<li>🚀 <strong>Recent Catalyst</strong>: Solid underlying demand with no major recent breaking news.</li>"
+
+    fallback_html = f"""
+    <p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>
+    <ul>
+        <li>📊 <strong>Valuation</strong>: PE: <strong>{pe_desc}</strong> | PS: <strong>{ps_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>. {val_verdict_str}</li>
+        <li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>
+        {catalyst_bullet}
+    </ul>
+    """
     return fallback_html, "Local Expert System"
 
 

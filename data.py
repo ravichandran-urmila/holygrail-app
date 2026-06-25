@@ -54,11 +54,44 @@ def fetch_spx_weekly(period: str = "10y") -> pd.Series:
     return s
 
 
+@st.cache_data(show_spinner=False, ttl=3600)
+def fetch_financial_info(ticker: str) -> dict:
+    """Fetch key financial metrics and cash flow info for the ticker using yfinance."""
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info or {}
+        
+        # Also try to get Free Cash Flow from cashflow statement
+        fcf_history = []
+        try:
+            cashflow_df = t.cashflow
+            if cashflow_df is not None and not cashflow_df.empty:
+                # Find matching row for Free Cash Flow (case-insensitive check)
+                fcf_row = None
+                for idx in cashflow_df.index:
+                    if str(idx).strip().lower() == "free cash flow":
+                        fcf_row = cashflow_df.loc[idx]
+                        break
+                if fcf_row is not None:
+                    fcf_series = fcf_row.dropna()
+                    fcf_history = [{"date": str(date)[:10], "val": float(val)} for date, val in fcf_series.items()]
+        except Exception:
+            pass
+            
+        return {
+            "info": info,
+            "fcf_history": fcf_history
+        }
+    except Exception:
+        return {"info": {}, "fcf_history": []}
+
+
 @st.cache_data(show_spinner=False, ttl=86400)
 def resolve_name(ticker: str) -> str:
     """Best-effort company/long name for display. Falls back to the ticker."""
     try:
-        info = yf.Ticker(ticker).info
+        data = fetch_financial_info(ticker)
+        info = data.get("info") or {}
         return info.get("longName") or info.get("shortName") or ticker.upper()
     except Exception:
         return ticker.upper()
