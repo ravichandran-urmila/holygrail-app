@@ -244,7 +244,7 @@ with st.sidebar:
                 st.rerun()
                 
         ticker = ticker_input
-        history_choice = st.select_slider("History", options=["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], value="1 Year")
+        history_choice = st.select_slider("History", options=["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], value="1 Year", key="history_choice")
 
         st.write("---")
         st.markdown("### 📖 How to read the chart")
