@@ -1174,13 +1174,15 @@ def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str
     entry_high = sm["entry_price_high"]
     stop_price = sm["stop_price"]
 
-    # Calculate weeks since last Holy Grail setup (full_setup == True)
+    # Calculate weeks since last Holy Grail setup (full_setup == True) and get HG week close
     hg_weeks_ago = None
+    hg_close_price = None
     if sm.get("last_hg_date") is not None:
         idx_list = list(df.index)
         try:
             pos = idx_list.index(sm["last_hg_date"])
             hg_weeks_ago = len(idx_list) - 1 - pos
+            hg_close_price = float(df.loc[sm["last_hg_date"], "close"])
         except ValueError:
             pass
 
@@ -1204,18 +1206,19 @@ def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str
 
     # Construct history description for prompt
     hg_history_prompt = ""
-    if hg_weeks_ago is not None:
-        if hg_weeks_ago == 0:
-            hg_history_prompt = "A COMPLETE Holy Grail setup was triggered THIS week!"
-        else:
-            hg_history_prompt = f"A COMPLETE Holy Grail setup was triggered recently ({hg_weeks_ago} week(s) ago)."
+    if hg_weeks_ago is not None and hg_close_price is not None:
+        pct_from_hg_close = ((last_close - hg_close_price) / hg_close_price) * 100.0
+        hg_history_prompt = f"A COMPLETE Holy Grail setup was triggered {hg_weeks_ago} week(s) ago (on the week close of ${hg_close_price:.2f}). "
         
-        if above_50wma:
-            hg_history_prompt += f" Since the price is currently (${last_close:.2f}) and remains above the 50WMA (${last_row['ma50w']:.2f}), it is still a prime buying opportunity."
+        is_in_range = (pct_from_hg_close <= 15.0) and above_50wma
+        if is_in_range:
+            hg_history_prompt += f"The current close (${last_close:.2f}) is {pct_from_hg_close:.1f}% from the setup close, which is within the 15% trading range and remains above the 50WMA (${last_row['ma50w']:.2f}). This indicates it is still a good time to buy (prime buying zone)."
+        elif above_50wma:
+            hg_history_prompt += f"The current close (${last_close:.2f}) is {pct_from_hg_close:.1f}% above the setup close, which exceeds the 15% trading range (extended), meaning it is too high/extended to buy right now."
         else:
-            hg_history_prompt += f" However, the price has since dropped below the 50WMA."
+            hg_history_prompt += f"However, the price has since dropped below the 50WMA, invalidating the buy setup."
     else:
-        hg_history_prompt = "No COMPLETE Holy Grail setup has been triggered in the past 8 weeks."
+        hg_history_prompt = "No COMPLETE Holy Grail setup has been triggered in the history."
 
     prompt = f"""You are a professional stock market technical analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the stock {name} ({ticker}) based on the Holy Grail setup rules.
 
@@ -1234,7 +1237,7 @@ Entry/Exit Strategy:
 
 CRITICAL INSTRUCTIONS:
 1. Restructure the analysis to be concise and not wordy (use short, bulleted points or tight sentences).
-2. Acknowledge and highlight the recent Holy Grail setup if one occurred in the past 8 weeks, explaining that it is a good time to buy if the price is still above the 50WMA.
+2. Acknowledge the most recent Holy Grail setup. Explain that it is currently a good time to buy if the price is still above the 50WMA and is within 15% of the Holy Grail week's closing price. If the current close is more than 15% above the Holy Grail closing price, highlight that the stock is extended (not a good time to buy).
 3. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep under 120 words."""
 
     # Try Gemini API if key is available
@@ -1347,18 +1350,17 @@ CRITICAL INSTRUCTIONS:
 
     # Programmatic Rules-Based Generator Fallback
     # Bullet 1: Setup History & Buy Signal
-    if hg_weeks_ago is not None and hg_weeks_ago <= 8:
-        if hg_weeks_ago == 0:
-            history_html = f"<li>🚀 <strong>Holy Grail Triggered</strong>: A complete buy setup was triggered <strong>this week</strong>!"
-        else:
-            history_html = f"<li>🟢 <strong>Recent Holy Grail Setup</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong>."
+    if hg_weeks_ago is not None and hg_close_price is not None:
+        pct_from_hg_close = ((last_close - hg_close_price) / hg_close_price) * 100.0
         
-        if above_50wma:
-            history_html += " Since the price remains above the 50WMA, it is currently in a <strong>prime buying zone</strong>.</li>"
+        if above_50wma and pct_from_hg_close <= 15.0:
+            history_html = f"<li>🟢 <strong>Holy Grail Buy Zone</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG week close: ${hg_close_price:.2f}). The current price is within the 15% range (<strong>{pct_from_hg_close:.1f}%</strong> above close) and remains above the 50WMA, placing it in a <strong>prime buying zone</strong>.</li>"
+        elif above_50wma:
+            history_html = f"<li>⚠️ <strong>Extended Price</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG week close: ${hg_close_price:.2f}). The current price is <strong>{pct_from_hg_close:.1f}%</strong> above the setup close, which is outside the 15% trading range (extended).</li>"
         else:
-            history_html += " However, the price has dropped below the 50WMA.</li>"
+            history_html = f"<li>❌ <strong>Setup Invalidated</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG week close: ${hg_close_price:.2f}), but the price has since dropped below the 50WMA.</li>"
     else:
-        history_html = "<li>⚠️ <strong>No Recent Setup</strong>: No complete Holy Grail setup was triggered in the last 8 weeks.</li>"
+        history_html = "<li>⚠️ <strong>No Active Setup</strong>: No complete Holy Grail setup was triggered in history.</li>"
 
     # Verdict Title
     if verdict == "COMPLETE SETUP":
