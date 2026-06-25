@@ -1436,20 +1436,19 @@ def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tu
 
     # Extract metrics
     ev_ebitda = info.get("enterpriseToEbitda")
-    pe = info.get("trailingPE") or info.get("forwardPE")
+    trailing_pe = info.get("trailingPE")
+    forward_pe = info.get("forwardPE")
     ps = info.get("priceToSalesTrailing12Months")
+    peg = info.get("pegRatio")
     fcf = info.get("freeCashflow")
     mcap = info.get("marketCap")
 
-    # 1. EV/EBITDA
+    # Format descriptions
     ev_ebitda_desc = f"{ev_ebitda:.2f}" if ev_ebitda is not None else "N/A"
-
-    # 2. PE Ratio
-    pe_type = "Trailing" if info.get("trailingPE") else "Forward" if info.get("forwardPE") else ""
-    pe_desc = f"{pe:.2f} ({pe_type})" if pe is not None else "N/A"
-
-    # 3. PS Ratio
+    trailing_pe_desc = f"{trailing_pe:.2f}" if trailing_pe is not None else "N/A"
+    forward_pe_desc = f"{forward_pe:.2f}" if forward_pe is not None else "N/A"
     ps_desc = f"{ps:.2f}" if ps is not None else "N/A"
+    peg_desc = f"{peg:.2f}" if peg is not None else "N/A"
 
     # 4. P/FCF
     p_fcf = None
@@ -1505,9 +1504,11 @@ def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tu
     prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health and recent momentum catalysts for the stock {name} ({ticker}).
 
 Key Financial Metrics:
-- EV/EBITDA: {ev_ebitda_desc}
-- PE Ratio: {pe_desc}
+- Trailing PE: {trailing_pe_desc}
+- Forward PE: {forward_pe_desc}
 - PS Ratio: {ps_desc}
+- PEG Ratio: {peg_desc}
+- EV/EBITDA: {ev_ebitda_desc}
 - Price to Free Cash Flow (P/FCF): {p_fcf_desc}
 - YoY Free Cash Flow Growth: {fcf_growth_desc}
 - Price to FCF Growth Ratio (P/FCF / Growth): {p_fcf_growth_desc}
@@ -1639,14 +1640,14 @@ CRITICAL INSTRUCTIONS:
     valuation_signals = []
     if ev_ebitda is not None:
         if ev_ebitda < 12.0:
-            valuation_signals.append("EV/EBITDA is low/undervalued")
+            valuation_signals.append("EV/EBITDA is undervalued")
         elif ev_ebitda > 25.0:
             valuation_signals.append("EV/EBITDA is premium-priced")
-    if pe is not None:
-        if pe < 15.0:
-            valuation_signals.append("PE ratio indicates value pricing")
-        elif pe > 40.0:
-            valuation_signals.append("PE ratio is growth-priced")
+    if forward_pe is not None:
+        if forward_pe < 15.0:
+            valuation_signals.append("Forward PE suggests value pricing")
+        elif forward_pe > 35.0:
+            valuation_signals.append("Forward PE is growth-priced")
             
     val_verdict_str = ", ".join(valuation_signals) if valuation_signals else "Valuation ratios are within standard industry bounds."
     
@@ -1667,7 +1668,8 @@ CRITICAL INSTRUCTIONS:
     fallback_html = f"""
     <p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>
     <ul>
-        <li>📊 <strong>Valuation</strong>: PE: <strong>{pe_desc}</strong> | PS: <strong>{ps_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>. {val_verdict_str}</li>
+        <li>📊 <strong>Valuation</strong>: PE: <strong>{trailing_pe_desc}</strong> (Trailing) / <strong>{forward_pe_desc}</strong> (Forward) | PS: <strong>{ps_desc}</strong> | PEG: <strong>{peg_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>.</li>
+        <li>💡 <strong>Context</strong>: {val_verdict_str}</li>
         <li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>
         {catalyst_bullet}
     </ul>
