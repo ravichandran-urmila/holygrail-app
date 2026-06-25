@@ -1138,6 +1138,22 @@ def render(ticker: str):
             mime="text/csv",
         )
 
+def clean_html_response(text: str) -> str:
+    if not text:
+        return ""
+    import re
+    text = text.strip()
+    code_block_match = re.search(r"```(?:html)?\s*(.*?)\s*```", text, re.DOTALL | re.IGNORECASE)
+    if code_block_match:
+        text = code_block_match.group(1).strip()
+    else:
+        html_tag_match = re.search(r"(<[a-zA-Z]+.*?>.*)", text, re.DOTALL)
+        if html_tag_match:
+            text = html_tag_match.group(1).strip()
+    text = text.replace("```", "")
+    return text.strip()
+
+
 def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str]:
     import json
     import requests
@@ -1246,13 +1262,7 @@ CRITICAL INSTRUCTIONS:
                 data = resp.json()
                 text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
                 if text:
-                    if text.startswith("```html"):
-                        text = text[7:]
-                    elif text.startswith("```"):
-                        text = text[3:]
-                    if text.endswith("```"):
-                        text = text[:-3]
-                    text = text.strip()
+                    text = clean_html_response(text)
                     return text, "Gemini 2.5 Flash API"
         except Exception:
             pass
@@ -1276,13 +1286,7 @@ CRITICAL INSTRUCTIONS:
                 data = resp.json()
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:
-                    if text.startswith("```html"):
-                        text = text[7:]
-                    elif text.startswith("```"):
-                        text = text[3:]
-                    if text.endswith("```"):
-                        text = text[:-3]
-                    text = text.strip()
+                    text = clean_html_response(text)
                     return text, "GPT-4o-mini API"
         except Exception:
             pass
@@ -1290,37 +1294,59 @@ CRITICAL INSTRUCTIONS:
     # Try Hugging Face Inference API if token is available
     if hf_token:
         hf_models = [
+            "Qwen/Qwen2.5-7B-Instruct",
+            "google/gemma-2-2b-it",
             "mistralai/Mistral-7B-Instruct-v0.3",
+            "microsoft/Phi-3-mini-4k-instruct",
             "HuggingFaceH4/zephyr-7b-beta"
         ]
         for model in hf_models:
+            # 1. Try Chat Completion API (handles templates automatically)
             try:
-                url = f"https://api-inference.huggingface.co/models/{model}"
+                chat_url = f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions"
                 headers = {
                     "Authorization": f"Bearer {hf_token}",
                     "Content-Type": "application/json"
                 }
                 payload = {
-                    "inputs": f"<s>[INST] {prompt} [/INST]",
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 250,
+                    "temperature": 0.4
+                }
+                resp = requests.post(chat_url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    text = data["choices"][0]["message"]["content"].strip()
+                    if text:
+                        text = clean_html_response(text)
+                        return text, f"Hugging Face ({model.split('/')[-1]})"
+            except Exception:
+                pass
+
+            # 2. Try raw endpoint if Chat API is not supported / failed
+            try:
+                std_url = f"https://api-inference.huggingface.co/models/{model}"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                formatted_input = f"<s>[INST] {prompt} [/INST]" if "mistral" in model.lower() or "zephyr" in model.lower() else prompt
+                payload = {
+                    "inputs": formatted_input,
                     "parameters": {
                         "max_new_tokens": 250,
                         "temperature": 0.4,
                         "return_full_text": False
                     }
                 }
-                resp = requests.post(url, headers=headers, json=payload, timeout=8)
+                resp = requests.post(std_url, headers=headers, json=payload, timeout=8)
                 if resp.status_code == 200:
                     data = resp.json()
                     if isinstance(data, list) and len(data) > 0:
                         text = data[0].get("generated_text", "").strip()
                         if text:
-                            if text.startswith("```html"):
-                                text = text[7:]
-                            elif text.startswith("```"):
-                                text = text[3:]
-                            if text.endswith("```"):
-                                text = text[:-3]
-                            text = text.strip()
+                            text = clean_html_response(text)
                             return text, f"Hugging Face ({model.split('/')[-1]})"
             except Exception:
                 pass
@@ -1444,11 +1470,16 @@ def generate_catalyst_narrative(ticker: str, name: str, news_items: list) -> tup
     # Determine if API keys are available in st.secrets
     gemini_key = None
     openai_key = None
+    hf_token = None
     try:
         if "GEMINI_API_KEY" in st.secrets:
             gemini_key = st.secrets["GEMINI_API_KEY"]
         if "OPENAI_API_KEY" in st.secrets:
             openai_key = st.secrets["OPENAI_API_KEY"]
+        if "HF_TOKEN" in st.secrets:
+            hf_token = st.secrets["HF_TOKEN"]
+        elif "HUGGINGFACE_API_KEY" in st.secrets:
+            hf_token = st.secrets["HUGGINGFACE_API_KEY"]
     except Exception:
         pass
 
@@ -1481,14 +1512,7 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>). Do not 
                 data = resp.json()
                 text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
                 if text:
-                    # Clean up code blocks if present
-                    if text.startswith("```html"):
-                        text = text[7:]
-                    elif text.startswith("```"):
-                        text = text[3:]
-                    if text.endswith("```"):
-                        text = text[:-3]
-                    text = text.strip()
+                    text = clean_html_response(text)
                     return text, "Gemini 2.5 Flash API"
         except Exception:
             pass
@@ -1512,17 +1536,70 @@ Format your response in raw HTML (using tags like <p>, <strong>, <br/>). Do not 
                 data = resp.json()
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:
-                    # Clean up code blocks if present
-                    if text.startswith("```html"):
-                        text = text[7:]
-                    elif text.startswith("```"):
-                        text = text[3:]
-                    if text.endswith("```"):
-                        text = text[:-3]
-                    text = text.strip()
+                    text = clean_html_response(text)
                     return text, "GPT-4o-mini API"
         except Exception:
             pass
+
+    # Try Hugging Face Inference API if token is available
+    if hf_token:
+        hf_models = [
+            "Qwen/Qwen2.5-7B-Instruct",
+            "google/gemma-2-2b-it",
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            "microsoft/Phi-3-mini-4k-instruct",
+            "HuggingFaceH4/zephyr-7b-beta"
+        ]
+        for model in hf_models:
+            # 1. Try Chat Completion API (handles templates automatically)
+            try:
+                chat_url = f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 250,
+                    "temperature": 0.4
+                }
+                resp = requests.post(chat_url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    text = data["choices"][0]["message"]["content"].strip()
+                    if text:
+                        text = clean_html_response(text)
+                        return text, f"Hugging Face ({model.split('/')[-1]})"
+            except Exception:
+                pass
+
+            # 2. Try raw endpoint if Chat API is not supported / failed
+            try:
+                std_url = f"https://api-inference.huggingface.co/models/{model}"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                formatted_input = f"<s>[INST] {prompt} [/INST]" if "mistral" in model.lower() or "zephyr" in model.lower() else prompt
+                payload = {
+                    "inputs": formatted_input,
+                    "parameters": {
+                        "max_new_tokens": 250,
+                        "temperature": 0.4,
+                        "return_full_text": False
+                    }
+                }
+                resp = requests.post(std_url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        text = data[0].get("generated_text", "").strip()
+                        if text:
+                            text = clean_html_response(text)
+                            return text, f"Hugging Face ({model.split('/')[-1]})"
+            except Exception:
+                pass
 
     # Programmatic Fallback: List of top 3 news items with direct links
     fallback_html = f"<p>Recent news headlines indicating potential catalysts for <strong>{name} ({ticker})</strong>:</p>"
