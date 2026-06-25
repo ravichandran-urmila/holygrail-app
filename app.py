@@ -19,6 +19,15 @@ import data as datalib
 from indicator import HGSettings, compute
 
 
+def render_html(html_str: str):
+    """Clean all leading/trailing whitespace from each line of HTML to prevent Markdown parser from interpreting indented HTML as code blocks."""
+    if not html_str:
+        return
+    cleaned_lines = [line.strip() for line in html_str.splitlines()]
+    cleaned_html = "\n".join(cleaned_lines)
+    st.markdown(cleaned_html, unsafe_allow_html=True)
+
+
 st.set_page_config(page_title="Holygrail — Long Term Momentum Scanner", layout="wide",
                    initial_sidebar_state="expanded")
 
@@ -980,8 +989,7 @@ def render(ticker: str):
             gain_pct = sm["last_hg_gain_pct"]
             gain_color = "#16c784" if gain_pct >= 0 else "#ea3943"
             gain_sign = "+" if gain_pct >= 0 else ""
-            st.markdown(
-                f"""
+            render_html(f"""
                 <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
                     <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Gain from HG Signal</div>
                     <div style="font-size: 1.8rem; font-weight: 600; color: {gain_color}; margin-bottom: 4px;">
@@ -991,12 +999,9 @@ def render(ticker: str):
                         at ${sm['last_hg_entry']:.2f} ({sm['last_hg_date'].strftime('%Y-%m-%d')})
                     </div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """)
         else:
-            st.markdown(
-                f"""
+            render_html(f"""
                 <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
                     <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Gain from HG Signal</div>
                     <div style="font-size: 1.8rem; font-weight: 600; color: rgba(250, 250, 250, 0.4); margin-bottom: 4px;">
@@ -1006,12 +1011,9 @@ def render(ticker: str):
                         No signals in history
                     </div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """)
     with c4:
-        st.markdown(
-            f"""
+        render_html(f"""
             <div style="font-family: inherit; line-height: 1.2; padding-top: 2px;">
                 <div style="font-size: 0.875rem; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Entry Range</div>
                 <div style="font-size: 1.8rem; font-weight: 600; color: rgb(250, 250, 250); margin-bottom: 4px;">
@@ -1021,9 +1023,7 @@ def render(ticker: str):
                     🛑 stop: ${sm['stop_price']:.2f}
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """)
 
     if sm["full_setup"]:
         st.success("🚀 **FULL Holy Grail Setup** on the latest weekly bar.")
@@ -1042,60 +1042,54 @@ def render(ticker: str):
 
         col_left, col_right = st.columns(2)
         with col_left:
-            st.markdown(
-                textwrap.dedent(f"""
-                <div style="
-                    background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
-                    border: 1px solid rgba(224, 64, 251, 0.2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-top: 15px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                    min-height: 280px;
-                ">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <div style="display: flex; align-items: center;">
-                            <span style="font-size: 1.3rem; margin-right: 8px;">🧠</span>
-                            <span style="font-weight: 600; font-size: 1.1rem; color: #e040fb; letter-spacing: 0.5px; text-transform: uppercase;">AI Technical Analyst</span>
-                        </div>
-                        <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{tech_source}</span>
+            render_html(f"""
+            <div style="
+                background: linear-gradient(135deg, rgba(224, 64, 251, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                border: 1px solid rgba(224, 64, 251, 0.2);
+                border-radius: 12px;
+                padding: 20px;
+                margin-top: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                min-height: 280px;
+            ">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 1.3rem; margin-right: 8px;">🧠</span>
+                        <span style="font-weight: 600; font-size: 1.1rem; color: #e040fb; letter-spacing: 0.5px; text-transform: uppercase;">AI Technical Analyst</span>
                     </div>
-                    <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
-                        {ai_summary_html}
-                    </div>
+                    <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{tech_source}</span>
                 </div>
-                """),
-                unsafe_allow_html=True
-            )
+                <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                    {ai_summary_html}
+                </div>
+            </div>
+            """)
 
         with col_right:
-            st.markdown(
-                textwrap.dedent(f"""
-                <div style="
-                    background: linear-gradient(135deg, rgba(255, 145, 0, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
-                    border: 1px solid rgba(255, 145, 0, 0.2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-top: 15px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                    min-height: 280px;
-                ">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <div style="display: flex; align-items: center;">
-                            <span style="font-size: 1.3rem; margin-right: 8px;">📰</span>
-                            <span style="font-weight: 600; font-size: 1.1rem; color: #ff9100; letter-spacing: 0.5px; text-transform: uppercase;">Current Narrative</span>
-                        </div>
-                        <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{narrative_source}</span>
+            render_html(f"""
+            <div style="
+                background: linear-gradient(135deg, rgba(255, 145, 0, 0.08) 0%, rgba(22, 199, 132, 0.02) 100%);
+                border: 1px solid rgba(255, 145, 0, 0.2);
+                border-radius: 12px;
+                padding: 20px;
+                margin-top: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                min-height: 280px;
+            ">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 1.3rem; margin-right: 8px;">📰</span>
+                        <span style="font-weight: 600; font-size: 1.1rem; color: #ff9100; letter-spacing: 0.5px; text-transform: uppercase;">Current Narrative</span>
                     </div>
-                    <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
-                        {narrative_html}
-                    </div>
+                    <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5);">{narrative_source}</span>
                 </div>
-                """),
-                unsafe_allow_html=True
-            )
+                <div style="font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: rgba(250, 250, 250, 0.95);">
+                    {narrative_html}
+                </div>
+            </div>
+            """)
 
 
     # ---- Dashboard (replicates the Pine table) -----------------------------
