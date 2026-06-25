@@ -7,6 +7,13 @@
     "commentary": "If you look at the AI buildout as a physical supply chain, HUBB is a primary beneficiary of the power bottleneck. Tech giants cannot scale their cluster builds without the underlying utility grid and power management components that companies like Hubbell supply, making its order books heavily tied to the pace of AI infrastructure deployment."
   },
   {
+    "ticker": "AKAM",
+    "date_added": "2026-06-21",
+    "price_added": 124.0,
+    "verdict": "BUY",
+    "commentary": "As AI evolves into multi-step \"agentic workflows\" (autonomous agents handling complex tasks like e-commerce transactions or fraud detection), two things become critical: milliseconds of response time and absolute security. Akamai leverages its market-dominant web security and API defense portfolios to protect AI models and sensitive data payloads directly at the edge, making it an all-in-one infrastructure guardrail for enterprise AI deployment."
+  },
+  {
     "ticker": "AAPL",
     "date_added": "2026-06-19",
     "price_added": 296.0,
@@ -35,13 +42,6 @@
     "commentary": "CPU shortage and Space data centers long term"
   },
   {
-    "ticker": "FCX",
-    "date_added": "2026-03-23",
-    "price_added": 57.0,
-    "verdict": "HOLD",
-    "commentary": "Copper is the clear winner of AI build out and fcx is one of the largest us supplier"
-  },
-  {
     "ticker": "AMD",
     "date_added": "2025-06-23",
     "price_added": 124.0,
@@ -56,10 +56,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "AKAM",
-    "date_added": "2026-06-21",
-    "price_added": 124.0,
+    "ticker": "FCX",
+    "date_added": "2026-03-23",
+    "price_added": 57.0,
     "verdict": "BUY",
-    "commentary": "As AI evolves into multi-step \"agentic workflows\" (autonomous agents handling complex tasks like e-commerce transactions or fraud detection), two things become critical: milliseconds of response time and absolute security. Akamai leverages its market-dominant web security and API defense portfolios to protect AI models and sensitive data payloads directly at the edge, making it an all-in-one infrastructure guardrail for enterprise AI deployment."
+    "commentary": "Copper prices will recover with data center demand being high"
   }
 ]
