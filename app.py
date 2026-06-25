@@ -1041,7 +1041,7 @@ def render(ticker: str):
 
         with st.spinner("Analyzing catalysts and pattern data..."):
             ai_summary_html, tech_source = generate_ai_summary(ticker, name, res, settings)
-            fundamental_html, fundamental_source = generate_fundamental_summary(ticker, name, news_items)
+            fundamental_html, fundamental_source = generate_fundamental_summary(ticker, name)
             narrative_html, narrative_source = generate_catalyst_narrative(ticker, name, news_items)
 
         col_left, col_mid, col_right = st.columns(3)
@@ -1423,7 +1423,7 @@ CRITICAL INSTRUCTIONS:
     return fallback_html, "Local Expert System"
 
 
-def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tuple[str, str]:
+def generate_fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     import requests
     import json
     import re
@@ -1475,16 +1475,6 @@ def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tu
         p_fcf_growth = p_fcf / fcf_growth_pct
         p_fcf_growth_desc = f"{p_fcf_growth:.2f}"
 
-    # Extract news catalyst context
-    news_titles = []
-    if news_items:
-        for item in news_items[:4]:
-            content = item.get("content", item)
-            title = content.get("title")
-            if title:
-                news_titles.append(f"- {title}")
-    news_summary_text = "\n".join(news_titles) if news_titles else "No recent news items."
-
     # Determine if API keys are available in st.secrets
     gemini_key = None
     openai_key = None
@@ -1501,7 +1491,7 @@ def generate_fundamental_summary(ticker: str, name: str, news_items: list) -> tu
     except Exception:
         pass
 
-    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health and recent momentum catalysts for the stock {name} ({ticker}).
+    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health of the stock {name} ({ticker}).
 
 Key Financial Metrics:
 - Trailing PE: {trailing_pe_desc}
@@ -1513,14 +1503,10 @@ Key Financial Metrics:
 - YoY Free Cash Flow Growth: {fcf_growth_desc}
 - Price to FCF Growth Ratio (P/FCF / Growth): {p_fcf_growth_desc}
 
-Recent news catalyst context:
-{news_summary_text}
-
 CRITICAL INSTRUCTIONS:
 1. Explain what these valuation and cash flow metrics mean for the stock (undervalued, fairly valued, or overvalued/extended).
-2. Acknowledge and summarize the most important recent fundamental catalyst driving momentum.
-3. Keep the analysis concise, structured (using bullet points or bold keys), and under 120 words.
-4. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep the style modern and professional."""
+2. Keep the analysis concise, structured (using bullet points or bold keys), and under 120 words.
+3. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep the style modern and professional."""
 
     # Try Gemini API if key is available
     if gemini_key:
@@ -1657,13 +1643,6 @@ CRITICAL INSTRUCTIONS:
             growth_verdict = f"YoY Free Cash Flow growth is very strong at <strong>{fcf_growth_desc}</strong>, indicating a powerful, expanding business model."
         elif fcf_growth_pct > 0:
             growth_verdict = f"YoY Free Cash Flow growth is healthy at <strong>{fcf_growth_desc}</strong>, reflecting steady business scale."
-            
-    catalyst_bullet = ""
-    if news_titles:
-        first_news = news_titles[0].replace("- ", "")
-        catalyst_bullet = f"<li>🚀 <strong>Recent Catalyst</strong>: Headlines on <em>\"{first_news}\"</em> are driving momentum.</li>"
-    else:
-        catalyst_bullet = "<li>🚀 <strong>Recent Catalyst</strong>: Solid underlying demand with no major recent breaking news.</li>"
 
     fallback_html = f"""
     <p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>
@@ -1671,7 +1650,6 @@ CRITICAL INSTRUCTIONS:
         <li>📊 <strong>Valuation</strong>: PE: <strong>{trailing_pe_desc}</strong> (Trailing) / <strong>{forward_pe_desc}</strong> (Forward) | PS: <strong>{ps_desc}</strong> | PEG: <strong>{peg_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>.</li>
         <li>💡 <strong>Context</strong>: {val_verdict_str}</li>
         <li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>
-        {catalyst_bullet}
     </ul>
     """
     return fallback_html, "Local Expert System"
