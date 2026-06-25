@@ -234,14 +234,17 @@ with st.sidebar:
 
     if nav_page == "🔍 Scanner":
         st.header("🔎 Ticker")
-        ticker = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
-        
-        # Sync query parameters with the active ticker
-        if ticker and st.query_params.get("ticker") != ticker:
-            st.query_params["ticker"] = ticker
+        with st.form(key="scanner_form", clear_on_submit=False, border=False):
+            ticker_input = st.text_input("Symbol", value=default_ticker, help="e.g. AAPL, MSFT, NVDA, TSLA, SPY").strip().upper()
+            go_btn = st.form_submit_button("Scan", type="primary", use_container_width=True)
             
+        if go_btn and ticker_input:
+            if st.query_params.get("ticker") != ticker_input:
+                st.query_params["ticker"] = ticker_input
+                st.rerun()
+                
+        ticker = ticker_input
         history_choice = st.selectbox("History", ["3 Months", "6 Months", "YTD", "1 Year", "2 Years", "5 Years"], index=3)
-        go_btn = st.button("Scan", type="primary", use_container_width=True)
 
         st.write("---")
         st.markdown("### 📖 How to read the chart")
