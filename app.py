@@ -1439,6 +1439,8 @@ def generate_fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     trailing_pe = info.get("trailingPE")
     forward_pe = info.get("forwardPE")
     ps = info.get("priceToSalesTrailing12Months")
+    rev_growth = info.get("revenueGrowth")
+    forward_ps = ps / (1.0 + rev_growth) if (ps is not None and rev_growth is not None) else None
     peg = info.get("pegRatio")
     fcf = info.get("freeCashflow")
     mcap = info.get("marketCap")
@@ -1448,6 +1450,7 @@ def generate_fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     trailing_pe_desc = f"{trailing_pe:.2f}" if trailing_pe is not None else "N/A"
     forward_pe_desc = f"{forward_pe:.2f}" if forward_pe is not None else "N/A"
     ps_desc = f"{ps:.2f}" if ps is not None else "N/A"
+    forward_ps_desc = f"{forward_ps:.2f}" if forward_ps is not None else "N/A"
     peg_desc = f"{peg:.2f}" if peg is not None else "N/A"
 
     # 4. P/FCF
@@ -1496,7 +1499,8 @@ def generate_fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
 Key Financial Metrics:
 - Trailing PE: {trailing_pe_desc}
 - Forward PE: {forward_pe_desc}
-- PS Ratio: {ps_desc}
+- Trailing PS: {ps_desc}
+- Forward PS: {forward_ps_desc}
 - PEG Ratio: {peg_desc}
 - EV/EBITDA: {ev_ebitda_desc}
 - Price to Free Cash Flow (P/FCF): {p_fcf_desc}
@@ -1647,7 +1651,7 @@ CRITICAL INSTRUCTIONS:
     fallback_html = f"""
     <p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>
     <ul>
-        <li>📊 <strong>Valuation</strong>: PE: <strong>{trailing_pe_desc}</strong> (Trailing) / <strong>{forward_pe_desc}</strong> (Forward) | PS: <strong>{ps_desc}</strong> | PEG: <strong>{peg_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>.</li>
+        <li>📊 <strong>Valuation</strong>: PE: <strong>{trailing_pe_desc}</strong> (Trailing) / <strong>{forward_pe_desc}</strong> (Forward) | PS: <strong>{ps_desc}</strong> (Trailing) / <strong>{forward_ps_desc}</strong> (Forward) | PEG: <strong>{peg_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>.</li>
         <li>💡 <strong>Context</strong>: {val_verdict_str}</li>
         <li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>
     </ul>
