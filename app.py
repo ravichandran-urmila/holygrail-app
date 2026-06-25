@@ -1179,11 +1179,16 @@ def generate_ai_summary(ticker: str, name: str, res, settings) -> tuple[str, str
     # Determine if API keys are available in st.secrets
     gemini_key = None
     openai_key = None
+    hf_token = None
     try:
         if "GEMINI_API_KEY" in st.secrets:
             gemini_key = st.secrets["GEMINI_API_KEY"]
         if "OPENAI_API_KEY" in st.secrets:
             openai_key = st.secrets["OPENAI_API_KEY"]
+        if "HF_TOKEN" in st.secrets:
+            hf_token = st.secrets["HF_TOKEN"]
+        elif "HUGGINGFACE_API_KEY" in st.secrets:
+            hf_token = st.secrets["HUGGINGFACE_API_KEY"]
     except Exception:
         pass
 
@@ -1281,6 +1286,44 @@ CRITICAL INSTRUCTIONS:
                     return text, "GPT-4o-mini API"
         except Exception:
             pass
+
+    # Try Hugging Face Inference API if token is available
+    if hf_token:
+        hf_models = [
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            "HuggingFaceH4/zephyr-7b-beta"
+        ]
+        for model in hf_models:
+            try:
+                url = f"https://api-inference.huggingface.co/models/{model}"
+                headers = {
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "inputs": f"<s>[INST] {prompt} [/INST]",
+                    "parameters": {
+                        "max_new_tokens": 250,
+                        "temperature": 0.4,
+                        "return_full_text": False
+                    }
+                }
+                resp = requests.post(url, headers=headers, json=payload, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        text = data[0].get("generated_text", "").strip()
+                        if text:
+                            if text.startswith("```html"):
+                                text = text[7:]
+                            elif text.startswith("```"):
+                                text = text[3:]
+                            if text.endswith("```"):
+                                text = text[:-3]
+                            text = text.strip()
+                            return text, f"Hugging Face ({model.split('/')[-1]})"
+            except Exception:
+                pass
 
     # Programmatic Rules-Based Generator Fallback
     # Bullet 1: Setup History & Buy Signal
