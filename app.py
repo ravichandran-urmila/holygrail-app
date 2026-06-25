@@ -1494,7 +1494,7 @@ def generate_fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     except Exception:
         pass
 
-    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health of the stock {name} ({ticker}).
+    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured, and non-wordy executive summary analyzing the fundamental health of the stock {name} ({ticker}) based on the following key metrics.
 
 Key Financial Metrics:
 - Trailing PE: {trailing_pe_desc}
@@ -1508,8 +1508,11 @@ Key Financial Metrics:
 - Price to FCF Growth Ratio (P/FCF / Growth): {p_fcf_growth_desc}
 
 CRITICAL INSTRUCTIONS:
-1. Explain what these valuation and cash flow metrics mean for the stock (undervalued, fairly valued, or overvalued/extended).
-2. Keep the analysis concise, structured (using bullet points or bold keys), and under 120 words.
+1. Format your output as a single snapshot introduction paragraph followed by a list (<ul>) with EXACTLY 3 bullet points in this order:
+   - Bullet 1 (📊 **Valuation**): Summarize the Trailing/Forward PE, PS, PEG, and EV/EBITDA metrics.
+   - Bullet 2 (💰 **Cash Flow**): Summarize the cash flow valuation, YoY FCF growth, and growth ratio.
+   - Bullet 3 (💡 **Context**): Provide a clear AI analyst summary of the fundamental health of the company based on these valuations (explaining whether the pricing represents premium growth, value, or is elevated/cautionary).
+2. Keep the entire response under 130 words.
 3. Format in raw HTML using <p>, <strong>, <ul>, <li>. Do not wrap in markdown or code blocks. Keep the style modern and professional."""
 
     # Try Gemini API if key is available
@@ -1628,18 +1631,24 @@ CRITICAL INSTRUCTIONS:
     mcap_desc = f"${mcap/1e9:.1f}B" if mcap else "N/A"
     
     valuation_signals = []
+    valuation_health = "Valuation ratios represent a standard market-average pricing profile."
     if ev_ebitda is not None:
         if ev_ebitda < 12.0:
-            valuation_signals.append("EV/EBITDA is undervalued")
+            valuation_signals.append("EV/EBITDA is low/undervalued (<12)")
         elif ev_ebitda > 25.0:
-            valuation_signals.append("EV/EBITDA is premium-priced")
+            valuation_signals.append("EV/EBITDA is premium-priced (>25)")
     if forward_pe is not None:
         if forward_pe < 15.0:
-            valuation_signals.append("Forward PE suggests value pricing")
+            valuation_signals.append("Forward PE suggests value pricing (<15)")
         elif forward_pe > 35.0:
-            valuation_signals.append("Forward PE is growth-priced")
+            valuation_signals.append("Forward PE is growth-priced (>35)")
             
-    val_verdict_str = ", ".join(valuation_signals) if valuation_signals else "Valuation ratios are within standard industry bounds."
+    if valuation_signals:
+        valuation_health = f"Valuation profile: {', '.join(valuation_signals)}."
+        if forward_pe and forward_pe > 35.0:
+            valuation_health += " Ratios suggest the market has priced in a significant growth premium."
+        else:
+            valuation_health += " Ratios indicate defensive value pricing relative to assets and earnings."
     
     growth_verdict = "YoY Free Cash Flow growth is negative or unavailable, suggesting some near-term operational friction."
     if fcf_growth_pct is not None:
@@ -1652,8 +1661,8 @@ CRITICAL INSTRUCTIONS:
     <p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>
     <ul>
         <li>📊 <strong>Valuation</strong>: PE: <strong>{trailing_pe_desc}</strong> (Trailing) / <strong>{forward_pe_desc}</strong> (Forward) | PS: <strong>{ps_desc}</strong> (Trailing) / <strong>{forward_ps_desc}</strong> (Forward) | PEG: <strong>{peg_desc}</strong> | EV/EBITDA: <strong>{ev_ebitda_desc}</strong>.</li>
-        <li>💡 <strong>Context</strong>: {val_verdict_str}</li>
         <li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>
+        <li>💡 <strong>Context</strong>: {valuation_health}</li>
     </ul>
     """
     return fallback_html, "Local Expert System"
