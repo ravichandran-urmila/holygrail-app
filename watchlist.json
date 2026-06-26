@@ -42,6 +42,13 @@
     "commentary": "Copper prices will recover with data center demand being high"
   },
   {
+    "ticker": "HPE",
+    "date_added": "2026-03-23",
+    "price_added": 25.0,
+    "verdict": "BUY",
+    "commentary": "AI agents servers, juniper networking solutions ,Space irradiation resistant servers and endless future themes"
+  },
+  {
     "ticker": "AMD",
     "date_added": "2025-06-23",
     "price_added": 124.0,
@@ -56,10 +63,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "HPE",
-    "date_added": "2026-03-23",
-    "price_added": 25.0,
+    "ticker": "NTRA",
+    "date_added": "2026-05-30",
+    "price_added": 220.0,
     "verdict": "BUY",
-    "commentary": "AI agents servers, juniper networking solutions ,Space irradiation resistant servers and endless future themes"
+    "commentary": ""
   }
 ]
