@@ -21,6 +21,13 @@
     "commentary": "INTC partnership is the catalyst"
   },
   {
+    "ticker": "NTRA",
+    "date_added": "2026-05-30",
+    "price_added": 220.0,
+    "verdict": "BUY",
+    "commentary": ""
+  },
+  {
     "ticker": "ILMN",
     "date_added": "2026-05-27",
     "price_added": 120.0,
@@ -63,10 +70,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "NTRA",
-    "date_added": "2026-05-30",
-    "price_added": 220.0,
-    "verdict": "BUY",
-    "commentary": ""
+    "ticker": "PAYX",
+    "date_added": "2026-06-26",
+    "price_added": 99.0,
+    "verdict": "WATCH",
+    "commentary": "Micheal maul republican buys and it flags EMA flip"
   }
 ]
