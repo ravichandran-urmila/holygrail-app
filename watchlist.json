@@ -35,11 +35,11 @@
     "commentary": "Virtual agents + anthropic stake in the company"
   },
   {
-    "ticker": "HPE",
-    "date_added": "2026-03-25",
-    "price_added": 25.0,
-    "verdict": "HOLD",
-    "commentary": "CPU shortage and Space data centers long term"
+    "ticker": "FCX",
+    "date_added": "2026-03-23",
+    "price_added": 57.0,
+    "verdict": "BUY",
+    "commentary": "Copper prices will recover with data center demand being high"
   },
   {
     "ticker": "AMD",
@@ -56,10 +56,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "FCX",
+    "ticker": "HPE",
     "date_added": "2026-03-23",
-    "price_added": 57.0,
+    "price_added": 25.0,
     "verdict": "BUY",
-    "commentary": "Copper prices will recover with data center demand being high"
+    "commentary": "AI agents servers, juniper networking solutions ,Space irradiation resistant servers and endless future themes"
   }
 ]
