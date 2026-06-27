@@ -1,5 +1,12 @@
 [
   {
+    "ticker": "PAYX",
+    "date_added": "2026-06-26",
+    "price_added": 99.0,
+    "verdict": "WATCH",
+    "commentary": "Micheal maul republican buys and it flags EMA flip"
+  },
+  {
     "ticker": "HUBB",
     "date_added": "2026-06-21",
     "price_added": 520.0,
@@ -70,10 +77,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "PAYX",
-    "date_added": "2026-06-26",
-    "price_added": 99.0,
-    "verdict": "WATCH",
-    "commentary": "Micheal maul republican buys and it flags EMA flip"
+    "ticker": "INCY",
+    "date_added": "2026-06-27",
+    "price_added": 113.0,
+    "verdict": "BUY",
+    "commentary": ""
   }
 ]
