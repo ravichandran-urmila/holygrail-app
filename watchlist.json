@@ -1,5 +1,12 @@
 [
   {
+    "ticker": "CRSP",
+    "date_added": "2026-07-02",
+    "price_added": 59.0,
+    "verdict": "BUY",
+    "commentary": ""
+  },
+  {
     "ticker": "INCY",
     "date_added": "2026-06-27",
     "price_added": 113.0,
@@ -84,10 +91,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "CRSP",
-    "date_added": "2026-07-02",
-    "price_added": 59.0,
+    "ticker": "APD",
+    "date_added": "2026-07-04",
+    "price_added": 314.0,
     "verdict": "BUY",
-    "commentary": ""
+    "commentary": "Space chips and everything's needs helium. And it's at the center of Iran war. "
   }
 ]
