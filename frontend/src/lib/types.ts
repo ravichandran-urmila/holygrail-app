@@ -117,3 +117,27 @@ export interface WatchlistResponse {
 }
 
 export type HistoryRange = "3M" | "6M" | "YTD" | "1Y" | "2Y" | "5Y";
+
+export interface ScreenResult {
+  ticker: string;
+  score: number;
+  verdict: "COMPLETE SETUP" | "WATCHING" | "NO SETUP";
+  fullSetup: boolean;
+  partialSetup: boolean;
+  lastClose: number | null;
+  entryLow: number | null;
+  entryHigh: number | null;
+  mansfieldRs: number | null;
+  pctAbove50w: number | null;
+  rsi14: number | null;
+}
+
+export interface ScreenStatus {
+  state: "idle" | "running" | "done" | "error";
+  total: number;
+  done: number;
+  found: number;
+  results: ScreenResult[];
+  elapsed: number | null;
+  error: string | null;
+}

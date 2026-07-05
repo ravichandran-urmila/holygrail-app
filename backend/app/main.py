@@ -9,7 +9,7 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import ai, data as datalib, watchlist as wl
+from . import ai, data as datalib, screener, watchlist as wl
 from .indicator import HGSettings, compute
 from .scan_service import run_scan
 
@@ -140,6 +140,25 @@ def guide_case(ticker: str, start: str, end: str):
     for mkey in payload["markers"]:
         payload["markers"][mkey] = [p for p in payload["markers"][mkey] if start <= p["time"] <= end]
     return payload
+
+
+@app.post("/api/screen/run")
+def screen_run(
+    retest_max: float = 15.0,
+    base_min: int = 15,
+    partial_thresh: float = 0.35,
+    full_thresh: float = 0.70,
+):
+    settings = _settings(
+        retest_max=retest_max, base_min=base_min,
+        partial_thresh=partial_thresh, full_thresh=full_thresh,
+    )
+    return screener.start(settings)
+
+
+@app.get("/api/screen")
+def screen_status():
+    return screener.status()
 
 
 @app.get("/api/watchlist")

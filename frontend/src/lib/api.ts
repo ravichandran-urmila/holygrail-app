@@ -3,6 +3,7 @@ import type {
   AiResponse,
   HistoryRange,
   ScanResponse,
+  ScreenStatus,
   WatchlistItem,
   WatchlistResponse,
 } from "./types";
@@ -108,6 +109,23 @@ export function useRemoveWatchlist() {
     mutationFn: (args: { ticker: string; admin: string }) =>
       send<WatchlistResponse>(`/api/watchlist/${args.ticker}`, "DELETE", undefined, args.admin),
     onSuccess: (data) => qc.setQueryData(["watchlist"], data),
+  });
+}
+
+export function useScreenStatus() {
+  return useQuery({
+    queryKey: ["screen"],
+    queryFn: () => get<ScreenStatus>("/api/screen"),
+    refetchInterval: (query) =>
+      query.state.data?.state === "running" ? 1500 : false,
+  });
+}
+
+export function useRunScreen() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => send<ScreenStatus>("/api/screen/run", "POST", undefined),
+    onSuccess: (data) => qc.setQueryData(["screen"], data),
   });
 }
 
