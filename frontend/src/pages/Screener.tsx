@@ -4,7 +4,14 @@ import { useRunScreen, useScreenStatus } from "../lib/api";
 import { fmtUsd, VERDICT_META } from "../lib/format";
 import type { ScreenResult } from "../lib/types";
 
-type Filter = "setups" | "all";
+type Filter = "setups" | "complete" | "watching" | "all";
+
+const FILTERS: { key: Filter; label: string; tint?: string; pred: (r: ScreenResult) => boolean }[] = [
+  { key: "setups", label: "Setups", pred: (r) => r.verdict !== "NO SETUP" },
+  { key: "complete", label: "Complete", tint: "#1fdd97", pred: (r) => r.verdict === "COMPLETE SETUP" },
+  { key: "watching", label: "Watching", tint: "#ffb020", pred: (r) => r.verdict === "WATCHING" },
+  { key: "all", label: "All", pred: () => true },
+];
 
 export function Screener() {
   const { data } = useScreenStatus();
@@ -21,13 +28,17 @@ export function Screener() {
   const complete = results.filter((r) => r.verdict === "COMPLETE SETUP").length;
   const watching = results.filter((r) => r.verdict === "WATCHING").length;
 
-  const rows = useMemo(
-    () =>
-      filter === "setups"
-        ? results.filter((r) => r.verdict !== "NO SETUP")
-        : results,
-    [results, filter],
+  const counts = useMemo(
+    () => Object.fromEntries(FILTERS.map((f) => [f.key, results.filter(f.pred).length])),
+    [results],
   );
+
+  const rows = useMemo(() => {
+    const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[3];
+    return results
+      .filter(active.pred)
+      .sort((a, b) => b.score - a.score || (b.mansfieldRs ?? -99) - (a.mansfieldRs ?? -99));
+  }, [results, filter]);
 
   return (
     <div className="animate-fade-up space-y-6">
@@ -81,18 +92,25 @@ export function Screener() {
               <MiniStat label="Complete" value={String(complete)} tint="#1fdd97" />
               <MiniStat label="Watching" value={String(watching)} tint="#ffb020" />
             </div>
-            <div className="flex rounded-2xl border border-line bg-white/[0.02] p-1 text-sm">
-              {(["setups", "all"] as Filter[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`rounded-xl px-4 py-1.5 font-medium transition ${
-                    filter === f ? "bg-white/[0.08] text-ink" : "text-muted hover:text-ink"
-                  }`}
-                >
-                  {f === "setups" ? "Setups only" : "All"}
-                </button>
-              ))}
+            <div className="flex flex-wrap rounded-2xl border border-line bg-white/[0.02] p-1 text-sm">
+              {FILTERS.map((f) => {
+                const active = filter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilter(f.key)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 font-medium transition ${
+                      active ? "bg-white/[0.08] text-ink" : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {f.tint && (
+                      <span className="h-2 w-2 rounded-full" style={{ background: f.tint }} />
+                    )}
+                    {f.label}
+                    <span className="tnum text-xs text-faint">{counts[f.key]}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
