@@ -7,6 +7,13 @@
     "commentary": "Space chips and everything's needs helium. And it's at the center of Iran war. "
   },
   {
+    "ticker": "GILD",
+    "date_added": "2026-07-04",
+    "price_added": 135.0,
+    "verdict": "WATCH",
+    "commentary": "Healthcare theme is picking up in midterm years"
+  },
+  {
     "ticker": "CRSP",
     "date_added": "2026-07-02",
     "price_added": 59.0,
@@ -56,13 +63,6 @@
     "commentary": ""
   },
   {
-    "ticker": "ILMN",
-    "date_added": "2026-05-27",
-    "price_added": 120.0,
-    "verdict": "BUY",
-    "commentary": "ARKG and biotech seems like the next momentum sector"
-  },
-  {
     "ticker": "ZM",
     "date_added": "2026-04-20",
     "price_added": 92.0,
@@ -98,10 +98,10 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "GILD",
-    "date_added": "2026-07-04",
-    "price_added": 135.0,
-    "verdict": "WATCH",
-    "commentary": "Healthcare theme is picking up in midterm years"
+    "ticker": "ILMN",
+    "date_added": "2026-05-27",
+    "price_added": 150.1699981689453,
+    "verdict": "HOLD",
+    "commentary": ""
   }
 ]
