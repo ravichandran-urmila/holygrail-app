@@ -136,10 +136,10 @@ export function Screener() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex gap-3">
-              <MiniStat label="Scanned" value={String(done)} />
-              <MiniStat label="Complete" value={String(complete)} tint="#1fdd97" />
-              <MiniStat label="Watching" value={String(watching)} tint="#ffb020" />
-              <MiniStat label="Complete (1-6 w)" value={String(recent)} tint="#a855f7" />
+              <MiniStat label="Scanned" value={String(done)} active={filter === "all"} onClick={() => setFilter("all")} />
+              <MiniStat label="Complete" value={String(complete)} tint="#1fdd97" active={filter === "complete"} onClick={() => setFilter("complete")} />
+              <MiniStat label="Watching" value={String(watching)} tint="#ffb020" active={filter === "watching"} onClick={() => setFilter("watching")} />
+              <MiniStat label="Complete (1-6 w)" value={String(recent)} tint="#a855f7" active={filter === "recentSetup"} onClick={() => setFilter("recentSetup")} />
             </div>
             <div className="flex flex-wrap rounded-2xl border border-line bg-white/[0.02] p-1 text-sm">
               {FILTERS.map((f) => {
@@ -185,14 +185,32 @@ export function Screener() {
   );
 }
 
-function MiniStat({ label, value, tint }: { label: string; value: string; tint?: string }) {
+function MiniStat({
+  label,
+  value,
+  tint,
+  active,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  tint?: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-line bg-white/[0.03] px-4 py-2.5 text-center">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-2xl border px-4 py-2.5 text-center transition ${
+        active ? "border-line-strong bg-white/[0.08]" : "border-line bg-white/[0.03] hover:bg-white/[0.05]"
+      }`}
+    >
       <div className="tnum font-display text-lg font-bold" style={tint ? { color: tint } : undefined}>
         {value}
       </div>
       <div className="text-[11px] text-faint">{label}</div>
-    </div>
+    </button>
   );
 }
 
