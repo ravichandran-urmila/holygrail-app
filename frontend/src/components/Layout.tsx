@@ -4,7 +4,7 @@ import { AlertBell } from "./AlertBell";
 
 const NAV = [
   { to: "/", label: "Scanner", end: true },
-  { to: "/screener", label: "Screener", end: false },
+  { to: "/screener", label: "Auto-Screener", end: false },
   { to: "/guide", label: "Guide", end: false },
   { to: "/expert", label: "Expert Corner", end: false },
 ];

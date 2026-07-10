@@ -124,7 +124,8 @@ export function useScreenStatus() {
 export function useRunScreen() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => send<ScreenStatus>("/api/screen/run", "POST", undefined),
+    mutationFn: (universe?: string) =>
+      send<ScreenStatus>(`/api/screen/run${universe ? `?universe=${universe}` : ""}`, "POST", undefined),
     onSuccess: (data) => qc.setQueryData(["screen"], data),
   });
 }
@@ -136,6 +137,18 @@ export async function lookupPrice(ticker: string, date: string, admin: string): 
   );
   if (!res.ok) throw new Error((await res.json()).detail ?? "Lookup failed");
   return (await res.json()).price as number;
+}
+
+export async function verifyAdminPassword(admin: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/api/admin/verify`, {
+      method: "POST",
+      headers: { "X-Admin-Password": admin },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export type { WatchlistItem };

@@ -24,5 +24,7 @@ export const WL_VERDICT_COLOR: Record<string, string> = {
   BUY: "#16c784",
   WATCH: "#ffd23f",
   HOLD: "#38b6ff",
-  AVOID: "#ea3943",
+  TRIM: "#f97316",
+  SELL: "#ea3943",
+  AVOID: "#94a6c9",
 };

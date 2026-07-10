@@ -105,8 +105,10 @@ export interface WatchlistItem {
   ticker: string;
   dateAdded: string;
   priceAdded: number;
+  priceTarget: number | null;
+  options?: string;
   currentPrice: number | null;
-  verdict: "BUY" | "WATCH" | "HOLD" | "AVOID" | string;
+  verdict: "BUY" | "WATCH" | "HOLD" | "TRIM" | "SELL" | "AVOID" | string;
   commentary: string;
   gain: number | null;
 }
@@ -124,6 +126,7 @@ export interface ScreenResult {
   verdict: "COMPLETE SETUP" | "WATCHING" | "NO SETUP";
   fullSetup: boolean;
   partialSetup: boolean;
+  weeksSinceLastFull: number | null;
   lastClose: number | null;
   entryLow: number | null;
   entryHigh: number | null;
@@ -134,6 +137,7 @@ export interface ScreenResult {
 
 export interface ScreenStatus {
   state: "idle" | "running" | "done" | "error";
+  universe?: string;
   total: number;
   done: number;
   found: number;

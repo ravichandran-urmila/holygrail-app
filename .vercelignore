@@ -1,0 +1,11 @@
+frontend/node_modules
+backend/.venv
+.devcontainer
+__pycache__
+*.pyc
+.git
+.npm_cache
+/app.py
+/data.py
+/indicator.py
+/requirements.txt

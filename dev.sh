@@ -18,7 +18,7 @@ echo "→ Starting FastAPI backend on :8000"
 echo "→ Starting Vite frontend on :5173"
 (
   cd "$ROOT/frontend"
-  [ -d node_modules ] || npm install
+  [ -d node_modules ] || npm install --cache "$ROOT/frontend/.npm_cache"
   npm run dev
 ) &
 

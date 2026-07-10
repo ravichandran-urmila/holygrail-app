@@ -15,11 +15,12 @@ from .scan_service import run_scan
 
 app = FastAPI(title="Holygrail API", version="1.0.0")
 
-_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:4173").split(",")
+_cors_env = os.environ.get("CORS_ORIGINS", "*")
+_origins = ["*"] if _cors_env == "*" else [o.strip() for o in _cors_env.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _origins if o.strip()],
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials=_cors_env != "*",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -144,6 +145,7 @@ def guide_case(ticker: str, start: str, end: str):
 
 @app.post("/api/screen/run")
 def screen_run(
+    universe: str = "sp500",
     retest_max: float = 15.0,
     base_min: int = 15,
     partial_thresh: float = 0.35,
@@ -153,7 +155,7 @@ def screen_run(
         retest_max=retest_max, base_min=base_min,
         partial_thresh=partial_thresh, full_thresh=full_thresh,
     )
-    return screener.start(settings)
+    return screener.start(settings, universe)
 
 
 @app.get("/api/screen")
@@ -171,6 +173,8 @@ class WatchlistItem(BaseModel):
     ticker: str
     date_added: str
     price_added: float
+    price_target: float | None = None
+    options: str | None = ""
     verdict: str = "WATCH"
     commentary: str = ""
 
@@ -188,6 +192,8 @@ def add_watchlist(item: WatchlistItem, x_admin_password: str | None = Header(def
             "ticker": ticker,
             "date_added": item.date_added,
             "price_added": float(item.price_added),
+            "price_target": float(item.price_target) if item.price_target is not None else None,
+            "options": item.options,
             "verdict": item.verdict,
             "commentary": item.commentary,
         }
@@ -205,6 +211,12 @@ def remove_watchlist(ticker: str, x_admin_password: str | None = Header(default=
     if not wl.save(items):
         raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
     return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
+
+
+@app.post("/api/admin/verify")
+def verify_admin(x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    return {"status": "ok"}
 
 
 @app.get("/api/lookup-price")

@@ -4,12 +4,18 @@ import { useRunScreen, useScreenStatus } from "../lib/api";
 import { fmtUsd, VERDICT_META } from "../lib/format";
 import type { ScreenResult } from "../lib/types";
 
-type Filter = "setups" | "complete" | "watching" | "all";
+type Filter = "setups" | "complete" | "watching" | "recentSetup" | "all";
 
 const FILTERS: { key: Filter; label: string; tint?: string; pred: (r: ScreenResult) => boolean }[] = [
   { key: "setups", label: "Setups", pred: (r) => r.verdict !== "NO SETUP" },
   { key: "complete", label: "Complete", tint: "#1fdd97", pred: (r) => r.verdict === "COMPLETE SETUP" },
   { key: "watching", label: "Watching", tint: "#ffb020", pred: (r) => r.verdict === "WATCHING" },
+  {
+    key: "recentSetup",
+    label: "Complete (1-6 wks ago)",
+    tint: "#a855f7",
+    pred: (r) => r.weeksSinceLastFull !== null && r.weeksSinceLastFull >= 1 && r.weeksSinceLastFull <= 6,
+  },
   { key: "all", label: "All", pred: () => true },
 ];
 
@@ -20,6 +26,7 @@ export function Screener() {
 
   const state = data?.state ?? "idle";
   const running = state === "running";
+  const activeUniverse = data?.universe;
   const total = data?.total ?? 0;
   const done = data?.done ?? 0;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -27,6 +34,9 @@ export function Screener() {
   const results = data?.results ?? [];
   const complete = results.filter((r) => r.verdict === "COMPLETE SETUP").length;
   const watching = results.filter((r) => r.verdict === "WATCHING").length;
+  const recent = results.filter(
+    (r) => r.weeksSinceLastFull !== null && r.weeksSinceLastFull >= 1 && r.weeksSinceLastFull <= 6
+  ).length;
 
   const counts = useMemo(
     () => Object.fromEntries(FILTERS.map((f) => [f.key, results.filter(f.pred).length])),
@@ -34,10 +44,21 @@ export function Screener() {
   );
 
   const rows = useMemo(() => {
-    const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[3];
-    return results
-      .filter(active.pred)
-      .sort((a, b) => b.score - a.score || (b.mansfieldRs ?? -99) - (a.mansfieldRs ?? -99));
+    const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[4];
+    const filtered = results.filter(active.pred);
+    if (filter === "recentSetup") {
+      return filtered.sort((a, b) => {
+        const aWatching = a.verdict === "WATCHING" ? 1 : 0;
+        const bWatching = b.verdict === "WATCHING" ? 1 : 0;
+        if (aWatching !== bWatching) {
+          return bWatching - aWatching; // 1 (watching) comes first
+        }
+        const aWeeks = a.weeksSinceLastFull ?? 999;
+        const bWeeks = b.weeksSinceLastFull ?? 999;
+        return aWeeks - bWeeks; // ascending weeks since setup
+      });
+    }
+    return filtered.sort((a, b) => b.score - a.score || (b.mansfieldRs ?? -99) - (a.mansfieldRs ?? -99));
   }, [results, filter]);
 
   return (
@@ -45,20 +66,47 @@ export function Screener() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">
-            <span className="text-gradient">S&P 500 Screener</span>
+            <span className="text-gradient">Auto-Screener</span>
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-muted">
-            Scans all ~500 S&P constituents through the Holy Grail engine and ranks every hit by
+            Scans index constituents through the Holy Grail engine and ranks every hit by
             weighted score. Data is weekly and cached hourly.
           </p>
         </div>
-        <button
-          onClick={() => run.mutate()}
-          disabled={running || run.isPending}
-          className="btn-primary whitespace-nowrap disabled:opacity-60"
-        >
-          {running ? `Scanning… ${pct}%` : results.length > 0 ? "Re-run scan" : "Run S&P 500 scan"}
-        </button>
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() => run.mutate("sp500")}
+              disabled={run.isPending || (running && activeUniverse === "sp500")}
+              className="btn-primary whitespace-nowrap disabled:opacity-60"
+            >
+              {running && activeUniverse === "sp500" ? `Scanning… ${pct}%` : "Run S&P 500 scan"}
+            </button>
+            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">fast</span>
+          </div>
+
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() => run.mutate("russell1000")}
+              disabled={run.isPending || (running && activeUniverse === "russell1000")}
+              className="btn-teal whitespace-nowrap disabled:opacity-60"
+            >
+              {running && activeUniverse === "russell1000" ? `Scanning… ${pct}%` : "Run Russell 1000 scan"}
+            </button>
+            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">slow</span>
+          </div>
+
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() => run.mutate("russell2000")}
+              disabled={run.isPending || (running && activeUniverse === "russell2000")}
+              className="btn-ghost whitespace-nowrap disabled:opacity-60"
+            >
+              {running && activeUniverse === "russell2000" ? `Scanning… ${pct}%` : "Run Russell 2000 scan"}
+            </button>
+            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">slowest</span>
+          </div>
+        </div>
       </div>
 
       {running && (
@@ -91,6 +139,7 @@ export function Screener() {
               <MiniStat label="Scanned" value={String(done)} />
               <MiniStat label="Complete" value={String(complete)} tint="#1fdd97" />
               <MiniStat label="Watching" value={String(watching)} tint="#ffb020" />
+              <MiniStat label="Complete (1-6 w)" value={String(recent)} tint="#a855f7" />
             </div>
             <div className="flex flex-wrap rounded-2xl border border-line bg-white/[0.02] p-1 text-sm">
               {FILTERS.map((f) => {
@@ -128,8 +177,7 @@ export function Screener() {
         <div className="card grid place-items-center gap-3 p-12 text-center">
           <div className="text-4xl">🛰️</div>
           <div className="text-sm text-muted">
-            Hit <span className="font-semibold text-ink">Run S&P 500 scan</span> to sweep the whole
-            index for Holy Grail setups. First run takes a couple of minutes.
+            Select an index to sweep constituents for Holy Grail setups. First run takes a couple of minutes.
           </div>
         </div>
       )}
@@ -196,6 +244,11 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                     >
                       {meta.emoji} {meta.label}
                     </span>
+                    {r.weeksSinceLastFull !== null && r.weeksSinceLastFull > 0 && (
+                      <span className="text-[10px] text-faint block mt-1">
+                        Setup: {r.weeksSinceLastFull} wk{r.weeksSinceLastFull > 1 ? "s" : ""} ago
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
                     {r.entryLow === null || r.entryHigh === null
