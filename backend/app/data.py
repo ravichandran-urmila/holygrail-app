@@ -7,14 +7,34 @@ Streamlit-free port of the original data.py — caching via a local TTL cache.
 
 from __future__ import annotations
 
+import threading
 import time
 
 import pandas as pd
 import yfinance as yf
+from curl_cffi import requests as curl_requests
 
 from .cache import cached
 
 SPX_SYMBOL = "^GSPC"
+
+# yfinance uses curl_cffi under the hood but leaves browser impersonation off,
+# so Yahoo flags the requests and rate-limits (HTTP 429). A Chrome-impersonating
+# session dramatically cuts 429s. Sessions aren't thread-safe, so give each
+# worker thread (the screener runs a pool) its own.
+_thread_local = threading.local()
+
+
+def _session() -> curl_requests.Session:
+    s = getattr(_thread_local, "session", None)
+    if s is None:
+        s = curl_requests.Session(impersonate="chrome")
+        _thread_local.session = s
+    return s
+
+
+def _ticker(symbol: str) -> yf.Ticker:
+    return yf.Ticker(symbol, session=_session())
 
 
 def _history_with_retry(symbol: str, period: str, attempts: int = 3) -> pd.DataFrame:
@@ -22,7 +42,7 @@ def _history_with_retry(symbol: str, period: str, attempts: int = 3) -> pd.DataF
     last_err = None
     for i in range(attempts):
         try:
-            df = yf.Ticker(symbol).history(period=period, interval="1wk", auto_adjust=False)
+            df = _ticker(symbol).history(period=period, interval="1wk", auto_adjust=False)
             if df is not None and not df.empty:
                 return df
             last_err = ValueError(f"Empty response for '{symbol}'.")
@@ -59,7 +79,7 @@ def fetch_spx_weekly(period: str = "10y") -> pd.Series:
 def fetch_financial_info(ticker: str) -> dict:
     """Fetch key financial metrics and cash flow info for the ticker."""
     try:
-        t = yf.Ticker(ticker)
+        t = _ticker(ticker)
         info = t.info or {}
 
         fcf_history = []
@@ -100,7 +120,7 @@ def resolve_name(ticker: str) -> str:
 def fetch_news(ticker: str) -> list:
     """Fetch recent news articles for a ticker from yfinance."""
     try:
-        t = yf.Ticker(ticker)
+        t = _ticker(ticker)
         return t.news or []
     except Exception:
         return []

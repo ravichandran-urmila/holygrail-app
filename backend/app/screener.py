@@ -46,18 +46,14 @@ _job: dict = {
 }
 
 
-def _reset(total: int, universe: str) -> None:
-    with _lock:
-        _job.update(
-            state="running",
-            universe=universe,
-            total=total,
-            done=0,
-            results=[],
-            startedAt=time.time(),
-            finishedAt=None,
-            error=None,
-        )
+def _universe_tickers(universe: str) -> list[str]:
+    if universe == "russell2000":
+        from .russell2000 import RUSSELL2000
+        return RUSSELL2000
+    if universe == "russell1000":
+        from .russell1000 import RUSSELL1000
+        return RUSSELL1000
+    return SP500
 
 
 def status() -> dict:
@@ -155,49 +151,46 @@ def _run(settings: HGSettings, tickers: list[str], universe: str) -> None:
 
 
 def start(settings: HGSettings, universe: str = "sp500") -> dict:
-    """Kick off a scan unless one is already running. Returns current status."""
+    """Kick off a scan unless one is already running. Returns current status.
+
+    Only one scan runs at a time. If a scan is already in flight (for any
+    universe) the call is a no-op that returns the live progress. The state
+    check and the transition to "running" happen under a single lock, so two
+    near-simultaneous clicks can't both spawn a scan and clobber each other.
+    """
+    tickers = _universe_tickers(universe)
     with _lock:
-        # Check if we have a valid cached scan completed within 1 hour
+        # Serve a scan completed within the last hour from cache.
         if universe in _completed_scans:
             completed_at, cached_results = _completed_scans[universe]
             if time.time() - completed_at < 3600:
-                if universe == "russell2000":
-                    from .russell2000 import RUSSELL2000
-                    u_len = len(RUSSELL2000)
-                elif universe == "russell1000":
-                    from .russell1000 import RUSSELL1000
-                    u_len = len(RUSSELL1000)
-                else:
-                    u_len = len(SP500)
-
                 _job.update(
                     state="done",
                     universe=universe,
-                    total=u_len,
-                    done=u_len,
+                    total=len(tickers),
+                    done=len(tickers),
                     results=cached_results,
                     startedAt=completed_at - 10,
                     finishedAt=completed_at,
-                    error=None
+                    error=None,
                 )
                 return status()
 
+        # Single-flight: a scan is already running — don't start another.
         if _job["state"] == "running":
-            already = True
-        else:
-            already = False
-    if already:
-        return status()
-    
-    if universe == "russell2000":
-        from .russell2000 import RUSSELL2000
-        tickers = RUSSELL2000
-    elif universe == "russell1000":
-        from .russell1000 import RUSSELL1000
-        tickers = RUSSELL1000
-    else:
-        tickers = SP500
+            return status()
 
-    _reset(len(tickers), universe)
+        # Claim the job before releasing the lock so no other caller can start one.
+        _job.update(
+            state="running",
+            universe=universe,
+            total=len(tickers),
+            done=0,
+            results=[],
+            startedAt=time.time(),
+            finishedAt=None,
+            error=None,
+        )
+
     threading.Thread(target=_run, args=(settings, tickers, universe), daemon=True).start()
     return status()

@@ -77,7 +77,7 @@ export function Screener() {
           <div className="flex flex-col items-center gap-1.5">
             <button
               onClick={() => run.mutate("sp500")}
-              disabled={run.isPending || (running && activeUniverse === "sp500")}
+              disabled={run.isPending || running}
               className="btn-primary whitespace-nowrap disabled:opacity-60"
             >
               {running && activeUniverse === "sp500" ? `Scanning… ${pct}%` : "Run S&P 500 scan"}
@@ -88,7 +88,7 @@ export function Screener() {
           <div className="flex flex-col items-center gap-1.5">
             <button
               onClick={() => run.mutate("russell1000")}
-              disabled={run.isPending || (running && activeUniverse === "russell1000")}
+              disabled={run.isPending || running}
               className="btn-teal whitespace-nowrap disabled:opacity-60"
             >
               {running && activeUniverse === "russell1000" ? `Scanning… ${pct}%` : "Run Russell 1000 scan"}
@@ -99,7 +99,7 @@ export function Screener() {
           <div className="flex flex-col items-center gap-1.5">
             <button
               onClick={() => run.mutate("russell2000")}
-              disabled={run.isPending || (running && activeUniverse === "russell2000")}
+              disabled={run.isPending || running}
               className="btn-ghost whitespace-nowrap disabled:opacity-60"
             >
               {running && activeUniverse === "russell2000" ? `Scanning… ${pct}%` : "Run Russell 2000 scan"}
