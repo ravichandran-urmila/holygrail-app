@@ -18,6 +18,7 @@ export function Scanner() {
   const urlTab = params.get("tab");
   const initialTab = urlTab === "Dashboard" || urlTab === "Data" ? urlTab : "Chart";
   const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab);
+  const [chartType, setChartType] = useState<"candle" | "line">("candle");
   const { settings, showCloud } = useSettings();
 
   useEffect(() => setInput(urlTicker), [urlTicker]);
@@ -80,7 +81,26 @@ export function Scanner() {
               </div>
 
               {tab === "Chart" && (
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <div className="flex rounded-2xl border border-line bg-white/[0.02] p-1">
+                    <button
+                      onClick={() => setChartType("candle")}
+                      className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
+                        chartType === "candle" ? "bg-violet/25 text-ink" : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      Candle
+                    </button>
+                    <button
+                      onClick={() => setChartType("line")}
+                      className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
+                        chartType === "line" ? "bg-violet/25 text-ink" : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      Line
+                    </button>
+                  </div>
+                  
                   <div className="flex rounded-2xl border border-line bg-white/[0.02] p-1">
                     {RANGES.map((r) => (
                       <button
@@ -101,7 +121,7 @@ export function Scanner() {
             <div className="p-3 sm:p-5">
               {tab === "Chart" && (
                 <>
-                  <Chart data={data} showCloud={showCloud} />
+                  <Chart data={data} showCloud={showCloud} type={chartType} />
                   <ChartLegend />
                 </>
               )}
