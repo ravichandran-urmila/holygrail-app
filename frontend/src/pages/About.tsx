@@ -106,6 +106,7 @@ export function About() {
           </Link>
           <Link
             to="/guide"
+            onClick={() => window.scrollTo(0, 0)}
             className="inline-flex items-center justify-center rounded-xl bg-white/[0.08] px-6 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-white/[0.12] active:scale-[0.98]"
           >
             Learn More
