@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useGuideCase } from "../lib/api";
 import { Chart } from "../components/Chart";
-import emaCloudImg from "../assets/ema-cloud.png";
+
 
 const MICRO_INDICATORS = [
   {
@@ -15,14 +15,9 @@ const MICRO_INDICATORS = [
     body: "Price pushes above the 50WMA, then pulls back to that line to check whether buyers still find value there.",
   },
   {
-    icon: "☁️",
+    icon: <span className="inline-block h-2 w-5 rounded bg-gradient-to-r from-red-500 to-green-500 align-middle" />,
     title: "EMA Cloud: “Is short-term momentum turning?”",
-    body: (
-      <>
-        <p>Three short-term trend lines that flip from a red cloud (downtrend) into a green cloud (uptrend), signaling short-term momentum just turned bullish.</p>
-        <img src={emaCloudImg} alt="EMA Cloud flipping from red to green" className="mt-3 w-full max-w-[280px] rounded-xl border border-line" />
-      </>
-    ),
+    body: "Three short-term trend lines that flip from a red cloud (downtrend) into a green cloud (uptrend), signaling short-term momentum just turned bullish.",
   },
   {
     icon: "📊",
