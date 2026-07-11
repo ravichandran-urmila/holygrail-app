@@ -67,21 +67,21 @@ const CASES: Case[] = [
     ticker: "ARM",
     start: "2025-08-01",
     end: "2026-06-01",
-    title: "ARM Holdings — The Apex Setup",
+    title: "ARM Holdings: The Apex Setup",
     body: (
       <>
         <p>
-          ARM built a prolonged base above the 50WMA through late 2025. On Mar 30 & Apr 6, 2026 it
-          triggered a <strong>Full Holy Grail Setup</strong> at a $149 close (rising 50WMA at
-          $135.67).
+          ARM spent the second half of 2025 building a long base, a stretch of time where buyers and sellers reached balance, with the price consistently accepted above its 50-week average (the long-term uptrend line). On March 30 and again on April 6, 2026, everything lined up at once: the stock closed at $149 while that 50-week average sat at $135.67, rising.
         </p>
-        <p>
-          Price sat in the retest zone, the EMA cloud flipped green, Mansfield RS was strongly
-          positive, and RSI was above 50 — a textbook confluence.
-        </p>
-        <p>
-          🔥 The result: ARM surged from $149 to $353 by late May 2026 — <strong>+135%</strong> in
-          under two months.
+        <ul className="mt-3 space-y-1.5 pl-5 marker:text-muted">
+          <li className="list-disc"><strong>50WMA uptrend:</strong> Price was holding above the 50-week average, confirming the long-term trend was still up.</li>
+          <li className="list-disc"><strong>Retest:</strong> Price had pushed above the 50WMA earlier, then came back down to that level to check whether buyers still saw value there, and they did.</li>
+          <li className="list-disc"><strong>EMA cloud flip:</strong> The short-term moving averages flipped green, signaling the near-term trend had turned bullish too.</li>
+          <li className="list-disc"><strong>Mansfield RS:</strong> ARM was growing faster than the S&P 500 over the past 52 weeks, a sign of relative strength.</li>
+          <li className="list-disc"><strong>Breakout volume:</strong> More buyers stepped in at the same price level, confirming real demand behind the move.</li>
+        </ul>
+        <p className="mt-3">
+          🔥 <strong>Result:</strong> ARM surged from $149 to $353 by late May 2026, a +135% move in under two months.
         </p>
       </>
     ),
@@ -90,20 +90,19 @@ const CASES: Case[] = [
     ticker: "AMD",
     start: "2025-01-01",
     end: "2026-06-19",
-    title: "AMD — Winning Trades Repeated",
+    title: "AMD: Winning Trades Repeated",
     body: (
       <>
         <p>
-          AMD established a solid support base above its rising 50WMA in early 2025. On Jun 23, 2025
-          it triggered a Full Setup (score 0.75) at $143.81, resting on a $126.60 50WMA.
+          AMD spent early 2025 building a solid base, buyers and sellers reaching balance, with price consistently accepted above its rising 50-week average (the long-term uptrend line). On June 23, 2025, it triggered a full setup at $143.81, resting right on its $126.60 50WMA.
         </p>
-        <p>
-          Mansfield RS turned positive (0.4469), confirming momentum vs. the S&amp;P 500 had shifted
-          in AMD's favor.
-        </p>
-        <p>
-          ✅ Entering in the low-risk retest zone captured a run to <strong>+273%</strong> ($537 by
-          Jun 2026).
+        <ul className="mt-3 space-y-1.5 pl-5 marker:text-muted">
+          <li className="list-disc"><strong>50WMA uptrend:</strong> Price held above the 50-week average, confirming the long-term trend was still climbing.</li>
+          <li className="list-disc"><strong>Retest:</strong> Price came back down to check the 50WMA level after being above it, and buyers stepped back in, confirming the level still held value.</li>
+          <li className="list-disc"><strong>Mansfield RS:</strong> AMD’s relative strength score turned positive, meaning it had started growing faster than the S&P 500, momentum had clearly shifted in AMD’s favor.</li>
+        </ul>
+        <p className="mt-3">
+          ✅ <strong>Result:</strong> Entering in that low-risk retest zone captured a massive run. AMD climbed to $537 by June 2026, a +273% return.
         </p>
       </>
     ),
@@ -112,19 +111,15 @@ const CASES: Case[] = [
     ticker: "ADBE",
     start: "2024-10-01",
     end: "2025-08-01",
-    title: "Adobe — The Risks & The Traps",
+    title: "Adobe: The Risks and The Traps",
     body: (
       <>
         <p>
-          Adobe illustrates HRR risk and the absolute rule of the 50WMA. A HRR signal fired at
-          $552.96 (Dec 2, 2024) as the cloud flipped green — but relative strength was weak
-          (Mansfield RS -0.91). It dropped <strong>-15.8%</strong> the very next week.
+          Adobe is a case study in why the 50-week average is treated as an absolute rule, no exceptions. On December 2, 2024, an HRR (High Risk/Reward) signal fired at $552.96: the fast-moving average (EMA5) flipped above the EMA21, an early, higher-payoff entry, but the trend wasn’t fully confirmed yet. Sure enough, the stock was actually underperforming the S&P 500 at the time (Mansfield RS was negative, -0.91), and price dropped -15.8% the very next week.
         </p>
         <p>
-          🚫 From Apr–Jun 2025, value hunters bought a rally to $417 — but price stayed strictly
-          below the declining 50WMA with negative RS.
+          🚫 Then from April to June 2025, bargain hunters bought a rally up to $417, but this wasn’t a real setup. Price stayed below its declining 50-week average the whole time, with relative strength still negative. Since price below the 50WMA means no setup exists, full stop, Adobe collapsed back down into the $340s.
         </p>
-        <p>Because candles below the 50WMA mean no setup, ADBE collapsed back to the $340s.</p>
       </>
     ),
   },
