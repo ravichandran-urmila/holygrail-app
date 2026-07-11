@@ -55,7 +55,7 @@ export function About() {
 
         <div className="prose prose-invert max-w-none text-muted space-y-6 text-[15px] leading-relaxed">
           <p>
-            Frustrated hearing that your neighbour or your friend made multiple folds of profits in a single stock but you didnt know when to catch the momentum? Holygrail will teach you to fish them yourself.
+            We built HolyGrail to give busy parents and early-life investors an accelerated path to mastering Technical Analysis. By identifying specific visual setups where the odds are heavily stacked in your favor, you can ride explosive individual stock momentum before the rest of the world catches on.
           </p>
           <p>
             Over the last few decades, the global money supply has expanded at a staggering long-term average of nearly 7% annually, while the S&P 500 has compounded at roughly 10%. Meanwhile, real ordinary income has practically flatlined, growing at less than 1% per year.
