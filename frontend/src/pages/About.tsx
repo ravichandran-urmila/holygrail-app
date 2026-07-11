@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import aboutPerspective from "../assets/about-perspective.png";
+import aboutGap from "../assets/about-gap.jpg";
 
 function WelcomeModal({ onClose }: { onClose: () => void }) {
   return (
@@ -55,22 +57,40 @@ export function About() {
 
         <div className="prose prose-invert max-w-none text-muted space-y-6 text-[15px] leading-relaxed">
           <p>
-            We built HolyGrail to give busy parents and early-life investors an accelerated path to mastering Technical Analysis. By identifying specific visual setups where the odds are heavily stacked in your favor, you can ride explosive individual stock momentum before the rest of the world catches on.
+            We built HolyGrail to give busy parents and early-stage investors a faster path to mastering technical analysis. By learning to spot a few high-probability chart setups, you can catch powerful stock momentum before the crowd does.
           </p>
           <p>
-            Over the last few decades, the global money supply has expanded at a staggering long-term average of nearly 7% annually, while the S&P 500 has compounded at roughly 10%. Meanwhile, real ordinary income has practically flatlined, growing at less than 1% per year.
+            Over the last few decades, global broad money has grown at about 7% annually, the S&P 500 has compounded at roughly 10% nominally, and real household income has barely moved. That gap leaves working families squeezed when major expenses show up, because the things parents care about most — housing, healthcare, and education — often rise faster than wages.
           </p>
           <p>
-            This massive economic divergence leaves working families stranded when major expenses land on their doorstep. While standard financial advice says to "just buy an index fund," a traditional S&P 500 strategy alone no longer cuts it. Official inflation metrics claim prices only rise a few percent a year, but the real-world expenses parents actually care about—housing, healthcare, and education—historically compound at rates much closer to the expansion of the money supply. When your cost of living grows at 7% a year, a standard index portfolio barely keeps your head above water after taxes and fees.
+            You may turn $100 into about $259 in the S&P 500 over 10 years, but if money supply expands at 7% annually, that’s only about $132 of real purchasing power. The gain is real — but much smaller than the headline suggests.
+          </p>
+
+          <figure className="my-8 overflow-hidden rounded-2xl border border-line bg-base/50 p-2 shadow-2xl">
+            <img 
+              src={aboutPerspective} 
+              alt="10 Years. Two Perspectives. Nominal Growth vs Real Purchasing Power" 
+              className="w-full rounded-xl"
+            />
+          </figure>
+
+          <p>
+            That is why a simple “buy an index fund” approach no longer feels enough on its own. Official inflation numbers may look modest, but the real cost of living for families compounds in a way that’s much harder to ignore. When expenses rise faster than income, a traditional index portfolio can struggle to keep up after taxes and fees.
+          </p>
+
+          <figure className="my-8 overflow-hidden rounded-2xl border border-line bg-base/50 p-2 shadow-2xl">
+            <img 
+              src={aboutGap} 
+              alt="The gap is growing. Inflation is quiet, compounding is loud." 
+              className="w-full rounded-xl"
+            />
+          </figure>
+
+          <p>
+            HolyGrail is designed to break that cycle by helping busy parents and early-stage investors learn momentum analysis more quickly. Think of it like weather forecasting for the stock market: human behavior repeats, charts leave footprints, and technical analysis is really about recognizing patterns where the odds are in your favor.
           </p>
           <p>
-            We built HolyGrail to shatter this cycle by giving busy parents and early-life investors an accelerated path to learning momentum analysis.
-          </p>
-          <p>
-            Think of it like weather forecasting for the stock market. Because human emotion and behavior repeat themselves, charts leave distinct visual footprints. Technical analysis is simply probability-based pattern recognition—identifying specific visual setups where the odds of a massive price move are heavily stacked in your favor.
-          </p>
-          <p>
-            Because the charts always lead the narrative, HolyGrail provides the custom, high-conviction indicators you need to allocate a small-risk portfolio and ride explosive individual stock momentum—like Bitcoin, Nvidia, or Micron—before the rest of the world catches on.
+            Because charts often lead the story, HolyGrail gives you high-conviction indicators to help allocate a small portion of capital toward explosive momentum moves in names like Bitcoin, Nvidia, or Micron before the broader market fully catches on.
           </p>
         </div>
 
