@@ -13,7 +13,7 @@ function WelcomeModal({ onClose }: { onClose: () => void }) {
         </div>
         
         <p className="mb-6 text-[14px] leading-relaxed text-muted">
-          Frustrated hearing that your neighbour or your friend made multiple folds of profits in a single stock but you didnt know when to catch the momentum? Holygrail will teach you to fish them yourself.
+          Frustrated hearing that your neighbor or your friend made multiple folds of profit in a single stock, but you didn't know when to catch the momentum? HolyGrail will teach you to fish for them yourself.
         </p>
         
         <button
@@ -64,7 +64,7 @@ export function About() {
             This massive economic divergence leaves working families stranded when major expenses land on their doorstep. While standard financial advice says to "just buy an index fund," a traditional S&P 500 strategy alone no longer cuts it. Official inflation metrics claim prices only rise a few percent a year, but the real-world expenses parents actually care about—housing, healthcare, and education—historically compound at rates much closer to the expansion of the money supply. When your cost of living grows at 7% a year, a standard index portfolio barely keeps your head above water after taxes and fees.
           </p>
           <p>
-            We built HolyGrail to shatter this cycle by giving busy parents and early-life investors an accelerated path to teaching momentum analysis.
+            We built HolyGrail to shatter this cycle by giving busy parents and early-life investors an accelerated path to learning momentum analysis.
           </p>
           <p>
             Think of it like weather forecasting for the stock market. Because human emotion and behavior repeat themselves, charts leave distinct visual footprints. Technical analysis is simply probability-based pattern recognition—identifying specific visual setups where the odds of a massive price move are heavily stacked in your favor.
