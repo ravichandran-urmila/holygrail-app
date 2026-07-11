@@ -10,6 +10,11 @@ const MICRO_INDICATORS = [
     body: "The stock’s long-term trend line. Price sitting 0 to 3% above a rising 50WMA is the retest zone where a healthy trend usually resumes higher.",
   },
   {
+    icon: "🔄",
+    title: "Retest",
+    body: "Price pushes above the 50WMA, then pulls back to that line to check whether buyers still find value there.",
+  },
+  {
     icon: "☁️",
     title: "EMA Cloud: “Is short-term momentum turning?”",
     body: (
