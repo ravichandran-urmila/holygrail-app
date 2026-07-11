@@ -16,9 +16,10 @@ interface Props {
   data: ScanResponse;
   showCloud: boolean;
   height?: number;
+  type?: "candle" | "line";
 }
 
-export function Chart({ data, showCloud, height = 560 }: Props) {
+export function Chart({ data, showCloud, height = 560, type = "candle" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
 
@@ -69,16 +70,26 @@ export function Chart({ data, showCloud, height = 560 }: Props) {
       );
     }
 
-    const candle = chart.addCandlestickSeries({
-      upColor: "#1fdd97",
-      downColor: "#ff5470",
-      borderUpColor: "#1fdd97",
-      borderDownColor: "#ff5470",
-      wickUpColor: "rgba(31,221,151,0.85)",
-      wickDownColor: "rgba(255,84,112,0.85)",
-      priceLineVisible: false,
-    });
-    candle.setData(data.candles.map((c) => ({ ...c, time: c.time as Time })));
+    let mainSeries: ISeriesApi<"Candlestick"> | ISeriesApi<"Line">;
+    if (type === "line") {
+      mainSeries = chart.addLineSeries({
+        color: "#1fdd97",
+        lineWidth: 2,
+        priceLineVisible: false,
+      });
+      mainSeries.setData(data.candles.map((c) => ({ time: c.time as Time, value: c.close })));
+    } else {
+      mainSeries = chart.addCandlestickSeries({
+        upColor: "#1fdd97",
+        downColor: "#ff5470",
+        borderUpColor: "#1fdd97",
+        borderDownColor: "#ff5470",
+        wickUpColor: "rgba(31,221,151,0.85)",
+        wickDownColor: "rgba(255,84,112,0.85)",
+        priceLineVisible: false,
+      });
+      mainSeries.setData(data.candles.map((c) => ({ ...c, time: c.time as Time })));
+    }
 
     if (showCloud) {
       const emaLine = (points: { time: string; value: number }[], color: string) => {
@@ -134,7 +145,7 @@ export function Chart({ data, showCloud, height = 560 }: Props) {
         size: 1,
       });
     markers.sort((a, b) => String(a.time).localeCompare(String(b.time)));
-    candle.setMarkers(markers);
+    mainSeries.setMarkers(markers);
 
     chart.timeScale().fitContent();
 
