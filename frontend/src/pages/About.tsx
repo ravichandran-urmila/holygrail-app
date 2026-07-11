@@ -57,7 +57,7 @@ export function About() {
 
         <div className="prose prose-invert max-w-none text-muted space-y-6 text-[15px] leading-relaxed">
           <p>
-            We built HolyGrail to give busy parents and early-stage investors a faster path to mastering technical analysis. By learning to spot a few high-probability chart setups, you can catch powerful stock momentum before the crowd does.
+            We built HolyGrail to give busy parents and early-stage investors a faster path to learning momentum analysis. By learning to spot a few high-probability chart setups, you can catch powerful stock momentum before the crowd does.
           </p>
           <p>
             Over the last few decades, global broad money has grown at about 7% annually, the S&P 500 has compounded at roughly 10% nominally, and real household income has barely moved. That gap leaves working families squeezed when major expenses show up, because the things parents care about most — housing, healthcare, and education — often rise faster than wages.
