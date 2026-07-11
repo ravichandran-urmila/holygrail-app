@@ -1,16 +1,23 @@
+import { Link } from "react-router-dom";
 import { useGuideCase } from "../lib/api";
 import { Chart } from "../components/Chart";
+import emaCloudImg from "../assets/ema-cloud.png";
 
 const MICRO_INDICATORS = [
   {
-    icon: "📈",
+    icon: <span className="inline-block h-1 w-5 rounded bg-[#ff9f0a] align-middle" />,
     title: "50WMA: “Where’s the trend?”",
     body: "The stock’s long-term trend line. Price sitting 0 to 3% above a rising 50WMA is the retest zone where a healthy trend usually resumes higher.",
   },
   {
     icon: "☁️",
     title: "EMA Cloud: “Is short-term momentum turning?”",
-    body: "Three short-term trend lines that flip from a flat “cloud” to stacked and rising, signaling short-term momentum just turned bullish.",
+    body: (
+      <>
+        <p>Three short-term trend lines that flip from a red cloud (downtrend) into a green cloud (uptrend), signaling short-term momentum just turned bullish.</p>
+        <img src={emaCloudImg} alt="EMA Cloud flipping from red to green" className="mt-3 w-full max-w-[280px] rounded-xl border border-line" />
+      </>
+    ),
   },
   {
     icon: "📊",
@@ -152,7 +159,12 @@ export function Guide() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="font-display text-xl font-bold tracking-tight">The Micro Indicators</h2>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="font-display text-xl font-bold tracking-tight">The Micro Indicators</h2>
+          <Link to="/scanner" onClick={() => window.scrollTo(0, 0)} className="text-sm font-semibold text-violet transition hover:opacity-80">
+            Test in Dashboard →
+          </Link>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {MICRO_INDICATORS.map((i) => (
             <div key={i.title} className="card flex gap-3 p-4">
