@@ -40,7 +40,7 @@ const SETUPS = [
   {
     icon: <span className="font-black text-xl" style={{ color: "#8b5cf6" }}>↑</span>,
     title: "Holy Grail Setup",
-    body: "The full confluence: price in the retest zone, green EMA cloud, positive Mansfield RS, and RSI above 50. The highest-probability entry.",
+    body: "The full confluence: price in the retest zone, green EMA cloud, positive Mansfield RS, and RSI above 50. The highest-probability entry. Price is ready to move higher in a few weeks to a month.",
   },
   {
     icon: <span style={{ color: "#e040fb" }}>■</span>,
