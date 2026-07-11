@@ -97,12 +97,18 @@ export function About() {
           </p>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-4 flex flex-wrap items-center gap-4">
           <Link
             to="/scanner"
             className="inline-flex items-center justify-center rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-base transition hover:opacity-90 active:scale-[0.98]"
           >
             Go to Scanner →
+          </Link>
+          <Link
+            to="/guide"
+            className="inline-flex items-center justify-center rounded-xl bg-white/[0.08] px-6 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-white/[0.12] active:scale-[0.98]"
+          >
+            Learn More
           </Link>
         </div>
       </div>
