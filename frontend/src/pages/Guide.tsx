@@ -161,7 +161,7 @@ export function Guide() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="font-display text-xl font-bold tracking-tight">The Micro Indicators</h2>
-          <Link to="/scanner" onClick={() => window.scrollTo(0, 0)} className="text-sm font-semibold text-violet transition hover:opacity-80">
+          <Link to="/scanner?tab=Dashboard" onClick={() => window.scrollTo(0, 0)} className="text-sm font-semibold text-violet transition hover:opacity-80">
             Test in Dashboard →
           </Link>
         </div>

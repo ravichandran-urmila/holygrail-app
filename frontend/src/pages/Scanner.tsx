@@ -15,7 +15,9 @@ export function Scanner() {
   const urlTicker = (params.get("ticker") ?? "NVDA").toUpperCase();
   const [input, setInput] = useState(urlTicker);
   const [range, setRange] = useState<HistoryRange>("1Y");
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Chart");
+  const urlTab = params.get("tab");
+  const initialTab = urlTab === "Dashboard" || urlTab === "Data" ? urlTab : "Chart";
+  const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab);
   const { settings, showCloud } = useSettings();
 
   useEffect(() => setInput(urlTicker), [urlTicker]);
