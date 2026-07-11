@@ -8,6 +8,7 @@ import { Scanner } from "./pages/Scanner";
 import { Screener } from "./pages/Screener";
 import { Guide } from "./pages/Guide";
 import { ExpertCorner } from "./pages/ExpertCorner";
+import { About } from "./pages/About";
 import { SettingsProvider } from "./lib/settings";
 
 const queryClient = new QueryClient();
@@ -19,7 +20,8 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Scanner />} />
+            <Route path="/" element={<About />} />
+            <Route path="/scanner" element={<Scanner />} />
             <Route path="/screener" element={<Screener />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/expert" element={<ExpertCorner />} />
