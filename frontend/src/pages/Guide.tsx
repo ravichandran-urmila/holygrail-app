@@ -179,7 +179,10 @@ export function Guide() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="font-display text-xl font-bold tracking-tight">The 3 Setups</h2>
+        <div className="flex items-baseline gap-3">
+          <h2 className="font-display text-xl font-bold tracking-tight">The 3 Setups</h2>
+          <span className="text-sm text-muted">— The only setups you need to read the charts.</span>
+        </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {SETUPS.map((i) => (
             <div key={i.title} className="card flex gap-3 p-4">
