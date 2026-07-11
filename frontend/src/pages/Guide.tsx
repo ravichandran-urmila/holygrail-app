@@ -1,26 +1,49 @@
 import { useGuideCase } from "../lib/api";
 import { Chart } from "../components/Chart";
 
-const INDICATORS = [
+const MICRO_INDICATORS = [
   {
-    icon: <span className="inline-block h-1 w-5 rounded bg-[#ff9f0a] align-middle" />,
-    title: "50-Week MA",
-    body: "The spine of the system — separates bullish from bearish regimes. Below the 50WMA, there is no setup. Period.",
+    icon: "📈",
+    title: "50WMA: “Where’s the trend?”",
+    body: "The stock’s long-term trend line. Price sitting 0 to 3% above a rising 50WMA is the retest zone where a healthy trend usually resumes higher.",
   },
+  {
+    icon: "☁️",
+    title: "EMA Cloud: “Is short-term momentum turning?”",
+    body: "Three short-term trend lines that flip from a flat “cloud” to stacked and rising, signaling short-term momentum just turned bullish.",
+  },
+  {
+    icon: "📊",
+    title: "Volume: “Is anyone actually behind this move?”",
+    body: "How many shares traded. A breakout on 1.5x average volume or more means real money is behind the move, not just noise.",
+  },
+  {
+    icon: "⚡",
+    title: "RSI: “Is momentum overheated or fresh?”",
+    body: "A 0-to-100 momentum gauge. The system watches for RSI freshly crossing above 50, a sign momentum just turned positive rather than already overheated.",
+  },
+  {
+    icon: "💪",
+    title: "Mansfield RS: “Is this stock beating the market?”",
+    body: "Compares the stock to the S&P 500. Turning positive means the stock has started outperforming the broader market, not just rising with it.",
+  },
+];
+
+const SETUPS = [
   {
     icon: <span className="font-black text-xl" style={{ color: "#8b5cf6" }}>↑</span>,
     title: "Holy Grail Setup",
-    body: "The apex signal: price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS and RSI > 50. Highest-probability entry.",
+    body: "The full confluence: price in the retest zone, green EMA cloud, positive Mansfield RS, and RSI above 50. The highest-probability entry.",
   },
   {
     icon: <span style={{ color: "#e040fb" }}>■</span>,
-    title: "HRR (High Risk / Reward)",
-    body: "Fast EMA5 crosses above EMA21 (red → green flip). An early, higher-payoff entry — but the trend isn't fully confirmed yet.",
+    title: "HRR (High Risk/Reward)",
+    body: "An early flip of EMA5 above EMA21 before the trend is fully confirmed. A higher-payoff but riskier entry.",
   },
   {
     icon: <span className="text-gold">●</span>,
     title: "Partial Setup",
-    body: "In the retest zone with a high score but missing one or two criteria. Almost perfect — patience for full confirmation is best.",
+    body: "Price is in the retest zone with a high score, but one or two criteria are still missing. Worth watching, but not yet a trade.",
   },
 ];
 
@@ -128,16 +151,34 @@ export function Guide() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {INDICATORS.map((i) => (
-          <div key={i.title} className="card flex gap-3 p-4">
-            <div className="mt-0.5 w-6 shrink-0 text-center text-lg">{i.icon}</div>
-            <div>
-              <div className="text-sm font-semibold">{i.title}</div>
-              <div className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.body}</div>
+      <div className="space-y-4">
+        <h2 className="font-display text-xl font-bold tracking-tight">The Micro Indicators</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {MICRO_INDICATORS.map((i) => (
+            <div key={i.title} className="card flex gap-3 p-4">
+              <div className="mt-0.5 w-6 shrink-0 text-center text-lg">{i.icon}</div>
+              <div>
+                <div className="text-sm font-semibold">{i.title}</div>
+                <div className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.body}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="font-display text-xl font-bold tracking-tight">The 3 Setups</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {SETUPS.map((i) => (
+            <div key={i.title} className="card flex gap-3 p-4">
+              <div className="mt-0.5 w-6 shrink-0 text-center text-lg">{i.icon}</div>
+              <div>
+                <div className="text-sm font-semibold">{i.title}</div>
+                <div className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-6">
