@@ -90,7 +90,10 @@ export function About() {
             HolyGrail is designed to break that cycle by helping busy parents and early-stage investors learn momentum analysis more quickly. Think of it like weather forecasting for the stock market: human behavior repeats, charts leave footprints, and technical analysis is really about recognizing patterns where the odds are in your favor.
           </p>
           <p>
-            Because charts often lead the story, HolyGrail gives you high-conviction indicators to help allocate a small portion of capital toward explosive momentum moves in names like Bitcoin, Nvidia, or Micron before the broader market fully catches on.
+            Because charts often lead the story, HolyGrail gives you high-conviction indicators to help allocate a small portion of capital toward explosive momentum moves in names like Bitcoin, AMD, or Intel before the broader market fully catches on.
+          </p>
+          <p>
+            Finally, you can backtest all of these indicators to verify their performance for yourself.
           </p>
         </div>
 
