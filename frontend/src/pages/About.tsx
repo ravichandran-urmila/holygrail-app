@@ -13,8 +13,7 @@ function WelcomeModal({ onClose }: { onClose: () => void }) {
         </div>
         
         <p className="mb-6 text-[14px] leading-relaxed text-muted">
-          We built HolyGrail to give busy parents and early-life investors an accelerated path to mastering Technical Analysis. 
-          By identifying specific visual setups where the odds are heavily stacked in your favor, you can ride explosive individual stock momentum before the rest of the world catches on.
+          Frustrated hearing that your neighbour or your friend made multiple folds of profits in a single stock but you didnt know when to catch the momentum? Holygrail will teach you to fish them yourself.
         </p>
         
         <button
@@ -56,13 +55,16 @@ export function About() {
 
         <div className="prose prose-invert max-w-none text-muted space-y-6 text-[15px] leading-relaxed">
           <p>
+            Frustrated hearing that your neighbour or your friend made multiple folds of profits in a single stock but you didnt know when to catch the momentum? Holygrail will teach you to fish them yourself.
+          </p>
+          <p>
             Over the last few decades, the global money supply has expanded at a staggering long-term average of nearly 7% annually, while the S&P 500 has compounded at roughly 10%. Meanwhile, real ordinary income has practically flatlined, growing at less than 1% per year.
           </p>
           <p>
             This massive economic divergence leaves working families stranded when major expenses land on their doorstep. While standard financial advice says to "just buy an index fund," a traditional S&P 500 strategy alone no longer cuts it. Official inflation metrics claim prices only rise a few percent a year, but the real-world expenses parents actually care about—housing, healthcare, and education—historically compound at rates much closer to the expansion of the money supply. When your cost of living grows at 7% a year, a standard index portfolio barely keeps your head above water after taxes and fees.
           </p>
           <p>
-            We built HolyGrail to shatter this cycle by giving busy parents and early-life investors an accelerated path to mastering Technical Analysis.
+            We built HolyGrail to shatter this cycle by giving busy parents and early-life investors an accelerated path to teaching momentum analysis.
           </p>
           <p>
             Think of it like weather forecasting for the stock market. Because human emotion and behavior repeat themselves, charts leave distinct visual footprints. Technical analysis is simply probability-based pattern recognition—identifying specific visual setups where the odds of a massive price move are heavily stacked in your favor.
