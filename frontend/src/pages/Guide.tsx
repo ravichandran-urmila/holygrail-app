@@ -8,7 +8,7 @@ const INDICATORS = [
     body: "The spine of the system — separates bullish from bearish regimes. Below the 50WMA, there is no setup. Period.",
   },
   {
-    icon: <span className="text-info">▲</span>,
+    icon: <span style={{ color: "#8b5cf6" }}>↑</span>,
     title: "Holy Grail Setup",
     body: "The apex signal: price in the 50WMA retest zone, green EMA cloud, positive Mansfield RS and RSI > 50. Highest-probability entry.",
   },
