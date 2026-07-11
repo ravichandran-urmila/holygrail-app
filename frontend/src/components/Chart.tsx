@@ -153,7 +153,7 @@ export function Chart({ data, showCloud, height = 560, type = "candle" }: Props)
       chart.remove();
       chartRef.current = null;
     };
-  }, [data, showCloud]);
+  }, [data, showCloud, type]);
 
   return <div ref={containerRef} style={{ height }} className="w-full" />;
 }
