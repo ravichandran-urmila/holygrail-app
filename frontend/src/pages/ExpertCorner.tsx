@@ -5,6 +5,7 @@ import {
   useAddWatchlist,
   useRemoveWatchlist,
   useSellWatchlist,
+  useReverseSell,
   useWatchlist,
   verifyAdminPassword,
 } from "../lib/api";
@@ -110,7 +111,7 @@ export function ExpertCorner() {
         </div>
       )}
 
-      <AdminPanel items={activeItems} githubEnabled={data?.githubEnabled ?? false} />
+      <AdminPanel activeItems={activeItems} allItems={items} allSells={allSells} githubEnabled={data?.githubEnabled ?? false} />
     </div>
   );
 }
@@ -277,7 +278,17 @@ function ClosedTable({
   );
 }
 
-function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEnabled: boolean }) {
+function AdminPanel({ 
+  activeItems, 
+  allItems, 
+  allSells, 
+  githubEnabled 
+}: { 
+  activeItems: WatchlistItem[]; 
+  allItems: WatchlistItem[]; 
+  allSells: { ticker: string; sellIndex: number; sellPercent: number; sellDate: string }[];
+  githubEnabled: boolean; 
+}) {
   const [open, setOpen] = useState(false);
   const [pass, setPass] = useState("");
   const [isVerified, setIsVerified] = useState(false);
@@ -291,7 +302,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
   const [optionsContract, setOptionsContract] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const [sellTicker, setSellTicker] = useState(items[0]?.ticker ?? "");
+  const [sellTicker, setSellTicker] = useState(activeItems[0]?.ticker ?? "");
   const [sellPercent, setSellPercent] = useState("100");
   const [sellDate, setSellDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [sellPrice, setSellPrice] = useState("");
@@ -300,6 +311,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
   const add = useAddWatchlist();
   const remove = useRemoveWatchlist();
   const sell = useSellWatchlist();
+  const reverseSell = useReverseSell();
 
   const flash = (ok: boolean, text: string) => {
     setMsg({ ok, text });
@@ -388,6 +400,15 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
       flash(true, `Sold ${sellPercent}% of ${sellTicker}`);
       setSellPercent("100");
       setSellPrice("");
+    } catch (e) {
+      flash(false, (e as Error).message);
+    }
+  };
+
+  const handleReverseSell = async (t: string, idx: number) => {
+    try {
+      await reverseSell.mutateAsync({ ticker: t, sellIndex: idx, admin: pass });
+      flash(true, `Reversed sell record for ${t}`);
     } catch (e) {
       flash(false, (e as Error).message);
     }
@@ -536,7 +557,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      {items.length === 0 ? (
+                      {activeItems.length === 0 ? (
                         <div className="text-sm text-muted col-span-2">No active setups to sell.</div>
                       ) : (
                         <>
@@ -548,7 +569,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                               className="input"
                             >
                               {sellTicker === "" && <option value="" disabled>Select...</option>}
-                              {items.map((i) => (
+                              {activeItems.map((i) => (
                                 <option key={i.ticker} value={i.ticker}>
                                   {i.ticker} ({i.positionSize}% left)
                                 </option>
@@ -588,7 +609,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                   )}
 
                   <div className="flex gap-2">
-                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || items.length === 0))}>
+                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || activeItems.length === 0))}>
                       🔍 Auto-fetch price
                     </button>
                     {actionType === "buy" ? (
@@ -596,32 +617,57 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                         {add.isPending ? "Saving…" : "Save"}
                       </button>
                     ) : (
-                      <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || items.length === 0}>
+                      <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || activeItems.length === 0}>
                         {sell.isPending ? "Saving…" : "Save"}
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Remove */}
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold text-muted">❌ Remove ticker</div>
-                  {items.length === 0 ? (
-                    <div className="text-sm text-muted">Nothing to remove.</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {items.map((i) => (
-                        <button
-                          key={i.ticker}
-                          onClick={() => del(i.ticker)}
-                          disabled={remove.isPending || !pass}
-                          className="chip transition hover:border-bear/50 hover:text-bear disabled:opacity-40"
-                        >
-                          {i.ticker} ✕
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="space-y-6">
+                  {/* Remove */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold text-muted">❌ Remove ticker</div>
+                    {allItems.length === 0 ? (
+                      <div className="text-sm text-muted">Nothing to remove.</div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {allItems.map((i) => (
+                          <button
+                            key={i.ticker}
+                            onClick={() => del(i.ticker)}
+                            disabled={remove.isPending || !pass}
+                            className="chip transition hover:border-bear/50 hover:text-bear disabled:opacity-40"
+                          >
+                            {i.ticker} ✕
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Reverse Sell */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold text-muted">⏪ Reverse Sell</div>
+                    {allSells.length === 0 ? (
+                      <div className="text-sm text-muted">No sells to reverse.</div>
+                    ) : (
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                        {allSells.map((s, idx) => (
+                          <div key={`${s.ticker}-${idx}`} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
+                            <span>{s.sellDate}: {s.ticker} ({s.sellPercent}%)</span>
+                            <button
+                              onClick={() => handleReverseSell(s.ticker, s.sellIndex)}
+                              disabled={reverseSell.isPending || !pass}
+                              className="text-bear hover:underline disabled:opacity-50"
+                            >
+                              Reverse
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

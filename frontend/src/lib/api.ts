@@ -121,6 +121,15 @@ export function useSellWatchlist() {
   });
 }
 
+export function useReverseSell() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { ticker: string; sellIndex: number; admin: string }) =>
+      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell/${args.sellIndex}`, "DELETE", undefined, args.admin),
+    onSuccess: (data) => qc.setQueryData(["watchlist"], data),
+  });
+}
+
 export function useScreenStatus(universe: string = "sp500") {
   return useQuery({
     queryKey: ["screen", universe],

@@ -272,6 +272,40 @@ def sell_watchlist(ticker: str, req: SellRequest, x_admin_password: str | None =
     return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
 
 
+@app.delete("/api/watchlist/{ticker}/sell/{sell_index}")
+def reverse_sell(ticker: str, sell_index: int, x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    ticker = ticker.strip().upper()
+    items = wl.load()
+    
+    target = None
+    for item in items:
+        if item.get("ticker") == ticker:
+            target = item
+            break
+            
+    if not target:
+        raise HTTPException(status_code=404, detail="Position not found.")
+        
+    sells = target.get("sells", [])
+    if not (0 <= sell_index < len(sells)):
+        raise HTTPException(status_code=400, detail="Sell record not found.")
+        
+    # Remove the sell and refund the position size
+    removed_sell = sells.pop(sell_index)
+    target["position_size"] = target.get("position_size", 0) + removed_sell.get("percent", 0)
+    
+    # If the position size is now > 0, make sure status is open
+    if target["position_size"] > 0:
+        target["status"] = "open"
+        
+    target["sells"] = sells
+    
+    if not wl.save(items):
+        raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
+    return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
+
+
 @app.post("/api/admin/verify")
 def verify_admin(x_admin_password: str | None = Header(default=None)):
     _require_admin(x_admin_password)
