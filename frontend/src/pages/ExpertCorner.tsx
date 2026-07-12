@@ -275,6 +275,9 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
 
   const [sellTicker, setSellTicker] = useState(items[0]?.ticker ?? "");
   const [sellPercent, setSellPercent] = useState("100");
+  const [sellDate, setSellDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sellPrice, setSellPrice] = useState("");
+  const [actionType, setActionType] = useState<"buy" | "sell">("buy");
 
   const add = useAddWatchlist();
   const remove = useRemoveWatchlist();
@@ -356,9 +359,17 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
   const handleSell = async () => {
     if (!sellTicker || !sellPercent) return;
     try {
-      await sell.mutateAsync({ ticker: sellTicker, percent: parseFloat(sellPercent), admin: pass });
+      const p = sellPrice ? parseFloat(sellPrice) : undefined;
+      await sell.mutateAsync({ 
+        ticker: sellTicker, 
+        percent: parseFloat(sellPercent), 
+        date: sellDate,
+        price: p,
+        admin: pass 
+      });
       flash(true, `Sold ${sellPercent}% of ${sellTicker}`);
       setSellPercent("100");
+      setSellPrice("");
     } catch (e) {
       flash(false, (e as Error).message);
     }
@@ -419,81 +430,158 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                 <div className={`text-sm ${msg.ok ? "text-bull" : "text-bear"}`}>{msg.text}</div>
               )}
 
-              <div className="grid gap-6 md:grid-cols-3">
-                {/* Add */}
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Buy / Sell Form */}
                 <div className="space-y-3">
-                  <div className="text-sm font-semibold text-muted">➕ Add / update ticker</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Ticker</span>
-                      <input
-                        value={ticker}
-                        onChange={(e) => setTicker(e.target.value.toUpperCase())}
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Date added</span>
-                      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Verdict</span>
-                      <select value={verdict} onChange={(e) => setVerdict(e.target.value)} className="input">
-                        {VERDICTS.map((v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Price added</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Resistance <span className="text-[10px] text-muted normal-case font-normal">(price rejection pt)</span></span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={targetPrice}
-                        onChange={(e) => setTargetPrice(e.target.value)}
-                        placeholder="None (-)"
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Options contract</span>
-                      <input
-                        value={optionsContract}
-                        onChange={(e) => setOptionsContract(e.target.value)}
-                        placeholder="None (-)"
-                        className="input"
-                      />
-                    </label>
+                  <div className="flex items-center justify-between text-sm font-semibold text-muted">
+                    <span>Manage Position</span>
+                    <div className="flex gap-1 text-xs">
+                      <button 
+                        onClick={() => setActionType("buy")}
+                        className={`px-2 py-1 rounded-md transition ${actionType === "buy" ? "bg-white/10 text-white" : "hover:bg-white/5"}`}
+                      >
+                        Buy / Update
+                      </button>
+                      <button 
+                        onClick={() => setActionType("sell")}
+                        className={`px-2 py-1 rounded-md transition ${actionType === "sell" ? "bg-white/10 text-white" : "hover:bg-white/5"}`}
+                      >
+                        Sell
+                      </button>
+                    </div>
                   </div>
-                  <label className="block text-xs text-muted">
-                    <span className="mb-1 block">Commentary (tooltip)</span>
-                    <textarea
-                      value={commentary}
-                      onChange={(e) => setCommentary(e.target.value)}
-                      rows={3}
-                      className="input resize-none"
-                      placeholder="Thesis shown on hover…"
-                    />
-                  </label>
+
+                  {actionType === "buy" ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Ticker</span>
+                        <input
+                          value={ticker}
+                          onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Date added</span>
+                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Verdict</span>
+                        <select value={verdict} onChange={(e) => setVerdict(e.target.value)} className="input">
+                          {VERDICTS.map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Price added</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Resistance <span className="text-[10px] text-muted normal-case font-normal">(price rejection pt)</span></span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={targetPrice}
+                          onChange={(e) => setTargetPrice(e.target.value)}
+                          placeholder="None (-)"
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Options contract</span>
+                        <input
+                          value={optionsContract}
+                          onChange={(e) => setOptionsContract(e.target.value)}
+                          placeholder="None (-)"
+                          className="input"
+                        />
+                      </label>
+                      <label className="block text-xs text-muted col-span-2">
+                        <span className="mb-1 block">Commentary (tooltip)</span>
+                        <textarea
+                          value={commentary}
+                          onChange={(e) => setCommentary(e.target.value)}
+                          rows={2}
+                          className="input resize-none"
+                          placeholder="Thesis shown on hover…"
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {items.length === 0 ? (
+                        <div className="text-sm text-muted col-span-2">No active setups to sell.</div>
+                      ) : (
+                        <>
+                          <label className="text-xs text-muted col-span-2">
+                            <span className="mb-1 block">Select Ticker</span>
+                            <select
+                              value={sellTicker}
+                              onChange={(e) => setSellTicker(e.target.value)}
+                              className="input"
+                            >
+                              {sellTicker === "" && <option value="" disabled>Select...</option>}
+                              {items.map((i) => (
+                                <option key={i.ticker} value={i.ticker}>
+                                  {i.ticker} ({i.positionSize}% left)
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="text-xs text-muted">
+                            <span className="mb-1 block">Date Sold</span>
+                            <input type="date" value={sellDate} onChange={(e) => setSellDate(e.target.value)} className="input" />
+                          </label>
+                          <label className="text-xs text-muted">
+                            <span className="mb-1 block">Price Sold</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={sellPrice}
+                              onChange={(e) => setSellPrice(e.target.value)}
+                              className="input"
+                              placeholder="Auto-fetch if empty"
+                            />
+                          </label>
+                          <label className="text-xs text-muted col-span-2">
+                            <span className="mb-1 block">Percent to Sell (0-100%)</span>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              value={sellPercent}
+                              onChange={(e) => setSellPercent(e.target.value)}
+                              className="input"
+                            />
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
-                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass}>
+                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || items.length === 0))}>
                       🔍 Auto-fetch price
                     </button>
-                    <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
-                      {add.isPending ? "Saving…" : "Save"}
-                    </button>
+                    {actionType === "buy" ? (
+                      <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
+                        {add.isPending ? "Saving…" : "Save"}
+                      </button>
+                    ) : (
+                      <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || items.length === 0}>
+                        {sell.isPending ? "Saving…" : "Save"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -514,51 +602,6 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                           {i.ticker} ✕
                         </button>
                       ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sell */}
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold text-muted">💰 Sell / Take Profit</div>
-                  {items.length === 0 ? (
-                    <div className="text-sm text-muted">No active setups to sell.</div>
-                  ) : (
-                    <div className="space-y-3">
-                      <label className="text-xs text-muted block">
-                        <span className="mb-1 block">Select Ticker</span>
-                        <select
-                          value={sellTicker}
-                          onChange={(e) => setSellTicker(e.target.value)}
-                          className="input"
-                        >
-                          {sellTicker === "" && <option value="" disabled>Select...</option>}
-                          {items.map((i) => (
-                            <option key={i.ticker} value={i.ticker}>
-                              {i.ticker} ({i.positionSize}% left)
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="text-xs text-muted block">
-                        <span className="mb-1 block">Percent to Sell (0-100%)</span>
-                        <input
-                          type="number"
-                          step="1"
-                          min="1"
-                          max="100"
-                          value={sellPercent}
-                          onChange={(e) => setSellPercent(e.target.value)}
-                          className="input"
-                        />
-                      </label>
-                      <button
-                        onClick={handleSell}
-                        disabled={sell.isPending || !pass || !sellTicker}
-                        className="btn-bull text-xs"
-                      >
-                        {sell.isPending ? "Selling…" : "Sell Position"}
-                      </button>
                     </div>
                   )}
                 </div>

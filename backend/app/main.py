@@ -221,6 +221,8 @@ def remove_watchlist(ticker: str, x_admin_password: str | None = Header(default=
 
 class SellRequest(BaseModel):
     percent: float
+    price: float | None = None
+    date: str | None = None
 
 
 @app.post("/api/watchlist/{ticker}/sell")
@@ -240,16 +242,21 @@ def sell_watchlist(ticker: str, req: SellRequest, x_admin_password: str | None =
     if not target:
         raise HTTPException(status_code=404, detail="Open position not found.")
         
-    current_price = datalib.fetch_last_close(ticker)
+    current_price = req.price
     if current_price is None:
-        raise HTTPException(status_code=500, detail="Failed to fetch current price.")
+        current_price = datalib.fetch_last_close(ticker)
+        if current_price is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch current price automatically.")
+            
+    if current_price <= 0:
+        raise HTTPException(status_code=400, detail="Price must be > 0.")
         
     sells = target.get("sells", [])
     current_size = target.get("position_size", 100)
     sell_percent = min(req.percent, current_size)
     
     sells.append({
-        "date": datetime.date.today().isoformat(),
+        "date": req.date if req.date else datetime.date.today().isoformat(),
         "percent": sell_percent,
         "price": current_price
     })

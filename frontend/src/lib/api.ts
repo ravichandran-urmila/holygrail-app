@@ -115,8 +115,8 @@ export function useRemoveWatchlist() {
 export function useSellWatchlist() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { ticker: string; percent: number; admin: string }) =>
-      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell`, "POST", { percent: args.percent }, args.admin),
+    mutationFn: (args: { ticker: string; percent: number; date?: string; price?: number; admin: string }) =>
+      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell`, "POST", { percent: args.percent, date: args.date, price: args.price }, args.admin),
     onSuccess: (data) => qc.setQueryData(["watchlist"], data),
   });
 }
