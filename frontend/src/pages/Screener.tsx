@@ -78,7 +78,7 @@ export function Screener() {
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-muted">
             Scans index constituents through the Holy Grail engine and ranks every hit by
-            weighted score. Data is weekly and cached hourly.
+            weighted score. Data is refreshed during the weekend
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
