@@ -21,8 +21,9 @@ export function ExpertCorner() {
 
   const activeItems = items.filter((i) => i.status !== "closed");
   const allSells = items.flatMap((item) => 
-    (item.sells || []).map((sell) => ({
+    (item.sells || []).map((sell, index) => ({
       ticker: item.ticker,
+      sellIndex: index,
       originalEntry: item.priceAdded,
       sellDate: sell.date,
       sellPercent: sell.percent,
