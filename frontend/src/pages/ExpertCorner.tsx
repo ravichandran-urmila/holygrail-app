@@ -114,7 +114,7 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
               <th className="px-4 py-3 font-semibold">Current</th>
               <th className="px-4 py-3 font-semibold">Verdict <span className="text-[9px] text-faint normal-case font-normal block mt-0.5">(hover for comments)</span></th>
               <th className="px-4 py-3 font-semibold">Gain / Loss</th>
-              <th className="px-4 py-3 font-semibold">Resistance (price rejection point)</th>
+              <th className="px-4 py-3 font-semibold">Resistance <span className="text-[9px] text-faint normal-case font-normal block mt-0.5">(price rejection pt)</span></th>
               <th className="px-4 py-3 font-semibold">Options</th>
             </tr>
           </thead>
@@ -347,7 +347,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                       />
                     </label>
                     <label className="text-xs text-muted">
-                      <span className="mb-1 block">Resistance (price rejection point)</span>
+                      <span className="mb-1 block">Resistance <span className="text-[10px] text-muted normal-case font-normal">(price rejection pt)</span></span>
                       <input
                         type="number"
                         step="0.01"
