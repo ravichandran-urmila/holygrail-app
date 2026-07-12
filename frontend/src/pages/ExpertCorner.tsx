@@ -8,6 +8,8 @@ import {
   useReverseSell,
   useWatchlist,
   verifyAdminPassword,
+  requestAdminPin,
+  verifyAdminPin,
 } from "../lib/api";
 import { fmtPct, fmtUsd, gainColor, WL_VERDICT_COLOR } from "../lib/format";
 import type { WatchlistItem } from "../lib/types";
@@ -297,6 +299,7 @@ function AdminPanel({
   const [pass, setPass] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [sendingPin, setSendingPin] = useState(false);
   const [ticker, setTicker] = useState("NVDA");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [verdict, setVerdict] = useState("WATCH");
@@ -322,9 +325,28 @@ function AdminPanel({
     setTimeout(() => setMsg(null), 4000);
   };
 
+  const handleRequestPin = async () => {
+    setSendingPin(true);
+    const res = await requestAdminPin();
+    setSendingPin(false);
+    flash(res.ok, res.message);
+  };
+
   const handleVerify = async () => {
     if (!pass) return;
     setVerifying(true);
+    
+    // First, try verifying as a PIN
+    const token = await verifyAdminPin(pass);
+    if (token) {
+      setPass(token); // Save session token
+      setIsVerified(true);
+      setVerifying(false);
+      flash(true, "PIN verified successfully. Session active.");
+      return;
+    }
+    
+    // If PIN verification fails, try static password fallback
     const ok = await verifyAdminPassword(pass);
     setVerifying(false);
     if (ok) {
@@ -332,7 +354,7 @@ function AdminPanel({
       flash(true, "Password verified successfully.");
     } else {
       setIsVerified(false);
-      flash(false, "Incorrect admin password.");
+      flash(false, "Incorrect PIN or admin password.");
     }
   };
 
@@ -432,15 +454,15 @@ function AdminPanel({
         <div className="space-y-5 border-t border-line p-5">
           {!isVerified ? (
             <div className="space-y-3">
-              <div className="text-xs text-muted font-semibold block mb-1">Verify Password to Unlock</div>
-              <div className="flex gap-2 max-w-sm">
+              <div className="text-xs text-muted font-semibold block mb-1">Admin Authentication Required</div>
+              <div className="flex flex-wrap gap-2 max-w-md items-center">
                 <input
                   type="password"
                   value={pass}
                   onChange={(e) => handlePassChange(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Admin password"
-                  className="input flex-1"
+                  placeholder="Enter temporary PIN or password"
+                  className="input flex-1 min-w-[200px]"
                 />
                 <button
                   onClick={handleVerify}
@@ -448,6 +470,13 @@ function AdminPanel({
                   className="btn-primary shrink-0 text-xs px-4"
                 >
                   {verifying ? "Verifying..." : "Unlock"}
+                </button>
+                <button
+                  onClick={handleRequestPin}
+                  disabled={sendingPin}
+                  className="btn-ghost shrink-0 text-xs px-4"
+                >
+                  {sendingPin ? "Sending..." : "Request Email PIN"}
                 </button>
               </div>
               {msg && (
