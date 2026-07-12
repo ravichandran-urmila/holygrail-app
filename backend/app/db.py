@@ -17,10 +17,19 @@ def _gh_cfg():
         return token, repo, branch, path
     return None
 
+_cache: dict = {}
+_cache_time: float = 0.0
+
 def init_db():
     pass
 
 def _load_all() -> dict:
+    global _cache, _cache_time
+    now = time.time()
+    if _cache and (now - _cache_time < 10.0):
+        return _cache
+
+    data = {}
     cfg = _gh_cfg()
     if cfg:
         token, repo, branch, path = cfg
@@ -36,17 +45,23 @@ def _load_all() -> dict:
             )
             if r.status_code == 200:
                 raw = base64.b64decode(r.json()["content"]).decode("utf-8")
-                return json.loads(raw)
+                data = json.loads(raw)
+                _cache = data
+                _cache_time = now
+                return data
         except Exception:
             pass
 
     if _LOCAL_PATH.exists():
         try:
             with open(_LOCAL_PATH, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+                _cache = data
+                _cache_time = now
+                return data
         except Exception:
             pass
-    return {}
+    return data
 
 def _save_all(data: dict) -> bool:
     payload_str = json.dumps(data, indent=2)
@@ -94,6 +109,7 @@ def _save_all(data: dict) -> bool:
         return False
 
 def save_cache(universe: str, results: list, state: str, total: int, done: int):
+    global _cache, _cache_time
     all_data = _load_all()
     all_data[universe] = {
         "universe": universe,
@@ -104,6 +120,8 @@ def save_cache(universe: str, results: list, state: str, total: int, done: int):
         "state": state,
     }
     _save_all(all_data)
+    _cache = all_data
+    _cache_time = time.time()
 
 def load_cache(universe: str) -> dict | None:
     all_data = _load_all()

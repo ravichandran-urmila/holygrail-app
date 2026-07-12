@@ -135,7 +135,7 @@ export function useScreenStatus(universe: string = "sp500") {
     queryKey: ["screen", universe],
     queryFn: () => get<ScreenStatus>(`/api/screen?universe=${universe}`),
     refetchInterval: (query) =>
-      query.state.data?.state === "running" ? 1500 : false,
+      query.state.data?.globalState === "running" ? 1500 : false,
   });
 }
 
