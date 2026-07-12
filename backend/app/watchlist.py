@@ -12,17 +12,20 @@ from . import data as datalib
 
 _GH_API = "https://api.github.com"
 
-# Local fallback: check env override, then search up from this file.
+# Local fallback: check /data volume first for Railway, then search locally.
 _LOCAL_PATH = os.environ.get("WATCHLIST_PATH", "")
 if not _LOCAL_PATH:
-    _dir = os.path.dirname(__file__)
-    for _up in [os.path.join(_dir, ".."), os.path.join(_dir, "..", "..")]:
-        _candidate = os.path.join(_up, "watchlist.json")
-        if os.path.exists(_candidate):
-            _LOCAL_PATH = _candidate
-            break
+    if os.path.exists("/data"):
+        _LOCAL_PATH = "/data/watchlist.json"
     else:
-        _LOCAL_PATH = os.path.join(_dir, "..", "..", "watchlist.json")
+        _dir = os.path.dirname(__file__)
+        for _up in [os.path.join(_dir, ".."), os.path.join(_dir, "..", "..")]:
+            _candidate = os.path.join(_up, "watchlist.json")
+            if os.path.exists(_candidate):
+                _LOCAL_PATH = _candidate
+                break
+        else:
+            _LOCAL_PATH = os.path.join(_dir, "..", "..", "watchlist.json")
 
 
 
