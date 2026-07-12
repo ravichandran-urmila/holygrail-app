@@ -164,6 +164,21 @@ def screen_run(
     return screener.start(settings, universe, force=force)
 
 
+@app.post("/api/screen/run-all")
+def screen_run_all(
+    force: bool = True,
+    retest_max: float = 15.0,
+    base_min: int = 15,
+    partial_thresh: float = 0.35,
+    full_thresh: float = 0.70,
+):
+    settings = _settings(
+        retest_max=retest_max, base_min=base_min,
+        partial_thresh=partial_thresh, full_thresh=full_thresh,
+    )
+    return screener.start_all(settings, force=force)
+
+
 @app.get("/api/screen")
 def screen_status(universe: str = "sp500"):
     return screener.status(universe)

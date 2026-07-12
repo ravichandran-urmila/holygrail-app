@@ -26,15 +26,10 @@ export function Screener() {
   const [filter, setFilter] = useState<Filter>("setups");
 
   const state = data?.state ?? "idle";
-
-  // Automatically start the scan if we select a universe that has no cached data
-  useEffect(() => {
-    if (data && data.state === "idle" && !run.isPending) {
-      run.mutate({ universe, force: true });
-    }
-  }, [data?.state, universe]);
+  const globalState = (data as any)?.globalState ?? "idle";
+  const activeUniverse = (data as any)?.activeUniverse;
   const running = state === "running";
-  const activeUniverse = data?.universe;
+  const globalRunning = globalState === "running";
   const total = data?.total ?? 0;
   const done = data?.done ?? 0;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -92,11 +87,11 @@ export function Screener() {
             <option value="russell2000">Russell 2000</option>
           </select>
           <button
-            onClick={() => run.mutate({ universe, force: true })}
-            disabled={run.isPending || running}
+            onClick={() => run.mutate({ force: true })}
+            disabled={run.isPending || globalRunning}
             className="btn-primary whitespace-nowrap disabled:opacity-60"
           >
-            {running && activeUniverse === universe ? `Scanning… ${pct}%` : "Manual Refresh"}
+            {globalRunning ? `Scanning... ${activeUniverse}` : "Manual Override"}
           </button>
         </div>
       </div>
