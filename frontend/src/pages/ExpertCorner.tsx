@@ -51,8 +51,8 @@ export function ExpertCorner() {
           <h1 className="font-display text-3xl font-bold tracking-tight">
             <span className="text-gradient">Expert Corner</span>
           </h1>
-          <p className="mt-1.5 max-w-xl text-sm text-muted">
-            A curated list of high-conviction tickers with entry prices and live returns.
+          <p className="mt-1.5 max-w-2xl text-sm text-muted">
+            A curated list of high-conviction tickers with entry prices and live returns. The bots are everywhere so we like to give it a human touch and read beyond the indicators.
           </p>
         </div>
         {tab === "active" && activeItems.length > 0 && (
