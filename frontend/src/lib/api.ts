@@ -107,7 +107,7 @@ export function useRemoveWatchlist() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { ticker: string; admin: string }) =>
-      send<WatchlistResponse>(`/api/watchlist/${args.ticker}`, "DELETE", undefined, args.admin),
+      send<WatchlistResponse>(`/api/watchlist/${encodeURIComponent(args.ticker)}`, "DELETE", undefined, args.admin),
     onSuccess: (data) => qc.setQueryData(["watchlist"], data),
   });
 }
@@ -116,7 +116,7 @@ export function useSellWatchlist() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { ticker: string; percent: number; date?: string; price?: number; admin: string }) =>
-      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell`, "POST", { percent: args.percent, date: args.date, price: args.price }, args.admin),
+      send<WatchlistResponse>(`/api/watchlist/${encodeURIComponent(args.ticker)}/sell`, "POST", { percent: args.percent, date: args.date, price: args.price }, args.admin),
     onSuccess: (data) => qc.setQueryData(["watchlist"], data),
   });
 }
@@ -125,7 +125,7 @@ export function useReverseSell() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { ticker: string; sellIndex: number; admin: string }) =>
-      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell/${args.sellIndex}`, "DELETE", undefined, args.admin),
+      send<WatchlistResponse>(`/api/watchlist/${encodeURIComponent(args.ticker)}/sell/${args.sellIndex}`, "DELETE", undefined, args.admin),
     onSuccess: (data) => qc.setQueryData(["watchlist"], data),
   });
 }
