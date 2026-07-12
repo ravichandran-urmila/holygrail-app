@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useRunScreen, useScreenStatus } from "../lib/api";
 import { fmtUsd, VERDICT_META } from "../lib/format";
@@ -26,6 +26,13 @@ export function Screener() {
   const [filter, setFilter] = useState<Filter>("setups");
 
   const state = data?.state ?? "idle";
+
+  // Automatically start the scan if we select a universe that has no cached data
+  useEffect(() => {
+    if (data && data.state === "idle" && !run.isPending) {
+      run.mutate({ universe, force: true });
+    }
+  }, [data?.state, universe]);
   const running = state === "running";
   const activeUniverse = data?.universe;
   const total = data?.total ?? 0;
