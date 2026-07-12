@@ -100,8 +100,13 @@ def save(items: list[dict]) -> bool:
                 json=body,
                 timeout=15,
             )
-            return r_put.status_code in (200, 201)
-        except Exception:
+            if r_put.status_code in (200, 201):
+                return True
+            else:
+                print(f"GitHub API Error: {r_put.status_code} {r_put.text}")
+                return False
+        except Exception as e:
+            print(f"GitHub Sync Exception: {str(e)}")
             return False
 
     try:
