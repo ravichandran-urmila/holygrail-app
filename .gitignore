@@ -5,3 +5,14 @@ venv/
 .DS_Store
 *.csv
 .streamlit/secrets.toml
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+# Env
+.env
+backend/.env
+*.local
+.vercel

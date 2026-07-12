@@ -29,24 +29,70 @@ Each rule has a specific weight. The sum of these weights produces a **Weighted 
 * **🟡 Yellow Dot**: Indicates a **Partial Setup** representing a medium confidence level to enter a stock.
 * **■ Purple Square**: Indicates Red to Green EMA cloud flip (crossover), representing a **high risk high reward** entry week.
 
-## Files
+## Architecture (v2 — React + FastAPI)
 
-| File | Purpose |
-|------|---------|
-| `indicator.py` | Faithful port of the Pine logic (6 rules + scoring + dashboard) |
-| `data.py`      | yfinance weekly data layer (ticker + ^GSPC) |
-| `app.py`       | Streamlit UI: search, chart, dashboard, raw data |
+The app has been rebuilt from Streamlit into a scalable two-tier application. The
+validated Pine-Script indicator math is **reused unchanged** on the Python side; a
+beautiful React + Tailwind UI renders it via a TradingView-grade chart.
 
-## Run
-
-```bash
-cd holygrail_app
-python3.10 -m pip install -r requirements.txt     # first time only
-python3.10 -m streamlit run app.py
+```
+holygrail-app/
+├── backend/                 FastAPI service (Python)
+│   └── app/
+│       ├── indicator.py     ← faithful Pine port (6 rules + scoring), reused verbatim
+│       ├── data.py          yfinance weekly data layer (streamlit-free, TTL cached)
+│       ├── scan_service.py  turns indicator output into chart-ready JSON
+│       ├── watchlist.py     Expert Corner storage (GitHub-backed + local fallback)
+│       ├── ai.py            AI analyst panels (Gemini/OpenAI/HF → local templates)
+│       └── main.py          REST API (/api/scan, /api/watchlist, /api/guide, …)
+├── frontend/                React + TypeScript + Vite + Tailwind
+│   └── src/
+│       ├── components/Chart.tsx    lightweight-charts candlesticks
+│       ├── lib/bandSeries.ts       custom green/red EMA-cloud band series
+│       └── pages/                  Scanner · Guide · ExpertCorner
+└── app.py, indicator.py, …  legacy Streamlit app (kept for reference)
 ```
 
-Then open the URL it prints (default http://localhost:8501), type a ticker
-(e.g. `AAPL`, `NVDA`, `SPY`) in the sidebar, and press **Scan**.
+## Run (development)
+
+One command runs both tiers:
+
+```bash
+./dev.sh
+```
+
+…or run them separately:
+
+```bash
+# Backend  →  http://localhost:8000
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Frontend →  http://localhost:5173  (proxies /api to the backend)
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 and search a ticker (e.g. `AAPL`, `NVDA`, `ARM`).
+
+## Configuration
+
+Copy `backend/.env.example` → `backend/.env` (or set env vars) to enable:
+
+- `ADMIN_PASSWORD` — gates Expert Corner writes (default `holygrail`).
+- `GEMINI_API_KEY` / `OPENAI_API_KEY` / `HF_TOKEN` — richer AI panels (optional;
+  falls back to deterministic local templates).
+- `GITHUB_TOKEN` / `GITHUB_REPO` / … — persist the watchlist to GitHub so edits
+  survive redeploys.
+
+## Deploy
+
+- **Backend:** `backend/Dockerfile` builds a container serving on `:8000`.
+- **Frontend:** `npm run build` emits a static `dist/` (any static host / CDN).
+  Set `VITE_API_BASE` to the backend URL if not co-hosted behind one origin.
 
 ## Notes / caveats
 
