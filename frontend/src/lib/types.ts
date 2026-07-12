@@ -148,4 +148,12 @@ export interface ScreenStatus {
   results: ScreenResult[];
   elapsed: number | null;
   error: string | null;
+  globalState?: "idle" | "running";
+  activeUniverse?: string;
+  jobState?: string;
+  jobUniverse?: string;
+  jobDone?: number;
+  jobTotal?: number;
+  completedUniverses?: string[];
+  currentUniverseIndex?: number;
 }

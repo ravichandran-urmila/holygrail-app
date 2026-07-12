@@ -28,11 +28,16 @@ export function Screener() {
   const state = data?.state ?? "idle";
   const globalState = (data as any)?.globalState ?? "idle";
   const activeUniverse = (data as any)?.activeUniverse;
-  const running = state === "running";
   const globalRunning = globalState === "running";
-  const total = data?.total ?? 0;
   const done = data?.done ?? 0;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  const _jobState = (data as any)?.jobState ?? "idle";
+  const jobDone = (data as any)?.jobDone ?? 0;
+  const jobTotal = (data as any)?.jobTotal ?? 0;
+  const completedCount = data?.completedUniverses?.length ?? 0;
+  const activeProgress = jobTotal > 0 ? jobDone / jobTotal : 0;
+  const overallPct = Math.min(100, Math.round(((completedCount + (globalRunning ? activeProgress : 0)) / 3) * 100));
+
 
   const results = data?.results ?? [];
   const complete = results.filter((r) => r.verdict === "COMPLETE SETUP").length;
@@ -86,32 +91,8 @@ export function Screener() {
             <option value="russell1000">Russell 1000</option>
             <option value="russell2000">Russell 2000</option>
           </select>
-          <button
-            onClick={() => run.mutate({ force: true })}
-            disabled={run.isPending || globalRunning}
-            className="btn-primary whitespace-nowrap disabled:opacity-60"
-          >
-            {globalRunning ? `Scanning... ${activeUniverse}` : "Manual Override"}
-          </button>
         </div>
       </div>
-
-      {running && (
-        <div className="card p-4">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted">
-            <span>
-              Scanning {done} / {total} tickers…
-            </span>
-            <span className="tnum">{data?.found ?? 0} hits so far</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-violet to-cyan transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-      )}
 
       {state === "error" && (
         <div className="card border-bear/30 bg-bear/5 p-4 text-sm text-bear">
@@ -164,12 +145,108 @@ export function Screener() {
         <div className="card grid place-items-center gap-3 p-12 text-center">
           <div className="text-4xl">🛰️</div>
           <div className="text-sm text-muted">
-            The {universe} index hasn't been scanned recently. Click Manual Refresh to start a sweep.
+            The {universe} index hasn't been scanned recently. Click Trigger Manual Override below to start a sweep.
           </div>
         </div>
       )}
+
+      {/* Manual Override & Progress Section at the Bottom */}
+      <div className="mt-12 rounded-3xl border border-line bg-gradient-to-br from-white/[0.03] to-white/[0.01] p-6 shadow-xl backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h3 className="font-display text-lg font-bold tracking-tight text-ink">
+              System Manual Override Scan
+            </h3>
+            <p className="text-xs text-muted max-w-xl">
+              Triggers a sequential Holy Grail indicator scan across all three index universes (S&P 500, Russell 1000, Russell 2000). To avoid API rate limiting, a delay is enforced between each index.
+            </p>
+          </div>
+          <div>
+            <button
+              onClick={() => run.mutate({ force: true })}
+              disabled={run.isPending || globalRunning}
+              className="btn-primary flex items-center gap-2 px-5 py-2.5 font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {globalRunning ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Scan in Progress
+                </>
+              ) : (
+                "Trigger Manual Override"
+              )}
+            </button>
+          </div>
+        </div>
+
+        {globalRunning && (
+          <div className="mt-6 border-t border-line/40 pt-6 space-y-5 animate-fade-in">
+            {/* Index Checklist / Status Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[
+                { key: "sp500", label: "S&P 500 Index" },
+                { key: "russell1000", label: "Russell 1000 Index" },
+                { key: "russell2000", label: "Russell 2000 Index" },
+              ].map((item) => {
+                const completed = data?.completedUniverses?.includes(item.key) ?? false;
+                const isScanning = activeUniverse === item.key && _jobState === "running";
+                
+                let statusColor = "text-faint border-line bg-white/[0.01]";
+                let statusLabel = "Pending";
+                let pulseDot = false;
+                
+                if (completed) {
+                  statusColor = "text-[#1fdd97] border-[#1fdd97]/20 bg-[#1fdd97]/5";
+                  statusLabel = "Completed";
+                } else if (isScanning) {
+                  statusColor = "text-violet border-violet/30 bg-violet/5";
+                  statusLabel = `Scanning (${jobDone}/${jobTotal})`;
+                  pulseDot = true;
+                }
+                
+                return (
+                  <div
+                    key={item.key}
+                    className={`flex items-center justify-between rounded-2xl border p-4 transition duration-300 ${statusColor}`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="font-semibold text-sm">{item.label}</div>
+                      <div className="text-[11px] font-medium opacity-80">{statusLabel}</div>
+                    </div>
+                    {completed ? (
+                      <span className="text-lg">✅</span>
+                    ) : pulseDot ? (
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet"></span>
+                      </span>
+                    ) : (
+                      <span className="h-2 w-2 rounded-full bg-white/20" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Overall Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-muted">
+                <span>Overall Sequence Progress</span>
+                <span className="tnum font-bold text-violet">{overallPct}%</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-white/[0.04] border border-line/30 p-[2px]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet via-[#ff4081] to-[#1fdd97] transition-all duration-500 ease-out"
+                  style={{ width: `${overallPct}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
+
 }
 
 function MiniStat({
@@ -256,7 +333,7 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                     )}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
-                    {r.entryLow === null || r.entryHigh === null
+                    {r.entryLow === null || r.entryLow === undefined || r.entryHigh === null || r.entryHigh === undefined
                       ? "N/A"
                       : `${fmtUsd(r.entryLow)} – ${fmtUsd(r.entryHigh)}`}
                   </td>
@@ -266,10 +343,10 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                       (r.mansfieldRs ?? 0) >= 0 ? "text-bull" : "text-bear"
                     }`}
                   >
-                    {r.mansfieldRs === null ? "N/A" : r.mansfieldRs.toFixed(3)}
+                    {r.mansfieldRs === null || r.mansfieldRs === undefined ? "N/A" : r.mansfieldRs.toFixed(3)}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
-                    {r.rsi14 === null ? "N/A" : r.rsi14.toFixed(1)}
+                    {r.rsi14 === null || r.rsi14 === undefined ? "N/A" : r.rsi14.toFixed(1)}
                   </td>
                 </tr>
               );
