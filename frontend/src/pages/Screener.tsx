@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useRunScreen, useScreenStatus } from "../lib/api";
 import { fmtUsd, VERDICT_META } from "../lib/format";
