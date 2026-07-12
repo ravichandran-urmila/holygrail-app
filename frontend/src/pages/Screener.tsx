@@ -333,7 +333,7 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                     )}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
-                    {r.entryLow === null || r.entryHigh === null
+                    {r.entryLow === null || r.entryLow === undefined || r.entryHigh === null || r.entryHigh === undefined
                       ? "N/A"
                       : `${fmtUsd(r.entryLow)} – ${fmtUsd(r.entryHigh)}`}
                   </td>
@@ -343,10 +343,10 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                       (r.mansfieldRs ?? 0) >= 0 ? "text-bull" : "text-bear"
                     }`}
                   >
-                    {r.mansfieldRs === null ? "N/A" : r.mansfieldRs.toFixed(3)}
+                    {r.mansfieldRs === null || r.mansfieldRs === undefined ? "N/A" : r.mansfieldRs.toFixed(3)}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
-                    {r.rsi14 === null ? "N/A" : r.rsi14.toFixed(1)}
+                    {r.rsi14 === null || r.rsi14 === undefined ? "N/A" : r.rsi14.toFixed(1)}
                   </td>
                 </tr>
               );
