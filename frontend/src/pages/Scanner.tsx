@@ -320,7 +320,7 @@ function MetricCard({
 
 function ChartLegend() {
   const items = [
-    { s: <span className="text-[#5b6bff]">▲</span>, t: "HG — Full Setup (best entry)" },
+    { s: <span className="text-[#5b6bff]">↑</span>, t: "HG — Full Setup (best entry)" },
     { s: <span className="text-gold">●</span>, t: "Partial Setup (watching)" },
     { s: <span style={{ color: "#e879f9" }}>■</span>, t: "HRR — high risk / reward" },
     { s: <span className="text-[#ff9f0a]">━</span>, t: "50-week MA" },
@@ -441,7 +441,7 @@ function DataTab({ data }: { data: ScanResponse }) {
                   );
                 })}
                 <td className="px-3 py-1.5 text-center">
-                  {row.fullSetup && <span className="text-[#5b6bff]">▲</span>}
+                  {row.fullSetup && <span className="text-[#5b6bff]">↑</span>}
                   {row.partialSetup && <span className="text-gold">●</span>}
                   {row.hrr && <span style={{ color: "#e879f9" }}>■</span>}
                 </td>
