@@ -19,7 +19,16 @@ export function ExpertCorner() {
   const [tab, setTab] = useState<"active" | "closed">("active");
 
   const activeItems = items.filter((i) => i.status !== "closed");
-  const closedItems = items.filter((i) => i.status === "closed");
+  const allSells = items.flatMap((item) => 
+    (item.sells || []).map((sell) => ({
+      ticker: item.ticker,
+      originalEntry: item.priceAdded,
+      sellDate: sell.date,
+      sellPercent: sell.percent,
+      sellPrice: sell.price,
+      realizedReturn: item.priceAdded ? ((sell.price - item.priceAdded) / item.priceAdded) * 100 : null
+    }))
+  ).sort((a, b) => b.sellDate.localeCompare(a.sellDate));
 
   const winners = activeItems.filter((i) => (i.gain ?? 0) > 0).length;
   const avgGain =
@@ -71,14 +80,14 @@ export function ExpertCorner() {
               onClick={() => setTab("closed")}
               className={`px-4 py-2 hover:text-info transition ${tab === "closed" ? "border-b-2 border-info text-info" : "text-muted"}`}
             >
-              Closed Trades ({closedItems.length})
+              Closed Trades ({allSells.length})
             </button>
           </div>
           
           {tab === "active" ? (
             activeItems.length > 0 ? <WatchTable items={activeItems} /> : <div className="text-sm text-muted">No active setups.</div>
           ) : (
-            closedItems.length > 0 ? <ClosedTable items={closedItems} /> : <div className="text-sm text-muted">No closed trades.</div>
+            allSells.length > 0 ? <ClosedTable sells={allSells} /> : <div className="text-sm text-muted">No closed trades.</div>
           )}
         </div>
       )}
@@ -197,7 +206,18 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
   );
 }
 
-function ClosedTable({ items }: { items: WatchlistItem[] }) {
+function ClosedTable({
+  sells,
+}: {
+  sells: {
+    ticker: string;
+    originalEntry: number;
+    sellDate: string;
+    sellPercent: number;
+    sellPrice: number;
+    realizedReturn: number | null;
+  }[];
+}) {
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
@@ -206,32 +226,32 @@ function ClosedTable({ items }: { items: WatchlistItem[] }) {
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
               <th className="px-4 py-3 font-semibold">Date Closed</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
+              <th className="px-4 py-3 font-semibold">Portion Sold</th>
+              <th className="px-4 py-3 font-semibold">Sell Price</th>
               <th className="px-4 py-3 font-semibold">Original Entry</th>
               <th className="px-4 py-3 font-semibold">Realized Return</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((r) => {
-              // The last sell date is when it was fully closed
-              const closeDate = r.sells?.[r.sells.length - 1]?.date ?? "Unknown";
-              return (
-                <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 text-muted">{closeDate}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/scanner?ticker=${r.ticker}`}
-                      className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
-                    >
-                      {r.ticker}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted">{fmtUsd(r.priceAdded)}</td>
-                  <td className={`px-4 py-3 font-bold ${gainColor(r.realizedGain)}`}>
-                    {r.realizedGain === null || r.realizedGain === undefined ? "N/A" : fmtPct(r.realizedGain)}
-                  </td>
-                </tr>
-              );
-            })}
+            {sells.map((s, i) => (
+              <tr key={`${s.ticker}-${i}`} className="border-b border-line/50 transition hover:bg-white/[0.02]">
+                <td className="px-4 py-3 text-muted">{s.sellDate}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/scanner?ticker=${s.ticker}`}
+                    className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
+                  >
+                    {s.ticker}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-muted">{s.sellPercent}%</td>
+                <td className="px-4 py-3 text-muted">{fmtUsd(s.sellPrice)}</td>
+                <td className="px-4 py-3 text-muted">{fmtUsd(s.originalEntry)}</td>
+                <td className={`px-4 py-3 font-bold ${gainColor(s.realizedReturn)}`}>
+                  {s.realizedReturn === null ? "N/A" : fmtPct(s.realizedReturn)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
