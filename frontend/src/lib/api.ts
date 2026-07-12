@@ -171,4 +171,31 @@ export async function verifyAdminPassword(admin: string): Promise<boolean> {
   }
 }
 
+export async function requestAdminPin(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await fetch(`${BASE}/api/admin/request-pin`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    return { ok: res.ok, message: data.message ?? "PIN request failed." };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Network error." };
+  }
+}
+
+export async function verifyAdminPin(pin: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${BASE}/api/admin/verify-pin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.token;
+  } catch {
+    return null;
+  }
+}
+
 export type { WatchlistItem };

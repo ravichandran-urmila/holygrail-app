@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import datetime
 import os
+import random
+import secrets
+import smtplib
+import time
+import threading
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,10 +66,76 @@ def _settings(
     )
 
 
+class AdminAuthStore:
+    def __init__(self):
+        self.active_pin: str | None = None
+        self.pin_expires_at: float = 0.0
+        self.sessions: dict[str, float] = {}
+
+auth_store = AdminAuthStore()
+
+
+def _send_email_async(subject: str, body: str, recipient: str):
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = os.environ.get("SMTP_PORT")
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASSWORD")
+    
+    if not smtp_host or not smtp_port or not smtp_user or not smtp_pass:
+        print("[AdminAuth] SMTP environment variables not fully configured. Email skipped.")
+        return
+        
+    try:
+        msg = MIMEMultipart()
+        msg["From"] = smtp_user
+        msg["To"] = recipient
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "html"))
+        
+        port = int(smtp_port)
+        if port == 465:
+            with smtplib.SMTP_SSL(smtp_host, port) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, recipient, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, recipient, msg.as_string())
+        print(f"[AdminAuth] PIN email sent successfully to {recipient}.")
+    except Exception as e:
+        print(f"[AdminAuth] Failed to send email: {e}")
+
+
+def send_email_in_background(subject: str, body: str, recipient: str):
+    thread = threading.Thread(target=_send_email_async, args=(subject, body, recipient))
+    thread.daemon = True
+    thread.start()
+
+
+class VerifyPinRequest(BaseModel):
+    pin: str
+
+
 def _require_admin(password: str | None):
+    if not password:
+        raise HTTPException(status_code=401, detail="Admin authorization required.")
+        
+    now = time.time()
+    # Clean up expired sessions
+    auth_store.sessions = {t: exp for t, exp in auth_store.sessions.items() if exp > now}
+    
+    if password in auth_store.sessions:
+        return
+        
     correct = os.environ.get("ADMIN_PASSWORD", "holygrail")
-    if password != correct:
-        raise HTTPException(status_code=401, detail="Incorrect admin password.")
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    
+    # Dev mode: allow static password if admin_email (production email setting) is not configured
+    if not admin_email and password == correct:
+        return
+        
+    raise HTTPException(status_code=401, detail="Incorrect admin credentials or session expired.")
 
 
 @app.get("/api/health")
@@ -325,6 +398,58 @@ def reverse_sell(ticker: str, sell_index: int, x_admin_password: str | None = He
 def verify_admin(x_admin_password: str | None = Header(default=None)):
     _require_admin(x_admin_password)
     return {"status": "ok"}
+
+
+@app.post("/api/admin/request-pin")
+def request_pin():
+    pin = f"{random.randint(100000, 999999)}"
+    auth_store.active_pin = pin
+    auth_store.pin_expires_at = time.time() + 300  # 5 minutes
+    
+    print(f"\n========================================\n[AdminAuth] GENERATED TEMPORARY PIN: {pin}\n========================================\n")
+    
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_configured = bool(smtp_host and admin_email)
+    
+    if admin_email:
+        subject = "Holy Grail Admin PIN"
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; background-color: #0d1117; color: #e6edf3; padding: 24px;">
+                <div style="max-width: 500px; margin: 0 auto; border: 1px solid #30363d; border-radius: 12px; padding: 24px; background-color: #161b22;">
+                    <h2 style="color: #58a6ff; margin-top: 0;">Holy Grail Admin</h2>
+                    <p>Your temporary Holy Grail Admin login PIN is:</p>
+                    <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #58a6ff; padding: 12px; border-radius: 8px; background-color: #21262d; text-align: center; margin: 20px 0;">
+                        {pin}
+                    </div>
+                    <p style="font-size: 12px; color: #8b949e; margin-bottom: 0;">This PIN will expire in 5 minutes.</p>
+                </div>
+            </body>
+        </html>
+        """
+        send_email_in_background(subject, body, admin_email)
+        
+    msg = "Temporary PIN sent to email." if smtp_configured else "Temporary PIN generated. Check server console logs."
+    return {"status": "ok", "message": msg}
+
+
+@app.post("/api/admin/verify-pin")
+def verify_pin(req: VerifyPinRequest):
+    if not auth_store.active_pin:
+        raise HTTPException(status_code=401, detail="No PIN has been generated.")
+    if time.time() > auth_store.pin_expires_at:
+        raise HTTPException(status_code=401, detail="PIN has expired.")
+    if req.pin != auth_store.active_pin:
+        raise HTTPException(status_code=401, detail="Incorrect PIN.")
+        
+    auth_store.active_pin = None
+    auth_store.pin_expires_at = 0.0
+    
+    token = secrets.token_hex(24)
+    auth_store.sessions[token] = time.time() + 7200  # 2 hours
+    
+    return {"status": "ok", "token": token}
 
 
 @app.get("/api/lookup-price")
