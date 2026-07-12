@@ -126,7 +126,7 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
                   <td className="px-4 py-3 text-muted">{r.dateAdded}</td>
                   <td className="px-4 py-3">
                     <Link
-                      to={`/?ticker=${r.ticker}`}
+                      to={`/scanner?ticker=${r.ticker}`}
                       className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
                     >
                       {r.ticker}

@@ -223,7 +223,7 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                 <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
                     <Link
-                      to={`/?ticker=${r.ticker}`}
+                      to={`/scanner?ticker=${r.ticker}`}
                       className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
                     >
                       {r.ticker}
