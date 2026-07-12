@@ -163,6 +163,7 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
+              <th className="px-4 py-3 font-semibold w-10">#</th>
               <th className="px-4 py-3 font-semibold">Date</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
               <th className="px-4 py-3 font-semibold">Price Added</th>
@@ -244,6 +245,7 @@ function ClosedTable({
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
+              <th className="px-4 py-3 font-semibold w-10">#</th>
               <th className="px-4 py-3 font-semibold">Date Closed</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
               <th className="px-4 py-3 font-semibold">Portion Sold</th>
@@ -255,6 +257,7 @@ function ClosedTable({
           <tbody>
             {sells.map((s, i) => (
               <tr key={`${s.ticker}-${i}`} className="border-b border-line/50 transition hover:bg-white/[0.02]">
+                <td className="px-4 py-3 text-muted">{i + 1}</td>
                 <td className="px-4 py-3 text-muted">{s.sellDate}</td>
                 <td className="px-4 py-3">
                   <Link
@@ -307,7 +310,7 @@ function AdminPanel({
   const [sellPercent, setSellPercent] = useState("100");
   const [sellDate, setSellDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [sellPrice, setSellPrice] = useState("");
-  const [actionType, setActionType] = useState<"buy" | "sell">("buy");
+  const [actionType, setActionType] = useState<"buy" | "sell" | "remove">("buy");
 
   const add = useAddWatchlist();
   const remove = useRemoveWatchlist();
@@ -470,29 +473,35 @@ function AdminPanel({
                 <div className={`text-sm ${msg.ok ? "text-bull" : "text-bear"}`}>{msg.text}</div>
               )}
 
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Buy / Sell Form */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm font-semibold text-muted">
+              <div className="grid gap-6">
+                {/* Unified Form */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm font-semibold text-muted border-b border-line pb-2">
                     <span>Manage Position</span>
                     <div className="flex gap-1 text-xs">
                       <button 
                         onClick={() => setActionType("buy")}
-                        className={`px-2 py-1 rounded-md transition ${actionType === "buy" ? "bg-white/10 text-white" : "hover:bg-white/5"}`}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "buy" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
                       >
                         Buy / Update
                       </button>
                       <button 
                         onClick={() => setActionType("sell")}
-                        className={`px-2 py-1 rounded-md transition ${actionType === "sell" ? "bg-white/10 text-white" : "hover:bg-white/5"}`}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "sell" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
                       >
                         Sell
+                      </button>
+                      <button 
+                        onClick={() => setActionType("remove")}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "remove" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
+                      >
+                        Remove
                       </button>
                     </div>
                   </div>
 
-                  {actionType === "buy" ? (
-                    <div className="grid grid-cols-2 gap-3">
+                  {actionType === "buy" && (
+                    <div className="grid grid-cols-2 gap-3 max-w-2xl">
                       <label className="text-xs text-muted">
                         <span className="mb-1 block">Ticker</span>
                         <input
@@ -556,8 +565,10 @@ function AdminPanel({
                         />
                       </label>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
+                  )}
+
+                  {actionType === "sell" && (
+                    <div className="grid grid-cols-2 gap-3 max-w-2xl">
                       {activeItems.length === 0 ? (
                         <div className="text-sm text-muted col-span-2">No active setups to sell.</div>
                       ) : (
@@ -609,66 +620,74 @@ function AdminPanel({
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || activeItems.length === 0))}>
-                      🔍 Auto-fetch price
-                    </button>
-                    {actionType === "buy" ? (
-                      <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
-                        {add.isPending ? "Saving…" : "Save"}
-                      </button>
-                    ) : (
-                      <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || activeItems.length === 0}>
-                        {sell.isPending ? "Saving…" : "Save"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Remove */}
-                  <div className="space-y-3">
-                    <div className="text-sm font-semibold text-muted">❌ Remove ticker</div>
-                    {allItems.length === 0 ? (
-                      <div className="text-sm text-muted">Nothing to remove.</div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {allItems.map((i) => (
-                          <button
-                            key={i.ticker}
-                            onClick={() => del(i.ticker)}
-                            disabled={remove.isPending || !pass}
-                            className="chip transition hover:border-bear/50 hover:text-bear disabled:opacity-40"
-                          >
-                            {i.ticker} ✕
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Reverse Sell */}
-                  <div className="space-y-3">
-                    <div className="text-sm font-semibold text-muted">⏪ Reverse Sell</div>
-                    {allSells.length === 0 ? (
-                      <div className="text-sm text-muted">No sells to reverse.</div>
-                    ) : (
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
-                        {allSells.map((s, idx) => (
-                          <div key={`${s.ticker}-${idx}`} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
-                            <span>{s.sellDate}: {s.ticker} ({s.sellPercent}%)</span>
-                            <button
-                              onClick={() => handleReverseSell(s.ticker, s.sellIndex)}
-                              disabled={reverseSell.isPending || !pass}
-                              className="text-bear hover:underline disabled:opacity-50"
-                            >
-                              Reverse
-                            </button>
+                  {actionType === "remove" && (
+                    <div className="grid md:grid-cols-2 gap-6 items-start">
+                      {/* Remove Entire Ticker */}
+                      <div className="space-y-3 bg-white/[0.01] border border-line rounded-lg p-3">
+                        <div className="text-sm font-semibold text-muted">❌ Delete Entire Ticker</div>
+                        <div className="text-[10px] text-faint mb-2">This deletes the ticker and all associated sell history completely.</div>
+                        {allItems.length === 0 ? (
+                          <div className="text-sm text-muted">Nothing to remove.</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                            {allItems.map((i, idx) => (
+                              <div key={i.ticker} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
+                                <span>{idx + 1}. {i.ticker} {i.status === "closed" && "(Closed)"}</span>
+                                <button
+                                  onClick={() => del(i.ticker)}
+                                  disabled={remove.isPending || !pass}
+                                  className="text-bear hover:underline disabled:opacity-50"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
-                  </div>
+
+                      {/* Reverse Sell */}
+                      <div className="space-y-3 bg-white/[0.01] border border-line rounded-lg p-3">
+                        <div className="text-sm font-semibold text-muted">⏪ Reverse a Sale</div>
+                        <div className="text-[10px] text-faint mb-2">This deletes a specific sell record and refunds the position size.</div>
+                        {allSells.length === 0 ? (
+                          <div className="text-sm text-muted">No sells to reverse.</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                            {allSells.map((s, idx) => (
+                              <div key={`${s.ticker}-${idx}`} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
+                                <span>{idx + 1}. {s.sellDate}: {s.ticker} ({s.sellPercent}%)</span>
+                                <button
+                                  onClick={() => handleReverseSell(s.ticker, s.sellIndex)}
+                                  disabled={reverseSell.isPending || !pass}
+                                  className="text-bear hover:underline disabled:opacity-50"
+                                >
+                                  Reverse
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {actionType !== "remove" && (
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || activeItems.length === 0))}>
+                        🔍 Auto-fetch price
+                      </button>
+                      {actionType === "buy" ? (
+                        <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
+                          {add.isPending ? "Saving…" : "Save"}
+                        </button>
+                      ) : (
+                        <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || activeItems.length === 0}>
+                          {sell.isPending ? "Saving…" : "Save"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
