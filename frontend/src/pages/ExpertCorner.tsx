@@ -30,10 +30,16 @@ export function ExpertCorner() {
     }))
   ).sort((a, b) => b.sellDate.localeCompare(a.sellDate));
 
-  const winners = activeItems.filter((i) => (i.gain ?? 0) > 0).length;
-  const avgGain =
+  const activeWinners = activeItems.filter((i) => (i.gain ?? 0) > 0).length;
+  const activeAvgGain =
     activeItems.length > 0
       ? activeItems.reduce((a, i) => a + (i.gain ?? 0), 0) / activeItems.filter((i) => i.gain !== null).length
+      : 0;
+
+  const closedWinners = allSells.filter((s) => (s.realizedReturn ?? 0) > 0).length;
+  const closedAvgGain =
+    allSells.length > 0
+      ? allSells.reduce((a, s) => a + (s.realizedReturn ?? 0), 0) / allSells.filter((s) => s.realizedReturn !== null).length
       : 0;
 
   return (
@@ -47,15 +53,27 @@ export function ExpertCorner() {
             A curated list of high-conviction tickers with entry prices and live returns.
           </p>
         </div>
-        {items.length > 0 && (
-          <div className="flex gap-3">
-            <MiniStat label="Tracked" value={String(items.length)} />
-            <MiniStat label="In profit" value={`${winners}/${items.length}`} tint="#1fdd97" />
+        {tab === "active" && activeItems.length > 0 && (
+          <div className="flex gap-3 animate-fade-in">
+            <MiniStat label="Active" value={String(activeItems.length)} />
+            <MiniStat label="In profit" value={`${activeWinners}/${activeItems.length}`} tint="#1fdd97" />
             <MiniStat
-              label="Avg return"
-              value={fmtPct(avgGain)}
-              tint={avgGain >= 0 ? "#1fdd97" : "#ff5470"}
+              label="Avg unrealized"
+              value={fmtPct(activeAvgGain)}
+              tint={activeAvgGain >= 0 ? "#1fdd97" : "#ff5470"}
               tooltip="assuming $100 to every ticker"
+            />
+          </div>
+        )}
+        {tab === "closed" && allSells.length > 0 && (
+          <div className="flex gap-3 animate-fade-in">
+            <MiniStat label="Sells" value={String(allSells.length)} />
+            <MiniStat label="Winning" value={`${closedWinners}/${allSells.length}`} tint="#1fdd97" />
+            <MiniStat
+              label="Avg realized"
+              value={fmtPct(closedAvgGain)}
+              tint={closedAvgGain >= 0 ? "#1fdd97" : "#ff5470"}
+              tooltip="average return across all partial and full sells"
             />
           </div>
         )}
