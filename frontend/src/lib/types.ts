@@ -111,6 +111,10 @@ export interface WatchlistItem {
   verdict: "BUY" | "WATCH" | "HOLD" | "TRIM" | "SELL" | "AVOID" | string;
   commentary: string;
   gain: number | null;
+  status: "open" | "closed";
+  positionSize: number;
+  sells?: { date: string; percent: number; price: number }[];
+  realizedGain?: number | null;
 }
 
 export interface WatchlistResponse {

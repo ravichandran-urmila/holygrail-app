@@ -219,6 +219,52 @@ def remove_watchlist(ticker: str, x_admin_password: str | None = Header(default=
     return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
 
 
+class SellRequest(BaseModel):
+    percent: float
+
+
+@app.post("/api/watchlist/{ticker}/sell")
+def sell_watchlist(ticker: str, req: SellRequest, x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    if not (0 < req.percent <= 100):
+        raise HTTPException(status_code=400, detail="Percent must be between 0 and 100.")
+    ticker = ticker.strip().upper()
+    items = wl.load()
+    
+    target = None
+    for item in items:
+        if item.get("ticker") == ticker and item.get("status", "open") == "open":
+            target = item
+            break
+            
+    if not target:
+        raise HTTPException(status_code=404, detail="Open position not found.")
+        
+    current_price = datalib.fetch_last_close(ticker)
+    if current_price is None:
+        raise HTTPException(status_code=500, detail="Failed to fetch current price.")
+        
+    sells = target.get("sells", [])
+    current_size = target.get("position_size", 100)
+    sell_percent = min(req.percent, current_size)
+    
+    sells.append({
+        "date": datetime.date.today().isoformat(),
+        "percent": sell_percent,
+        "price": current_price
+    })
+    
+    new_size = current_size - sell_percent
+    target["sells"] = sells
+    target["position_size"] = new_size
+    if new_size <= 0:
+        target["status"] = "closed"
+        
+    if not wl.save(items):
+        raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
+    return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
+
+
 @app.post("/api/admin/verify")
 def verify_admin(x_admin_password: str | None = Header(default=None)):
     _require_admin(x_admin_password)

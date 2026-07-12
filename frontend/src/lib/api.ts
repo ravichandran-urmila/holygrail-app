@@ -112,6 +112,15 @@ export function useRemoveWatchlist() {
   });
 }
 
+export function useSellWatchlist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { ticker: string; percent: number; admin: string }) =>
+      send<WatchlistResponse>(`/api/watchlist/${args.ticker}/sell`, "POST", { percent: args.percent }, args.admin),
+    onSuccess: (data) => qc.setQueryData(["watchlist"], data),
+  });
+}
+
 export function useScreenStatus(universe: string = "sp500") {
   return useQuery({
     queryKey: ["screen", universe],

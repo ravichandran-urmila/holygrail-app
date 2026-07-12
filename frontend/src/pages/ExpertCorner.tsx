@@ -4,6 +4,7 @@ import {
   lookupPrice,
   useAddWatchlist,
   useRemoveWatchlist,
+  useSellWatchlist,
   useWatchlist,
   verifyAdminPassword,
 } from "../lib/api";
@@ -15,11 +16,15 @@ const VERDICTS = ["BUY", "WATCH", "HOLD", "TRIM", "SELL", "AVOID"];
 export function ExpertCorner() {
   const { data, isLoading } = useWatchlist();
   const items = data?.items ?? [];
+  const [tab, setTab] = useState<"active" | "closed">("active");
 
-  const winners = items.filter((i) => (i.gain ?? 0) > 0).length;
+  const activeItems = items.filter((i) => i.status !== "closed");
+  const closedItems = items.filter((i) => i.status === "closed");
+
+  const winners = activeItems.filter((i) => (i.gain ?? 0) > 0).length;
   const avgGain =
-    items.length > 0
-      ? items.reduce((a, i) => a + (i.gain ?? 0), 0) / items.filter((i) => i.gain !== null).length
+    activeItems.length > 0
+      ? activeItems.reduce((a, i) => a + (i.gain ?? 0), 0) / activeItems.filter((i) => i.gain !== null).length
       : 0;
 
   return (
@@ -54,10 +59,31 @@ export function ExpertCorner() {
           Expert Corner is currently empty. Add tickers in the admin panel below.
         </div>
       ) : (
-        <WatchTable items={items} />
+        <div className="space-y-4">
+          <div className="flex border-b border-line-strong text-sm font-semibold">
+            <button
+              onClick={() => setTab("active")}
+              className={`px-4 py-2 hover:text-bull transition ${tab === "active" ? "border-b-2 border-bull text-bull" : "text-muted"}`}
+            >
+              Active Setups ({activeItems.length})
+            </button>
+            <button
+              onClick={() => setTab("closed")}
+              className={`px-4 py-2 hover:text-info transition ${tab === "closed" ? "border-b-2 border-info text-info" : "text-muted"}`}
+            >
+              Closed Trades ({closedItems.length})
+            </button>
+          </div>
+          
+          {tab === "active" ? (
+            activeItems.length > 0 ? <WatchTable items={activeItems} /> : <div className="text-sm text-muted">No active setups.</div>
+          ) : (
+            closedItems.length > 0 ? <ClosedTable items={closedItems} /> : <div className="text-sm text-muted">No closed trades.</div>
+          )}
+        </div>
       )}
 
-      <AdminPanel items={items} githubEnabled={data?.githubEnabled ?? false} />
+      <AdminPanel items={activeItems} githubEnabled={data?.githubEnabled ?? false} />
     </div>
   );
 }
@@ -125,12 +151,19 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
                 <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
                   <td className="px-4 py-3 text-muted">{r.dateAdded}</td>
                   <td className="px-4 py-3">
-                    <Link
-                      to={`/scanner?ticker=${r.ticker}`}
-                      className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
-                    >
-                      {r.ticker}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/scanner?ticker=${r.ticker}`}
+                        className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
+                      >
+                        {r.ticker}
+                      </Link>
+                      {r.positionSize < 100 && (
+                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-muted">
+                          {r.positionSize}% left
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">{fmtUsd(r.priceAdded)}</td>
                   <td className="px-4 py-3">{r.currentPrice === null ? "N/A" : fmtUsd(r.currentPrice)}</td>
@@ -164,6 +197,48 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
   );
 }
 
+function ClosedTable({ items }: { items: WatchlistItem[] }) {
+  return (
+    <div className="card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
+              <th className="px-4 py-3 font-semibold">Date Closed</th>
+              <th className="px-4 py-3 font-semibold">Ticker</th>
+              <th className="px-4 py-3 font-semibold">Original Entry</th>
+              <th className="px-4 py-3 font-semibold">Realized Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((r) => {
+              // The last sell date is when it was fully closed
+              const closeDate = r.sells?.[r.sells.length - 1]?.date ?? "Unknown";
+              return (
+                <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
+                  <td className="px-4 py-3 text-muted">{closeDate}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      to={`/scanner?ticker=${r.ticker}`}
+                      className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
+                    >
+                      {r.ticker}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-muted">{fmtUsd(r.priceAdded)}</td>
+                  <td className={`px-4 py-3 font-bold ${gainColor(r.realizedGain)}`}>
+                    {r.realizedGain === null || r.realizedGain === undefined ? "N/A" : fmtPct(r.realizedGain)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEnabled: boolean }) {
   const [open, setOpen] = useState(false);
   const [pass, setPass] = useState("");
@@ -178,8 +253,12 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
   const [optionsContract, setOptionsContract] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const [sellTicker, setSellTicker] = useState(items[0]?.ticker ?? "");
+  const [sellPercent, setSellPercent] = useState("100");
+
   const add = useAddWatchlist();
   const remove = useRemoveWatchlist();
+  const sell = useSellWatchlist();
 
   const flash = (ok: boolean, text: string) => {
     setMsg({ ok, text });
@@ -254,6 +333,17 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
     }
   };
 
+  const handleSell = async () => {
+    if (!sellTicker || !sellPercent) return;
+    try {
+      await sell.mutateAsync({ ticker: sellTicker, percent: parseFloat(sellPercent), admin: pass });
+      flash(true, `Sold ${sellPercent}% of ${sellTicker}`);
+      setSellPercent("100");
+    } catch (e) {
+      flash(false, (e as Error).message);
+    }
+  };
+
   return (
     <div className="card overflow-hidden">
       <button
@@ -309,7 +399,7 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                 <div className={`text-sm ${msg.ok ? "text-bull" : "text-bear"}`}>{msg.text}</div>
               )}
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-3">
                 {/* Add */}
                 <div className="space-y-3">
                   <div className="text-sm font-semibold text-muted">➕ Add / update ticker</div>
@@ -404,6 +494,51 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                           {i.ticker} ✕
                         </button>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sell */}
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold text-muted">💰 Sell / Take Profit</div>
+                  {items.length === 0 ? (
+                    <div className="text-sm text-muted">No active setups to sell.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      <label className="text-xs text-muted block">
+                        <span className="mb-1 block">Select Ticker</span>
+                        <select
+                          value={sellTicker}
+                          onChange={(e) => setSellTicker(e.target.value)}
+                          className="input"
+                        >
+                          {sellTicker === "" && <option value="" disabled>Select...</option>}
+                          {items.map((i) => (
+                            <option key={i.ticker} value={i.ticker}>
+                              {i.ticker} ({i.positionSize}% left)
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs text-muted block">
+                        <span className="mb-1 block">Percent to Sell (0-100%)</span>
+                        <input
+                          type="number"
+                          step="1"
+                          min="1"
+                          max="100"
+                          value={sellPercent}
+                          onChange={(e) => setSellPercent(e.target.value)}
+                          className="input"
+                        />
+                      </label>
+                      <button
+                        onClick={handleSell}
+                        disabled={sell.isPending || !pass || !sellTicker}
+                        className="btn-bull text-xs"
+                      >
+                        {sell.isPending ? "Selling…" : "Sell Position"}
+                      </button>
                     </div>
                   )}
                 </div>

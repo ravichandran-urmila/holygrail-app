@@ -125,6 +125,20 @@ def with_live_prices(items: list[dict]) -> list[dict]:
                 gain = (current - float(price_added)) / float(price_added) * 100.0
             except (TypeError, ZeroDivisionError):
                 gain = None
+        position_size = item.get("position_size", 100)
+        status = item.get("status", "open")
+        sells = item.get("sells", [])
+        
+        realized_gain = 0.0
+        for sell in sells:
+            if price_added:
+                try:
+                    sell_gain = (float(sell["price"]) - float(price_added)) / float(price_added) * 100.0
+                    weight = sell.get("percent", 0) / 100.0
+                    realized_gain += sell_gain * weight
+                except (TypeError, ValueError, ZeroDivisionError):
+                    pass
+
         enriched.append(
             {
                 "ticker": ticker,
@@ -136,6 +150,10 @@ def with_live_prices(items: list[dict]) -> list[dict]:
                 "verdict": item.get("verdict", "WATCH"),
                 "commentary": item.get("commentary", ""),
                 "gain": gain,
+                "positionSize": position_size,
+                "status": status,
+                "sells": sells,
+                "realizedGain": realized_gain if sells else None,
             }
         )
     enriched.sort(key=lambda x: x.get("dateAdded") or "", reverse=True)
