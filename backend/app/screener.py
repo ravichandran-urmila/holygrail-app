@@ -36,6 +36,7 @@ def _num(v):
 _lock = threading.RLock()
 _job: dict = {
     "state": "idle",
+    "globalState": "idle",
     "universe": "sp500",
     "total": 0,
     "done": 0,
@@ -59,12 +60,17 @@ def _universe_tickers(universe: str) -> list[str]:
 def status(universe: str = "sp500") -> dict:
     """Snapshot of the current job, or the cached results if idle."""
     with _lock:
+        global_state = _job.get("globalState", "idle")
+        active_universe = _job.get("universe")
+        
         if _job["state"] == "running" and _job["universe"] == universe:
             results = sorted(_job["results"], key=lambda r: r["score"], reverse=True)
             started = _job["startedAt"]
             elapsed = (time.time() - started) if started else None
             return {
                 "state": "running",
+                "globalState": global_state,
+                "activeUniverse": active_universe,
                 "universe": universe,
                 "total": _job["total"],
                 "done": _job["done"],
@@ -79,6 +85,8 @@ def status(universe: str = "sp500") -> dict:
             results = sorted(cached["results"], key=lambda r: r["score"], reverse=True)
             return {
                 "state": cached["state"],
+                "globalState": global_state,
+                "activeUniverse": active_universe,
                 "universe": universe,
                 "total": cached["total_tickers"],
                 "done": cached["done_tickers"],
@@ -90,6 +98,8 @@ def status(universe: str = "sp500") -> dict:
 
         return {
             "state": "idle",
+            "globalState": global_state,
+            "activeUniverse": active_universe,
             "universe": universe,
             "total": 0,
             "done": 0,
@@ -200,3 +210,38 @@ def start(settings: HGSettings, universe: str = "sp500", force: bool = False) ->
 
     threading.Thread(target=_run, args=(settings, tickers, universe), daemon=True).start()
     return status(universe)
+
+
+def _run_all_sequential(settings: HGSettings, force: bool = False):
+    universes = ["sp500", "russell1000", "russell2000"]
+    with _lock:
+        _job["globalState"] = "running"
+    
+    for i, uni in enumerate(universes):
+        # We manually update _job before starting _run, but _run will also do some updates.
+        # It's better to just call start() directly and wait for it.
+        start(settings, uni, force=force)
+        
+        # Wait until the current scan finishes
+        while True:
+            with _lock:
+                if _job["state"] != "running" or _job["universe"] != uni:
+                    break
+            time.sleep(1)
+            
+        # Delay before next index to avoid rate limits (unless it's the last one)
+        if i < len(universes) - 1:
+            time.sleep(180) # 3 minutes
+            
+    with _lock:
+        _job["globalState"] = "idle"
+
+
+def start_all(settings: HGSettings, force: bool = False) -> dict:
+    """Kick off a sequential scan of all universes."""
+    with _lock:
+        if _job.get("globalState") == "running":
+            return status("sp500") # Return any status, the frontend looks at globalState
+    
+    threading.Thread(target=_run_all_sequential, args=(settings, force), daemon=True).start()
+    return status("sp500")

@@ -142,12 +142,11 @@ export function useScreenStatus(universe: string = "sp500") {
 export function useRunScreen() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { universe?: string; force?: boolean } = {}) => {
-      const u = args.universe || "sp500";
-      const f = args.force ? "&force=true" : "";
-      return send<ScreenStatus>(`/api/screen/run?universe=${u}${f}`, "POST", undefined);
+    mutationFn: (args: { force?: boolean } = {}) => {
+      const f = args.force ? "?force=true" : "";
+      return send<ScreenStatus>(`/api/screen/run-all${f}`, "POST", undefined);
     },
-    onSuccess: (data, args) => qc.setQueryData(["screen", args?.universe || "sp500"], data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["screen"] }),
   });
 }
 
