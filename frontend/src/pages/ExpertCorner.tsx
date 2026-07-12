@@ -583,7 +583,7 @@ function AdminPanel({
                               {sellTicker === "" && <option value="" disabled>Select...</option>}
                               {activeItems.map((i) => (
                                 <option key={i.ticker} value={i.ticker}>
-                                  {i.ticker} ({i.positionSize}% left)
+                                  {i.ticker} ({i.positionSize ?? 100}% left)
                                 </option>
                               ))}
                             </select>
