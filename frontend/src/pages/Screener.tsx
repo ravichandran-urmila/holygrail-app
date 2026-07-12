@@ -20,7 +20,8 @@ const FILTERS: { key: Filter; label: string; tint?: string; pred: (r: ScreenResu
 ];
 
 export function Screener() {
-  const { data } = useScreenStatus();
+  const [universe, setUniverse] = useState<string>("sp500");
+  const { data } = useScreenStatus(universe);
   const run = useRunScreen();
   const [filter, setFilter] = useState<Filter>("setups");
 
@@ -73,39 +74,23 @@ export function Screener() {
             weighted score. Data is weekly and cached hourly.
           </p>
         </div>
-        <div className="flex flex-wrap items-start gap-4">
-          <div className="flex flex-col items-center gap-1.5">
-            <button
-              onClick={() => run.mutate("sp500")}
-              disabled={run.isPending || running}
-              className="btn-primary whitespace-nowrap disabled:opacity-60"
-            >
-              {running && activeUniverse === "sp500" ? `Scanning… ${pct}%` : "Run S&P 500 scan"}
-            </button>
-            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">fast</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-1.5">
-            <button
-              onClick={() => run.mutate("russell1000")}
-              disabled={run.isPending || running}
-              className="btn-teal whitespace-nowrap disabled:opacity-60"
-            >
-              {running && activeUniverse === "russell1000" ? `Scanning… ${pct}%` : "Run Russell 1000 scan"}
-            </button>
-            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">slow</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-1.5">
-            <button
-              onClick={() => run.mutate("russell2000")}
-              disabled={run.isPending || running}
-              className="btn-ghost whitespace-nowrap disabled:opacity-60"
-            >
-              {running && activeUniverse === "russell2000" ? `Scanning… ${pct}%` : "Run Russell 2000 scan"}
-            </button>
-            <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">slowest</span>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <select 
+            value={universe} 
+            onChange={(e) => setUniverse(e.target.value)}
+            className="rounded-xl border border-line bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-violet"
+          >
+            <option value="sp500">S&P 500</option>
+            <option value="russell1000">Russell 1000</option>
+            <option value="russell2000">Russell 2000</option>
+          </select>
+          <button
+            onClick={() => run.mutate({ universe, force: true })}
+            disabled={run.isPending || running}
+            className="btn-primary whitespace-nowrap disabled:opacity-60"
+          >
+            {running && activeUniverse === universe ? `Scanning… ${pct}%` : "Manual Refresh"}
+          </button>
         </div>
       </div>
 
@@ -177,7 +162,7 @@ export function Screener() {
         <div className="card grid place-items-center gap-3 p-12 text-center">
           <div className="text-4xl">🛰️</div>
           <div className="text-sm text-muted">
-            Select an index to sweep constituents for Holy Grail setups. First run takes a couple of minutes.
+            The {universe} index hasn't been scanned recently. Click Manual Refresh to start a sweep.
           </div>
         </div>
       )}
@@ -238,7 +223,7 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                 <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
                     <Link
-                      to={`/?ticker=${r.ticker}`}
+                      to={`/scanner?ticker=${r.ticker}`}
                       className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
                     >
                       {r.ticker}

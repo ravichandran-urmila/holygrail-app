@@ -9,7 +9,7 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import ai, data as datalib, screener, watchlist as wl
+from . import ai, data as datalib, screener, watchlist as wl, db, scheduler
 from .indicator import HGSettings, compute
 from .scan_service import run_scan
 
@@ -24,6 +24,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_event():
+    db.init_db()
+    scheduler.start_scheduler()
 
 
 def _settings(
@@ -146,6 +151,7 @@ def guide_case(ticker: str, start: str, end: str):
 @app.post("/api/screen/run")
 def screen_run(
     universe: str = "sp500",
+    force: bool = False,
     retest_max: float = 15.0,
     base_min: int = 15,
     partial_thresh: float = 0.35,
@@ -155,12 +161,12 @@ def screen_run(
         retest_max=retest_max, base_min=base_min,
         partial_thresh=partial_thresh, full_thresh=full_thresh,
     )
-    return screener.start(settings, universe)
+    return screener.start(settings, universe, force=force)
 
 
 @app.get("/api/screen")
-def screen_status():
-    return screener.status()
+def screen_status(universe: str = "sp500"):
+    return screener.status(universe)
 
 
 @app.get("/api/watchlist")
@@ -208,6 +214,93 @@ def remove_watchlist(ticker: str, x_admin_password: str | None = Header(default=
     _require_admin(x_admin_password)
     ticker = ticker.strip().upper()
     items = [x for x in wl.load() if x.get("ticker") != ticker]
+    if not wl.save(items):
+        raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
+    return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
+
+
+class SellRequest(BaseModel):
+    percent: float
+    price: float | None = None
+    date: str | None = None
+
+
+@app.post("/api/watchlist/{ticker}/sell")
+def sell_watchlist(ticker: str, req: SellRequest, x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    if not (0 < req.percent <= 100):
+        raise HTTPException(status_code=400, detail="Percent must be between 0 and 100.")
+    ticker = ticker.strip().upper()
+    items = wl.load()
+    
+    target = None
+    for item in items:
+        if item.get("ticker") == ticker and item.get("status", "open") == "open":
+            target = item
+            break
+            
+    if not target:
+        raise HTTPException(status_code=404, detail="Open position not found.")
+        
+    current_price = req.price
+    if current_price is None:
+        current_price = datalib.fetch_last_close(ticker)
+        if current_price is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch current price automatically.")
+            
+    if current_price <= 0:
+        raise HTTPException(status_code=400, detail="Price must be > 0.")
+        
+    sells = target.get("sells", [])
+    current_size = target.get("position_size", 100)
+    sell_percent = min(req.percent, current_size)
+    
+    sells.append({
+        "date": req.date if req.date else datetime.date.today().isoformat(),
+        "percent": sell_percent,
+        "price": current_price
+    })
+    
+    new_size = current_size - sell_percent
+    target["sells"] = sells
+    target["position_size"] = new_size
+    if new_size <= 0:
+        target["status"] = "closed"
+        
+    if not wl.save(items):
+        raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
+    return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
+
+
+@app.delete("/api/watchlist/{ticker}/sell/{sell_index}")
+def reverse_sell(ticker: str, sell_index: int, x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    ticker = ticker.strip().upper()
+    items = wl.load()
+    
+    target = None
+    for item in items:
+        if item.get("ticker") == ticker:
+            target = item
+            break
+            
+    if not target:
+        raise HTTPException(status_code=404, detail="Position not found.")
+        
+    sells = target.get("sells", [])
+    if not (0 <= sell_index < len(sells)):
+        raise HTTPException(status_code=400, detail="Sell record not found.")
+        
+    # Remove the sell and refund the position size
+    removed_sell = sells.pop(sell_index)
+    target["position_size"] = target.get("position_size", 0) + removed_sell.get("percent", 0)
+    
+    # If the position size is now > 0, make sure status is open
+    if target["position_size"] > 0:
+        target["status"] = "open"
+        
+    target["sells"] = sells
+    
     if not wl.save(items):
         raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
     return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}

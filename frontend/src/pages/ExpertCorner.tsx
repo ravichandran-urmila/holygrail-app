@@ -4,6 +4,8 @@ import {
   lookupPrice,
   useAddWatchlist,
   useRemoveWatchlist,
+  useSellWatchlist,
+  useReverseSell,
   useWatchlist,
   verifyAdminPassword,
 } from "../lib/api";
@@ -15,11 +17,31 @@ const VERDICTS = ["BUY", "WATCH", "HOLD", "TRIM", "SELL", "AVOID"];
 export function ExpertCorner() {
   const { data, isLoading } = useWatchlist();
   const items = data?.items ?? [];
+  const [tab, setTab] = useState<"active" | "closed">("active");
 
-  const winners = items.filter((i) => (i.gain ?? 0) > 0).length;
-  const avgGain =
-    items.length > 0
-      ? items.reduce((a, i) => a + (i.gain ?? 0), 0) / items.filter((i) => i.gain !== null).length
+  const activeItems = items.filter((i) => i.status !== "closed");
+  const allSells = items.flatMap((item) => 
+    (item.sells || []).map((sell, index) => ({
+      ticker: item.ticker,
+      sellIndex: index,
+      originalEntry: item.priceAdded,
+      sellDate: sell.date,
+      sellPercent: sell.percent,
+      sellPrice: sell.price,
+      realizedReturn: item.priceAdded ? ((sell.price - item.priceAdded) / item.priceAdded) * 100 : null
+    }))
+  ).sort((a, b) => b.sellDate.localeCompare(a.sellDate));
+
+  const activeWinners = activeItems.filter((i) => (i.gain ?? 0) > 0).length;
+  const activeAvgGain =
+    activeItems.length > 0
+      ? activeItems.reduce((a, i) => a + (i.gain ?? 0), 0) / activeItems.filter((i) => i.gain !== null).length
+      : 0;
+
+  const closedWinners = allSells.filter((s) => (s.realizedReturn ?? 0) > 0).length;
+  const closedAvgGain =
+    allSells.length > 0
+      ? allSells.reduce((a, s) => a + (s.realizedReturn ?? 0), 0) / allSells.filter((s) => s.realizedReturn !== null).length
       : 0;
 
   return (
@@ -29,19 +51,31 @@ export function ExpertCorner() {
           <h1 className="font-display text-3xl font-bold tracking-tight">
             <span className="text-gradient">Expert Corner</span>
           </h1>
-          <p className="mt-1.5 max-w-xl text-sm text-muted">
-            A curated list of high-conviction tickers with entry prices and live returns.
+          <p className="mt-1.5 max-w-2xl text-sm text-muted">
+            A curated list of high-conviction tickers with entry prices and live returns. The bots are everywhere so we like to give it a human touch and read beyond the indicators.
           </p>
         </div>
-        {items.length > 0 && (
-          <div className="flex gap-3">
-            <MiniStat label="Tracked" value={String(items.length)} />
-            <MiniStat label="In profit" value={`${winners}/${items.length}`} tint="#1fdd97" />
+        {tab === "active" && activeItems.length > 0 && (
+          <div className="flex gap-3 animate-fade-in">
+            <MiniStat label="Active" value={String(activeItems.length)} />
+            <MiniStat label="In profit" value={`${activeWinners}/${activeItems.length}`} tint="#1fdd97" />
             <MiniStat
-              label="Avg return"
-              value={fmtPct(avgGain)}
-              tint={avgGain >= 0 ? "#1fdd97" : "#ff5470"}
+              label="Avg unrealized"
+              value={fmtPct(activeAvgGain)}
+              tint={activeAvgGain >= 0 ? "#1fdd97" : "#ff5470"}
               tooltip="assuming $100 to every ticker"
+            />
+          </div>
+        )}
+        {tab === "closed" && allSells.length > 0 && (
+          <div className="flex gap-3 animate-fade-in">
+            <MiniStat label="Sells" value={String(allSells.length)} />
+            <MiniStat label="Winning" value={`${closedWinners}/${allSells.length}`} tint="#1fdd97" />
+            <MiniStat
+              label="Avg realized"
+              value={fmtPct(closedAvgGain)}
+              tint={closedAvgGain >= 0 ? "#1fdd97" : "#ff5470"}
+              tooltip="average return across all partial and full sells"
             />
           </div>
         )}
@@ -54,10 +88,31 @@ export function ExpertCorner() {
           Expert Corner is currently empty. Add tickers in the admin panel below.
         </div>
       ) : (
-        <WatchTable items={items} />
+        <div className="space-y-4">
+          <div className="flex border-b border-line-strong text-sm font-semibold">
+            <button
+              onClick={() => setTab("active")}
+              className={`px-4 py-2 hover:text-bull transition ${tab === "active" ? "border-b-2 border-bull text-bull" : "text-muted"}`}
+            >
+              Active Setups ({activeItems.length})
+            </button>
+            <button
+              onClick={() => setTab("closed")}
+              className={`px-4 py-2 hover:text-info transition ${tab === "closed" ? "border-b-2 border-info text-info" : "text-muted"}`}
+            >
+              Closed Trades ({allSells.length})
+            </button>
+          </div>
+          
+          {tab === "active" ? (
+            activeItems.length > 0 ? <WatchTable items={activeItems} /> : <div className="text-sm text-muted">No active setups.</div>
+          ) : (
+            allSells.length > 0 ? <ClosedTable sells={allSells} /> : <div className="text-sm text-muted">No closed trades.</div>
+          )}
+        </div>
       )}
 
-      <AdminPanel items={items} githubEnabled={data?.githubEnabled ?? false} />
+      <AdminPanel activeItems={activeItems} allItems={items} allSells={allSells} githubEnabled={data?.githubEnabled ?? false} />
     </div>
   );
 }
@@ -108,13 +163,14 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
+              <th className="px-4 py-3 font-semibold w-10">#</th>
               <th className="px-4 py-3 font-semibold">Date</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
               <th className="px-4 py-3 font-semibold">Price Added</th>
               <th className="px-4 py-3 font-semibold">Current</th>
               <th className="px-4 py-3 font-semibold">Verdict <span className="text-[9px] text-faint normal-case font-normal block mt-0.5">(hover for comments)</span></th>
               <th className="px-4 py-3 font-semibold">Gain / Loss</th>
-              <th className="px-4 py-3 font-semibold">Price Target</th>
+              <th className="px-4 py-3 font-semibold">Resistance <span className="text-[9px] text-faint normal-case font-normal block mt-0.5">(price rejection pt)</span></th>
               <th className="px-4 py-3 font-semibold">Options</th>
             </tr>
           </thead>
@@ -125,12 +181,19 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
                 <tr key={r.ticker} className="border-b border-line/50 transition hover:bg-white/[0.02]">
                   <td className="px-4 py-3 text-muted">{r.dateAdded}</td>
                   <td className="px-4 py-3">
-                    <Link
-                      to={`/?ticker=${r.ticker}`}
-                      className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
-                    >
-                      {r.ticker}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/scanner?ticker=${r.ticker}`}
+                        className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
+                      >
+                        {r.ticker}
+                      </Link>
+                      {r.positionSize < 100 && (
+                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-muted">
+                          {r.positionSize}% left
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">{fmtUsd(r.priceAdded)}</td>
                   <td className="px-4 py-3">{r.currentPrice === null ? "N/A" : fmtUsd(r.currentPrice)}</td>
@@ -164,7 +227,72 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
   );
 }
 
-function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEnabled: boolean }) {
+function ClosedTable({
+  sells,
+}: {
+  sells: {
+    ticker: string;
+    originalEntry: number;
+    sellDate: string;
+    sellPercent: number;
+    sellPrice: number;
+    realizedReturn: number | null;
+  }[];
+}) {
+  return (
+    <div className="card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
+              <th className="px-4 py-3 font-semibold w-10">#</th>
+              <th className="px-4 py-3 font-semibold">Date Closed</th>
+              <th className="px-4 py-3 font-semibold">Ticker</th>
+              <th className="px-4 py-3 font-semibold">Portion Sold</th>
+              <th className="px-4 py-3 font-semibold">Sell Price</th>
+              <th className="px-4 py-3 font-semibold">Original Entry</th>
+              <th className="px-4 py-3 font-semibold">Realized Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sells.map((s, i) => (
+              <tr key={`${s.ticker}-${i}`} className="border-b border-line/50 transition hover:bg-white/[0.02]">
+                <td className="px-4 py-3 text-muted">{i + 1}</td>
+                <td className="px-4 py-3 text-muted">{s.sellDate}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/scanner?ticker=${s.ticker}`}
+                    className="rounded-md border border-info/20 bg-info/10 px-2 py-1 font-bold text-info transition hover:bg-info/20"
+                  >
+                    {s.ticker}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-muted">{s.sellPercent}%</td>
+                <td className="px-4 py-3 text-muted">{fmtUsd(s.sellPrice)}</td>
+                <td className="px-4 py-3 text-muted">{fmtUsd(s.originalEntry)}</td>
+                <td className={`px-4 py-3 font-bold ${gainColor(s.realizedReturn)}`}>
+                  {s.realizedReturn === null ? "N/A" : fmtPct(s.realizedReturn)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AdminPanel({ 
+  activeItems, 
+  allItems, 
+  allSells, 
+  githubEnabled 
+}: { 
+  activeItems: WatchlistItem[]; 
+  allItems: WatchlistItem[]; 
+  allSells: { ticker: string; sellIndex: number; sellPercent: number; sellDate: string }[];
+  githubEnabled: boolean; 
+}) {
   const [open, setOpen] = useState(false);
   const [pass, setPass] = useState("");
   const [isVerified, setIsVerified] = useState(false);
@@ -178,8 +306,16 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
   const [optionsContract, setOptionsContract] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const [sellTicker, setSellTicker] = useState(activeItems[0]?.ticker ?? "");
+  const [sellPercent, setSellPercent] = useState("100");
+  const [sellDate, setSellDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sellPrice, setSellPrice] = useState("");
+  const [actionType, setActionType] = useState<"buy" | "sell" | "remove">("buy");
+
   const add = useAddWatchlist();
   const remove = useRemoveWatchlist();
+  const sell = useSellWatchlist();
+  const reverseSell = useReverseSell();
 
   const flash = (ok: boolean, text: string) => {
     setMsg({ ok, text });
@@ -254,6 +390,34 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
     }
   };
 
+  const handleSell = async () => {
+    if (!sellTicker || !sellPercent) return;
+    try {
+      const p = sellPrice ? parseFloat(sellPrice) : undefined;
+      await sell.mutateAsync({ 
+        ticker: sellTicker, 
+        percent: parseFloat(sellPercent), 
+        date: sellDate,
+        price: p,
+        admin: pass 
+      });
+      flash(true, `Sold ${sellPercent}% of ${sellTicker}`);
+      setSellPercent("100");
+      setSellPrice("");
+    } catch (e) {
+      flash(false, (e as Error).message);
+    }
+  };
+
+  const handleReverseSell = async (t: string, idx: number) => {
+    try {
+      await reverseSell.mutateAsync({ ticker: t, sellIndex: idx, admin: pass });
+      flash(true, `Reversed sell record for ${t}`);
+    } catch (e) {
+      flash(false, (e as Error).message);
+    }
+  };
+
   return (
     <div className="card overflow-hidden">
       <button
@@ -309,101 +473,219 @@ function AdminPanel({ items, githubEnabled }: { items: WatchlistItem[]; githubEn
                 <div className={`text-sm ${msg.ok ? "text-bull" : "text-bear"}`}>{msg.text}</div>
               )}
 
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Add */}
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold text-muted">➕ Add / update ticker</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Ticker</span>
-                      <input
-                        value={ticker}
-                        onChange={(e) => setTicker(e.target.value.toUpperCase())}
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Date added</span>
-                      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Verdict</span>
-                      <select value={verdict} onChange={(e) => setVerdict(e.target.value)} className="input">
-                        {VERDICTS.map((v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Price added</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Price target</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={targetPrice}
-                        onChange={(e) => setTargetPrice(e.target.value)}
-                        placeholder="None (-)"
-                        className="input"
-                      />
-                    </label>
-                    <label className="text-xs text-muted">
-                      <span className="mb-1 block">Options contract</span>
-                      <input
-                        value={optionsContract}
-                        onChange={(e) => setOptionsContract(e.target.value)}
-                        placeholder="None (-)"
-                        className="input"
-                      />
-                    </label>
+              <div className="grid gap-6">
+                {/* Unified Form */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm font-semibold text-muted border-b border-line pb-2">
+                    <span>Manage Position</span>
+                    <div className="flex gap-1 text-xs">
+                      <button 
+                        onClick={() => setActionType("buy")}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "buy" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
+                      >
+                        Buy / Update
+                      </button>
+                      <button 
+                        onClick={() => setActionType("sell")}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "sell" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
+                      >
+                        Sell
+                      </button>
+                      <button 
+                        onClick={() => setActionType("remove")}
+                        className={`px-3 py-1.5 rounded-md transition ${actionType === "remove" ? "bg-white/10 text-white font-bold" : "hover:bg-white/5"}`}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <label className="block text-xs text-muted">
-                    <span className="mb-1 block">Commentary (tooltip)</span>
-                    <textarea
-                      value={commentary}
-                      onChange={(e) => setCommentary(e.target.value)}
-                      rows={3}
-                      className="input resize-none"
-                      placeholder="Thesis shown on hover…"
-                    />
-                  </label>
-                  <div className="flex gap-2">
-                    <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass}>
-                      🔍 Auto-fetch price
-                    </button>
-                    <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
-                      {add.isPending ? "Saving…" : "Save"}
-                    </button>
-                  </div>
-                </div>
 
-                {/* Remove */}
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold text-muted">❌ Remove ticker</div>
-                  {items.length === 0 ? (
-                    <div className="text-sm text-muted">Nothing to remove.</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {items.map((i) => (
-                        <button
-                          key={i.ticker}
-                          onClick={() => del(i.ticker)}
-                          disabled={remove.isPending || !pass}
-                          className="chip transition hover:border-bear/50 hover:text-bear disabled:opacity-40"
-                        >
-                          {i.ticker} ✕
+                  {actionType === "buy" && (
+                    <div className="grid grid-cols-2 gap-3 max-w-2xl">
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Ticker</span>
+                        <input
+                          value={ticker}
+                          onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Date added</span>
+                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Verdict</span>
+                        <select value={verdict} onChange={(e) => setVerdict(e.target.value)} className="input">
+                          {VERDICTS.map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Price added</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Resistance <span className="text-[10px] text-muted normal-case font-normal">(price rejection pt)</span></span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={targetPrice}
+                          onChange={(e) => setTargetPrice(e.target.value)}
+                          placeholder="None (-)"
+                          className="input"
+                        />
+                      </label>
+                      <label className="text-xs text-muted">
+                        <span className="mb-1 block">Options contract</span>
+                        <input
+                          value={optionsContract}
+                          onChange={(e) => setOptionsContract(e.target.value)}
+                          placeholder="None (-)"
+                          className="input"
+                        />
+                      </label>
+                      <label className="block text-xs text-muted col-span-2">
+                        <span className="mb-1 block">Commentary (tooltip)</span>
+                        <textarea
+                          value={commentary}
+                          onChange={(e) => setCommentary(e.target.value)}
+                          rows={2}
+                          className="input resize-none"
+                          placeholder="Thesis shown on hover…"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {actionType === "sell" && (
+                    <div className="grid grid-cols-2 gap-3 max-w-2xl">
+                      {activeItems.length === 0 ? (
+                        <div className="text-sm text-muted col-span-2">No active setups to sell.</div>
+                      ) : (
+                        <>
+                          <label className="text-xs text-muted col-span-2">
+                            <span className="mb-1 block">Select Ticker</span>
+                            <select
+                              value={sellTicker}
+                              onChange={(e) => setSellTicker(e.target.value)}
+                              className="input"
+                            >
+                              {sellTicker === "" && <option value="" disabled>Select...</option>}
+                              {activeItems.map((i) => (
+                                <option key={i.ticker} value={i.ticker}>
+                                  {i.ticker} ({i.positionSize}% left)
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="text-xs text-muted">
+                            <span className="mb-1 block">Date Sold</span>
+                            <input type="date" value={sellDate} onChange={(e) => setSellDate(e.target.value)} className="input" />
+                          </label>
+                          <label className="text-xs text-muted">
+                            <span className="mb-1 block">Price Sold</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={sellPrice}
+                              onChange={(e) => setSellPrice(e.target.value)}
+                              className="input"
+                              placeholder="Auto-fetch if empty"
+                            />
+                          </label>
+                          <label className="text-xs text-muted col-span-2">
+                            <span className="mb-1 block">Percent to Sell (0-100%)</span>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              value={sellPercent}
+                              onChange={(e) => setSellPercent(e.target.value)}
+                              className="input"
+                            />
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {actionType === "remove" && (
+                    <div className="grid md:grid-cols-2 gap-6 items-start">
+                      {/* Remove Entire Ticker */}
+                      <div className="space-y-3 bg-white/[0.01] border border-line rounded-lg p-3">
+                        <div className="text-sm font-semibold text-muted">❌ Delete Entire Ticker</div>
+                        <div className="text-[10px] text-faint mb-2">This deletes the ticker and all associated sell history completely.</div>
+                        {allItems.length === 0 ? (
+                          <div className="text-sm text-muted">Nothing to remove.</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                            {allItems.map((i, idx) => (
+                              <div key={i.ticker} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
+                                <span>{idx + 1}. {i.ticker} {i.status === "closed" && "(Closed)"}</span>
+                                <button
+                                  onClick={() => del(i.ticker)}
+                                  disabled={remove.isPending || !pass}
+                                  className="text-bear hover:underline disabled:opacity-50"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Reverse Sell */}
+                      <div className="space-y-3 bg-white/[0.01] border border-line rounded-lg p-3">
+                        <div className="text-sm font-semibold text-muted">⏪ Reverse a Sale</div>
+                        <div className="text-[10px] text-faint mb-2">This deletes a specific sell record and refunds the position size.</div>
+                        {allSells.length === 0 ? (
+                          <div className="text-sm text-muted">No sells to reverse.</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                            {allSells.map((s, idx) => (
+                              <div key={`${s.ticker}-${idx}`} className="flex items-center justify-between bg-white/[0.02] border border-line rounded px-2 py-1 text-xs">
+                                <span>{idx + 1}. {s.sellDate}: {s.ticker} ({s.sellPercent}%)</span>
+                                <button
+                                  onClick={() => handleReverseSell(s.ticker, s.sellIndex)}
+                                  disabled={reverseSell.isPending || !pass}
+                                  className="text-bear hover:underline disabled:opacity-50"
+                                >
+                                  Reverse
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {actionType !== "remove" && (
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={autoFetch} className="btn-ghost text-xs" disabled={!pass || (actionType === "sell" && (!sellTicker || activeItems.length === 0))}>
+                        🔍 Auto-fetch price
+                      </button>
+                      {actionType === "buy" ? (
+                        <button onClick={save} className="btn-primary text-xs" disabled={add.isPending || !pass}>
+                          {add.isPending ? "Saving…" : "Save"}
                         </button>
-                      ))}
+                      ) : (
+                        <button onClick={handleSell} className="btn-primary text-xs" disabled={sell.isPending || !pass || activeItems.length === 0}>
+                          {sell.isPending ? "Saving…" : "Save"}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
