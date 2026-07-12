@@ -1,53 +1,105 @@
+import base64
 import json
-import sqlite3
+import os
 import time
+import requests
 from pathlib import Path
 
-DB_PATH = Path("/data/screener.db") if Path("/data").exists() else Path("screener.db")
+_GH_API = "https://api.github.com"
+_LOCAL_PATH = Path(os.path.dirname(__file__)) / ".." / "screener_cache.json"
 
-def _get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+def _gh_cfg():
+    token = os.environ.get("GITHUB_TOKEN", "")
+    repo = os.environ.get("GITHUB_REPO", "")
+    branch = os.environ.get("GITHUB_BRANCH", "master")
+    path = "screener_cache.json"
+    if token and repo:
+        return token, repo, branch, path
+    return None
 
 def init_db():
-    with _get_conn() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS screener_cache (
-                universe TEXT PRIMARY KEY,
-                results TEXT,
-                updated_at REAL,
-                total_tickers INTEGER,
-                done_tickers INTEGER,
-                state TEXT
+    pass
+
+def _load_all() -> dict:
+    cfg = _gh_cfg()
+    if cfg:
+        token, repo, branch, path = cfg
+        try:
+            headers = {
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.v3+json",
+            }
+            r = requests.get(
+                f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                headers=headers,
+                timeout=10,
             )
-        """)
-        conn.commit()
+            if r.status_code == 200:
+                raw = base64.b64decode(r.json()["content"]).decode("utf-8")
+                return json.loads(raw)
+        except Exception:
+            pass
+
+    if _LOCAL_PATH.exists():
+        try:
+            with open(_LOCAL_PATH, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_all(data: dict) -> bool:
+    payload_str = json.dumps(data, indent=2)
+    cfg = _gh_cfg()
+    if cfg:
+        token, repo, branch, path = cfg
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        try:
+            r_get = requests.get(
+                f"{_GH_API}/repos/{repo}/contents/{path}?ref={branch}",
+                headers=headers,
+                timeout=10,
+            )
+            sha = r_get.json().get("sha", "") if r_get.status_code == 200 else ""
+            body = {
+                "message": "chore: update screener cache",
+                "content": base64.b64encode(payload_str.encode()).decode(),
+                "branch": branch,
+            }
+            if sha:
+                body["sha"] = sha
+            r_put = requests.put(
+                f"{_GH_API}/repos/{repo}/contents/{path}",
+                headers=headers,
+                json=body,
+                timeout=15,
+            )
+            return r_put.status_code in (200, 201)
+        except Exception:
+            return False
+
+    try:
+        with open(_LOCAL_PATH, "w") as f:
+            f.write(payload_str)
+        return True
+    except Exception:
+        return False
 
 def save_cache(universe: str, results: list, state: str, total: int, done: int):
-    with _get_conn() as conn:
-        conn.execute("""
-            INSERT INTO screener_cache (universe, results, updated_at, total_tickers, done_tickers, state)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(universe) DO UPDATE SET
-                results=excluded.results,
-                updated_at=excluded.updated_at,
-                total_tickers=excluded.total_tickers,
-                done_tickers=excluded.done_tickers,
-                state=excluded.state
-        """, (universe, json.dumps(results), time.time(), total, done, state))
-        conn.commit()
+    all_data = _load_all()
+    all_data[universe] = {
+        "universe": universe,
+        "results": results,
+        "updated_at": time.time(),
+        "total_tickers": total,
+        "done_tickers": done,
+        "state": state,
+    }
+    _save_all(all_data)
 
 def load_cache(universe: str) -> dict | None:
-    with _get_conn() as conn:
-        row = conn.execute("SELECT * FROM screener_cache WHERE universe = ?", (universe,)).fetchone()
-        if not row:
-            return None
-        return {
-            "universe": row["universe"],
-            "results": json.loads(row["results"]),
-            "updated_at": row["updated_at"],
-            "total_tickers": row["total_tickers"],
-            "done_tickers": row["done_tickers"],
-            "state": row["state"],
-        }
+    all_data = _load_all()
+    return all_data.get(universe)
