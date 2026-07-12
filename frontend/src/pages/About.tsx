@@ -100,6 +100,7 @@ export function About() {
         <div className="pt-4 flex flex-wrap items-center gap-4">
           <Link
             to="/scanner"
+            onClick={() => window.scrollTo(0, 0)}
             className="inline-flex items-center justify-center rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-base transition hover:opacity-90 active:scale-[0.98]"
           >
             Go to Scanner →
