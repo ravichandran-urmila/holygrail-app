@@ -112,10 +112,10 @@ export function useRemoveWatchlist() {
   });
 }
 
-export function useScreenStatus() {
+export function useScreenStatus(universe: string = "sp500") {
   return useQuery({
-    queryKey: ["screen"],
-    queryFn: () => get<ScreenStatus>("/api/screen"),
+    queryKey: ["screen", universe],
+    queryFn: () => get<ScreenStatus>(`/api/screen?universe=${universe}`),
     refetchInterval: (query) =>
       query.state.data?.state === "running" ? 1500 : false,
   });
@@ -124,9 +124,12 @@ export function useScreenStatus() {
 export function useRunScreen() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (universe?: string) =>
-      send<ScreenStatus>(`/api/screen/run${universe ? `?universe=${universe}` : ""}`, "POST", undefined),
-    onSuccess: (data) => qc.setQueryData(["screen"], data),
+    mutationFn: (args: { universe?: string; force?: boolean } = {}) => {
+      const u = args.universe || "sp500";
+      const f = args.force ? "&force=true" : "";
+      return send<ScreenStatus>(`/api/screen/run?universe=${u}${f}`, "POST", undefined);
+    },
+    onSuccess: (data, args) => qc.setQueryData(["screen", args?.universe || "sp500"], data),
   });
 }
 
