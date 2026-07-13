@@ -102,7 +102,15 @@
     "date_added": "2026-05-27",
     "price_added": 150.1699981689453,
     "verdict": "HOLD",
-    "commentary": ""
+    "commentary": "",
+    "sells": [
+      {
+        "date": "2026-07-10",
+        "percent": 50.0,
+        "price": 194.0
+      }
+    ],
+    "position_size": 50.0
   },
   {
     "ticker": "APD",
