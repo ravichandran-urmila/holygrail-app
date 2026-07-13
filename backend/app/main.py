@@ -128,7 +128,7 @@ def _require_admin(password: str | None):
     if password in auth_store.sessions:
         return
         
-    correct = os.environ.get("ADMIN_PASSWORD", "holygrail")
+    correct = os.environ.get("ADMIN_PASSWORD", "MakeUsRich25%")
     admin_email = os.environ.get("ADMIN_EMAIL")
     
     # Dev mode: allow static password if admin_email (production email setting) is not configured

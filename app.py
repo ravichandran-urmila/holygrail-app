@@ -827,9 +827,9 @@ def render_expert_corner():
     with st.expander("🛠️ Admin Expert Corner Controls", expanded=False):
         admin_pass = st.text_input("Admin Password", type="password", key="wl_admin_pass")
         try:
-            correct_pass = st.secrets.get("admin_password", "holygrail")
+            correct_pass = st.secrets.get("admin_password", "MakeUsRich25%")
         except Exception:
-            correct_pass = "holygrail"
+            correct_pass = "MakeUsRich25%"
         
         if admin_pass == correct_pass:
             st.success("Authorized!")
