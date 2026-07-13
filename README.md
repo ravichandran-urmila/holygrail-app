@@ -82,7 +82,7 @@ Open http://localhost:5173 and search a ticker (e.g. `AAPL`, `NVDA`, `ARM`).
 
 Copy `backend/.env.example` → `backend/.env` (or set env vars) to enable:
 
-- `ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` — configures temporary email PIN auth for Expert Corner writes. (Local development falls back to static `ADMIN_PASSWORD` or `MakeUsRich25%`).
+- `ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` — configures temporary email PIN auth for Expert Corner writes. (Local development falls back to static `ADMIN_PASSWORD`).
 - `GEMINI_API_KEY` / `OPENAI_API_KEY` / `HF_TOKEN` — richer AI panels (optional;
   falls back to deterministic local templates).
 - `GITHUB_TOKEN` / `GITHUB_REPO` / … — persist the watchlist to GitHub so edits
