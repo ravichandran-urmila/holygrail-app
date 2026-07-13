@@ -363,7 +363,7 @@ All three markers have `hoverinfo="skip"` to suppress incorrect price tooltips (
 | AVOID | `#ea3943` (red) |
 
 ### Admin Panel
-- Protected by password (`st.secrets["admin_password"]`, fallback: `"holygrail"`)
+- Protected by password (`st.secrets["admin_password"]`, fallback: `"MakeUsRich25%"`)
 - **Add Ticker**: Symbol, date, auto-fetch price button, verdict selector (BUY/WATCH/HOLD/AVOID), commentary text area
 - **Remove Ticker**: Multi-select of existing tickers
 - Persistence status indicator (GitHub active vs local-only)
