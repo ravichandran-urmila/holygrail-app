@@ -165,7 +165,6 @@ function WatchTable({ items }: { items: WatchlistItem[] }) {
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
-              <th className="px-4 py-3 font-semibold w-10">#</th>
               <th className="px-4 py-3 font-semibold">Date</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
               <th className="px-4 py-3 font-semibold">Price Added</th>
@@ -247,7 +246,6 @@ function ClosedTable({
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line-strong text-left text-[11px] uppercase tracking-wider text-faint">
-              <th className="px-4 py-3 font-semibold w-10">#</th>
               <th className="px-4 py-3 font-semibold">Date Closed</th>
               <th className="px-4 py-3 font-semibold">Ticker</th>
               <th className="px-4 py-3 font-semibold">Portion Sold</th>
@@ -259,7 +257,6 @@ function ClosedTable({
           <tbody>
             {sells.map((s, i) => (
               <tr key={`${s.ticker}-${i}`} className="border-b border-line/50 transition hover:bg-white/[0.02]">
-                <td className="px-4 py-3 text-muted">{i + 1}</td>
                 <td className="px-4 py-3 text-muted">{s.sellDate}</td>
                 <td className="px-4 py-3">
                   <Link
