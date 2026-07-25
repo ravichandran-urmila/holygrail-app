@@ -104,5 +104,14 @@
       }
     ],
     "position_size": 50.0
+  },
+  {
+    "ticker": "BMY",
+    "date_added": "2026-07-20",
+    "price_added": 60.16,
+    "price_target": null,
+    "options": null,
+    "verdict": "WATCH",
+    "commentary": "elative to traditional pharmaceutical peers\u2014moving beyond standard R&D by pairing heavy NVIDIA AI infrastructure with company-wide Anthropic/Claude agentic workflows to speed up trial execution, lower pipeline failure rates, and offset revenue cliffs from patent expirations."
   }
 ]
