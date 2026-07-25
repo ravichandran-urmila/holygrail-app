@@ -1,12 +1,5 @@
 [
   {
-    "ticker": "APD",
-    "date_added": "2026-07-04",
-    "price_added": 314.0,
-    "verdict": "BUY",
-    "commentary": "Space chips and everything's needs helium. And it's at the center of Iran war. "
-  },
-  {
     "ticker": "GILD",
     "date_added": "2026-07-04",
     "price_added": 135.0,
@@ -111,12 +104,5 @@
       }
     ],
     "position_size": 50.0
-  },
-  {
-    "ticker": "APD",
-    "date_added": "2026-07-03",
-    "price_added": 314.19,
-    "verdict": "BUY",
-    "commentary": "Helium shortage for everything from terrestial data center to space data centers to EVs "
   }
 ]
