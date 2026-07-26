@@ -65,7 +65,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {"maxOutputTokens": 300, "temperature": 0.4},
                 },
-                timeout=3,
+                timeout=5,
             )
             if resp.status_code == 200:
                 text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
@@ -85,7 +85,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     "max_tokens": 300,
                     "temperature": 0.4,
                 },
-                timeout=3,
+                timeout=5,
             )
             if resp.status_code == 200:
                 text = resp.json()["choices"][0]["message"]["content"].strip()
@@ -109,7 +109,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                         "max_tokens": 250,
                         "temperature": 0.4,
                     },
-                    timeout=3,
+                    timeout=5,
                 )
                 if resp.status_code == 200:
                     text = resp.json()["choices"][0]["message"]["content"].strip()
