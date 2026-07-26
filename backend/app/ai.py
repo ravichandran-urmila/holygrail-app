@@ -112,8 +112,10 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     text = resp.json()["choices"][0]["message"]["content"].strip()
                     if text:
                         return _clean_html_response(text), f"HF ({model.split('/')[-1]})"
-            except Exception:
-                pass
+                else:
+                    print(f"[HF DEBUG] Model {model} failed with status {resp.status_code}: {resp.text}")
+            except Exception as e:
+                print(f"[HF DEBUG] Model {model} raised exception: {str(e)}")
     return None
 
 
