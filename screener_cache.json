@@ -5976,20 +5976,6 @@
         "rsi14": 44.842735736803625
       },
       {
-        "ticker": "AAT",
-        "score": 0.4,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 24.299999237060547,
-        "entryLow": 20.46500003814697,
-        "entryHigh": 23.534750043869014,
-        "mansfieldRs": 1.1125736237354045,
-        "pctAbove50w": 18.73930706946053,
-        "rsi14": 64.05037575769106
-      },
-      {
         "ticker": "AAON",
         "score": 0.15,
         "verdict": "NO SETUP",
@@ -6002,6 +5988,20 @@
         "mansfieldRs": -0.2097024937613856,
         "pctAbove50w": 3.8575046809596696,
         "rsi14": 46.50661386432653
+      },
+      {
+        "ticker": "AAT",
+        "score": 0.4,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 24.299999237060547,
+        "entryLow": 20.46500003814697,
+        "entryHigh": 23.534750043869014,
+        "mansfieldRs": 1.1125736237354045,
+        "pctAbove50w": 18.73930706946053,
+        "rsi14": 64.05037575769106
       },
       {
         "ticker": "ABCB",
@@ -6060,20 +6060,6 @@
         "rsi14": 61.81159261054113
       },
       {
-        "ticker": "ACAT",
-        "score": 0.5,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 10.0,
-        "entryLow": 8.107799994945527,
-        "entryHigh": 9.323969994187355,
-        "mansfieldRs": 2.0771152616203126,
-        "pctAbove50w": 23.338020254990095,
-        "rsi14": 100.0
-      },
-      {
         "ticker": "ACAD",
         "score": 0.44999999999999996,
         "verdict": "WATCHING",
@@ -6086,6 +6072,20 @@
         "mansfieldRs": -0.23951989431618026,
         "pctAbove50w": 5.106376435673046,
         "rsi14": 56.817268628769384
+      },
+      {
+        "ticker": "ACAT",
+        "score": 0.5,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 10.0,
+        "entryLow": 8.107799994945527,
+        "entryHigh": 9.323969994187355,
+        "mansfieldRs": 2.0771152616203126,
+        "pctAbove50w": 23.338020254990095,
+        "rsi14": 100.0
       },
       {
         "ticker": "ACCO",
@@ -6102,20 +6102,6 @@
         "rsi14": 53.38758423324958
       },
       {
-        "ticker": "ACLS",
-        "score": 0.5,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": 17,
-        "lastClose": 134.10000610351562,
-        "entryLow": 106.09780059814453,
-        "entryHigh": 122.0124706878662,
-        "mansfieldRs": 2.042827262452438,
-        "pctAbove50w": 26.39282374140073,
-        "rsi14": 51.46008256406087
-      },
-      {
         "ticker": "ACIW",
         "score": 0.6,
         "verdict": "WATCHING",
@@ -6128,6 +6114,20 @@
         "mansfieldRs": 1.3219423597109037,
         "pctAbove50w": 21.351484835298365,
         "rsi14": 66.8505774409411
+      },
+      {
+        "ticker": "ACLS",
+        "score": 0.5,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": 17,
+        "lastClose": 134.10000610351562,
+        "entryLow": 106.09780059814453,
+        "entryHigh": 122.0124706878662,
+        "mansfieldRs": 2.042827262452438,
+        "pctAbove50w": 26.39282374140073,
+        "rsi14": 51.46008256406087
       },
       {
         "ticker": "ACTG",
@@ -6368,20 +6368,6 @@
         "rsi14": 61.98685896204192
       },
       {
-        "ticker": "AMC",
-        "score": 0.5499999999999999,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": true,
-        "weeksSinceLastFull": null,
-        "lastClose": 2.2699999809265137,
-        "entryLow": 1.9808000004291535,
-        "entryHigh": 2.2779200004935265,
-        "mansfieldRs": 0.41410183134890755,
-        "pctAbove50w": 14.60016056314131,
-        "rsi14": 57.1432514081992
-      },
-      {
         "ticker": "AMD",
         "score": 0.4,
         "verdict": "WATCHING",
@@ -6394,6 +6380,20 @@
         "mansfieldRs": 7.691198385420019,
         "pctAbove50w": 83.55744848490642,
         "rsi14": 66.73491481281062
+      },
+      {
+        "ticker": "AMC",
+        "score": 0.5499999999999999,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": true,
+        "weeksSinceLastFull": null,
+        "lastClose": 2.2699999809265137,
+        "entryLow": 1.9808000004291535,
+        "entryHigh": 2.2779200004935265,
+        "mansfieldRs": 0.41410183134890755,
+        "pctAbove50w": 14.60016056314131,
+        "rsi14": 57.1432514081992
       },
       {
         "ticker": "AMKR",
@@ -6410,20 +6410,6 @@
         "rsi14": 51.891256959453834
       },
       {
-        "ticker": "ANDE",
-        "score": 0.4,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 77.70999908447266,
-        "entryLow": 59.73080017089844,
-        "entryHigh": 68.6904201965332,
-        "mansfieldRs": 2.377525646318557,
-        "pctAbove50w": 30.10038181663921,
-        "rsi14": 62.70541581816209
-      },
-      {
         "ticker": "ANF",
         "score": 0.25,
         "verdict": "NO SETUP",
@@ -6436,6 +6422,20 @@
         "mansfieldRs": -0.41659887357573644,
         "pctAbove50w": 3.4567153964123962,
         "rsi14": 53.61042074708722
+      },
+      {
+        "ticker": "ANDE",
+        "score": 0.4,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 77.70999908447266,
+        "entryLow": 59.73080017089844,
+        "entryHigh": 68.6904201965332,
+        "mansfieldRs": 2.377525646318557,
+        "pctAbove50w": 30.10038181663921,
+        "rsi14": 62.70541581816209
       },
       {
         "ticker": "ANGO",
@@ -6844,20 +6844,6 @@
         "rsi14": 57.3963330857105
       },
       {
-        "ticker": "BFS",
-        "score": 0.5499999999999999,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": true,
-        "weeksSinceLastFull": null,
-        "lastClose": 35.68000030517578,
-        "entryLow": 33.22440006256104,
-        "entryHigh": 38.20806007194519,
-        "mansfieldRs": 0.012073935896028676,
-        "pctAbove50w": 7.390954352797598,
-        "rsi14": 53.30616232995734
-      },
-      {
         "ticker": "BGC",
         "score": 0.5,
         "verdict": "WATCHING",
@@ -6870,6 +6856,20 @@
         "mansfieldRs": 0.9350937746432852,
         "pctAbove50w": 17.238599046233166,
         "rsi14": 59.82788302089248
+      },
+      {
+        "ticker": "BFS",
+        "score": 0.5499999999999999,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": true,
+        "weeksSinceLastFull": null,
+        "lastClose": 35.68000030517578,
+        "entryLow": 33.22440006256104,
+        "entryHigh": 38.20806007194519,
+        "mansfieldRs": 0.012073935896028676,
+        "pctAbove50w": 7.390954352797598,
+        "rsi14": 53.30616232995734
       },
       {
         "ticker": "BH",
@@ -7376,20 +7376,6 @@
         "rsi14": 63.9076252625414
       },
       {
-        "ticker": "CENX",
-        "score": 0.44999999999999996,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": true,
-        "weeksSinceLastFull": null,
-        "lastClose": 46.209999084472656,
-        "entryLow": 43.48120002746582,
-        "entryHigh": 50.003380031585685,
-        "mansfieldRs": 0.1770036034084721,
-        "pctAbove50w": 6.275813582153058,
-        "rsi14": 45.80703522173433
-      },
-      {
         "ticker": "CERS",
         "score": 0.4,
         "verdict": "WATCHING",
@@ -7404,18 +7390,18 @@
         "rsi14": 58.71514337771163
       },
       {
-        "ticker": "CEVA",
-        "score": 0.5,
+        "ticker": "CENX",
+        "score": 0.44999999999999996,
         "verdict": "WATCHING",
         "fullSetup": false,
-        "partialSetup": false,
+        "partialSetup": true,
         "weeksSinceLastFull": null,
-        "lastClose": 36.349998474121094,
-        "entryLow": 27.515999908447267,
-        "entryHigh": 31.643399894714353,
-        "mansfieldRs": 2.545880685512809,
-        "pctAbove50w": 32.10495200998251,
-        "rsi14": 53.47265647870821
+        "lastClose": 46.209999084472656,
+        "entryLow": 43.48120002746582,
+        "entryHigh": 50.003380031585685,
+        "mansfieldRs": 0.1770036034084721,
+        "pctAbove50w": 6.275813582153058,
+        "rsi14": 45.80703522173433
       },
       {
         "ticker": "CFFN",
@@ -7430,6 +7416,20 @@
         "mansfieldRs": 1.3988588093621734,
         "pctAbove50w": 21.206171777276246,
         "rsi14": 71.46471635121226
+      },
+      {
+        "ticker": "CEVA",
+        "score": 0.5,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 36.349998474121094,
+        "entryLow": 27.515999908447267,
+        "entryHigh": 31.643399894714353,
+        "mansfieldRs": 2.545880685512809,
+        "pctAbove50w": 32.10495200998251,
+        "rsi14": 53.47265647870821
       },
       {
         "ticker": "CHCO",
@@ -7502,20 +7502,6 @@
         "rsi14": 81.29349148648862
       },
       {
-        "ticker": "CLDX",
-        "score": 0.5,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 35.279998779296875,
-        "entryLow": 28.582000007629393,
-        "entryHigh": 32.8693000087738,
-        "mansfieldRs": 1.6481549369517778,
-        "pctAbove50w": 23.434324994330645,
-        "rsi14": 57.97494966960698
-      },
-      {
         "ticker": "CLF",
         "score": 0.25,
         "verdict": "NO SETUP",
@@ -7528,6 +7514,20 @@
         "mansfieldRs": -0.28364278134394794,
         "pctAbove50w": 3.814963420773186,
         "rsi14": 53.8519166889447
+      },
+      {
+        "ticker": "CLDX",
+        "score": 0.5,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 35.279998779296875,
+        "entryLow": 28.582000007629393,
+        "entryHigh": 32.8693000087738,
+        "mansfieldRs": 1.6481549369517778,
+        "pctAbove50w": 23.434324994330645,
+        "rsi14": 57.97494966960698
       },
       {
         "ticker": "CMC",
@@ -8132,20 +8132,6 @@
         "rsi14": 61.26894464320246
       },
       {
-        "ticker": "DGICA",
-        "score": 0.44999999999999996,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": true,
-        "weeksSinceLastFull": 45,
-        "lastClose": 18.760000228881836,
-        "entryLow": 18.46440002441406,
-        "entryHigh": 21.23406002807617,
-        "mansfieldRs": -0.527461073487423,
-        "pctAbove50w": 1.6009196295407653,
-        "rsi14": 56.14084542992828
-      },
-      {
         "ticker": "DGII",
         "score": 0.4,
         "verdict": "WATCHING",
@@ -8158,6 +8144,20 @@
         "mansfieldRs": 3.0582713304176767,
         "pctAbove50w": 37.016292486242726,
         "rsi14": 63.37271776740828
+      },
+      {
+        "ticker": "DGICA",
+        "score": 0.44999999999999996,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": true,
+        "weeksSinceLastFull": 45,
+        "lastClose": 18.760000228881836,
+        "entryLow": 18.46440002441406,
+        "entryHigh": 21.23406002807617,
+        "mansfieldRs": -0.527461073487423,
+        "pctAbove50w": 1.6009196295407653,
+        "rsi14": 56.14084542992828
       },
       {
         "ticker": "DHT",
@@ -11520,20 +11520,6 @@
         "rsi14": 71.26878056557008
       },
       {
-        "ticker": "NKTR",
-        "score": 0.65,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 70.7249984741211,
-        "entryLow": 59.47090034484863,
-        "entryHigh": 68.39153539657592,
-        "mansfieldRs": 1.4004803437139124,
-        "pctAbove50w": 18.923705651023145,
-        "rsi14": 54.80316765013763
-      },
-      {
         "ticker": "NKSH",
         "score": 0.5499999999999999,
         "verdict": "WATCHING",
@@ -11546,6 +11532,20 @@
         "mansfieldRs": 0.1369443324005859,
         "pctAbove50w": 8.030969414175699,
         "rsi14": 54.04511376570869
+      },
+      {
+        "ticker": "NKTR",
+        "score": 0.65,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 70.7249984741211,
+        "entryLow": 59.47090034484863,
+        "entryHigh": 68.39153539657592,
+        "mansfieldRs": 1.4004803437139124,
+        "pctAbove50w": 18.923705651023145,
+        "rsi14": 54.80316765013763
       },
       {
         "ticker": "NMIH",
@@ -12962,20 +12962,6 @@
         "rsi14": 58.39408953342261
       },
       {
-        "ticker": "SF",
-        "score": 0.5,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": true,
-        "weeksSinceLastFull": 14,
-        "lastClose": 80.81999969482422,
-        "entryLow": 77.58700012207031,
-        "entryHigh": 89.22505014038084,
-        "mansfieldRs": -0.30447705047940143,
-        "pctAbove50w": 4.166934625217268,
-        "rsi14": 58.30315902219343
-      },
-      {
         "ticker": "SFBS",
         "score": 0.5499999999999999,
         "verdict": "WATCHING",
@@ -12988,6 +12974,20 @@
         "mansfieldRs": 0.3368016230549875,
         "pctAbove50w": 11.05618207506398,
         "rsi14": 61.995238036609145
+      },
+      {
+        "ticker": "SF",
+        "score": 0.5,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": true,
+        "weeksSinceLastFull": 14,
+        "lastClose": 80.81999969482422,
+        "entryLow": 77.58700012207031,
+        "entryHigh": 89.22505014038084,
+        "mansfieldRs": -0.30447705047940143,
+        "pctAbove50w": 4.166934625217268,
+        "rsi14": 58.30315902219343
       },
       {
         "ticker": "SFL",
@@ -13088,20 +13088,6 @@
         "rsi14": 62.30364321344498
       },
       {
-        "ticker": "SLAB",
-        "score": 0.4,
-        "verdict": "WATCHING",
-        "fullSetup": false,
-        "partialSetup": false,
-        "weeksSinceLastFull": null,
-        "lastClose": 216.8800048828125,
-        "entryLow": 173.77219985961915,
-        "entryHigh": 199.838029838562,
-        "mansfieldRs": 1.812280513224931,
-        "pctAbove50w": 24.80707792041405,
-        "rsi14": 71.27349130131839
-      },
-      {
         "ticker": "SKYW",
         "score": 0.25,
         "verdict": "NO SETUP",
@@ -13114,6 +13100,20 @@
         "mansfieldRs": -0.3020148574545656,
         "pctAbove50w": 5.081633924531636,
         "rsi14": 58.797227288953515
+      },
+      {
+        "ticker": "SLAB",
+        "score": 0.4,
+        "verdict": "WATCHING",
+        "fullSetup": false,
+        "partialSetup": false,
+        "weeksSinceLastFull": null,
+        "lastClose": 216.8800048828125,
+        "entryLow": 173.77219985961915,
+        "entryHigh": 199.838029838562,
+        "mansfieldRs": 1.812280513224931,
+        "pctAbove50w": 24.80707792041405,
+        "rsi14": 71.27349130131839
       },
       {
         "ticker": "SMTC",
@@ -14698,7 +14698,7 @@
         "rsi14": 58.069255096836436
       }
     ],
-    "updated_at": 1784974695.1405923,
+    "updated_at": 1785078467.1420743,
     "total_tickers": 1909,
     "done_tickers": 1909,
     "state": "done"
