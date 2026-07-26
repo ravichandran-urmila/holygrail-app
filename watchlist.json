@@ -91,21 +91,6 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "ILMN",
-    "date_added": "2026-05-27",
-    "price_added": 150.1699981689453,
-    "verdict": "HOLD",
-    "commentary": "",
-    "sells": [
-      {
-        "date": "2026-07-10",
-        "percent": 50.0,
-        "price": 194.0
-      }
-    ],
-    "position_size": 50.0
-  },
-  {
     "ticker": "BMY",
     "date_added": "2026-07-20",
     "price_added": 60.16,
@@ -122,5 +107,14 @@
     "options": null,
     "verdict": "BUY",
     "commentary": "Cheniere Energy (LNG) is riding strong upward momentum driven by the operational rollout of its Corpus Christi Stage 3 expansion, which locks in high-margin, long-term take-or-pay export capacity. This fundamental growth is amplified by tight global supply and Middle East supply disruptions, cementing U.S. LNG export dominance. Supported by upgraded full-year EBITDA guidance ($7.25B\u2013$7.75B) and aggressive share buybacks, the stock continues to attract robust institutional buying."
+  },
+  {
+    "ticker": "ILMN",
+    "date_added": "2026-05-27",
+    "price_added": 150.17,
+    "price_target": 198.96,
+    "options": null,
+    "verdict": "HOLD",
+    "commentary": "Momentum is driven by NovaSeq X adoption boosting high-margin consumable sales, post-GRAIL margin expansion (23.5%+ target), and a $1.5B buyback backed by upgraded 2026 guidance."
   }
 ]
