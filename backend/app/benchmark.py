@@ -126,7 +126,7 @@ Article: "{item['article_text']}"
         start_time = time.time()
         try:
             resp = requests.post(
-                f"https://router.huggingface.co/hf-inference/models/{model_name}/v1/chat/completions",
+                "https://router.huggingface.co/hf-inference/v1/chat/completions",
                 headers={"Authorization": f"Bearer {hf_token}", "Content-Type": "application/json"},
                 json={
                     "model": model_name,
