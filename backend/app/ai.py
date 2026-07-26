@@ -99,7 +99,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
         for model in models_to_try:
             try:
                 resp = requests.post(
-                    f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions",
+                    f"https://router.huggingface.co/hf-inference/models/{model}/v1/chat/completions",
                     headers={"Authorization": f"Bearer {hf_token}", "Content-Type": "application/json"},
                     json={
                         "model": model,
