@@ -18,6 +18,7 @@ import requests
 from . import data as datalib
 
 HF_MODELS = [
+    "moonshotai/Kimi-K2-Instruct",
     "Qwen/Qwen2.5-7B-Instruct",
     "google/gemma-2-2b-it",
     "mistralai/Mistral-7B-Instruct-v0.3",
@@ -393,3 +394,61 @@ Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 1
         )
     html += "</ul>"
     return html, "Recent Yahoo News"
+
+
+# --------------------------------------------------------------------------
+# Company digest
+# --------------------------------------------------------------------------
+def company_digest(ticker: str, name: str, news_items: list) -> tuple[str, str]:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+    valid_news = []
+    for item in news_items or []:
+        content = item.get("content", item)
+        title = content.get("title")
+        if not title:
+            continue
+        provider = content.get("provider") or {}
+        publisher = (provider.get("displayName") if isinstance(provider, dict) else None) or content.get("publisher") or "Unknown"
+        pub_date_str = content.get("pubDate")
+        pub_ts = content.get("providerPublishTime")
+        if pub_date_str:
+            try:
+                if datetime.fromisoformat(pub_date_str.replace("Z", "+00:00")) < cutoff:
+                    continue
+            except Exception:
+                pass
+        elif pub_ts:
+            try:
+                if float(pub_ts) < cutoff.timestamp():
+                    continue
+            except Exception:
+                pass
+        valid_news.append(title)
+
+    news_text = "\n".join(f"- {title}" for title in valid_news[:5])
+    
+    prompt = f"""You are a professional financial analyst. Write a highly concise company digest for {name} ({ticker}) under 85 words.
+Structure it into exactly two short paragraphs:
+1. First paragraph: Explain briefly what the company does (sector, core business model, key products).
+2. Second paragraph: Summarize the most recent catalyst moving the stock based on these recent headlines:
+{news_text if news_text else "No recent major news headlines available."}
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY valid raw HTML (using <p> and <strong> tags). No <html>/<body> wrapping. No markdown or code block formatting.
+- Keep the total length strictly under 85 words.
+- Be objective, clear, and professional.
+"""
+
+    result = _call_llm(prompt)
+    if result:
+        return result
+
+    # Local fallback
+    desc = f"{name} ({ticker}) is a publicly traded company. Detailed business operations and specific sector metrics can be reviewed in the fundamental analysis card below."
+    catalyst = "No recent major news catalysts were identified from public sources in the last two weeks. Price action is driven by technical setups, broader market flows, or sector-wide dynamics."
+    if valid_news:
+        catalyst = f"Recent news headlines center around: '{_html.escape(valid_news[0])}'. Check the catalyst news narrative section below for detailed context."
+        
+    html = f"<p>{desc}</p><p><strong>Recent Catalyst</strong>: {catalyst}</p>"
+    return html, "Local Expert System"
+

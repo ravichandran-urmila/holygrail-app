@@ -182,10 +182,12 @@ def scan_ai(ticker: str, full_thresh: float = 0.70, partial_thresh: float = 0.35
     tech_html, tech_src = ai.technical_summary(ticker, name, res, settings)
     fund_html, fund_src = ai.fundamental_summary(ticker, name)
     narr_html, narr_src = ai.catalyst_narrative(ticker, name, news)
+    digest_html, digest_src = ai.company_digest(ticker, name, news)
     return {
         "technical": {"html": tech_html, "source": tech_src},
         "fundamental": {"html": fund_html, "source": fund_src},
         "narrative": {"html": narr_html, "source": narr_src},
+        "digest": {"html": digest_html, "source": digest_src},
     }
 
 
