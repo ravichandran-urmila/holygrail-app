@@ -151,8 +151,12 @@ Article: "{item['article_text']}"
                     sim = calculate_jaccard_similarity(parsed["catalyst"], item["gold_output"]["catalyst"])
                     total_similarity += sim
             else:
+                import logging
+                logging.getLogger("uvicorn.error").error(f"[HF DEBUG] Benchmark model {model_name} failed with status {resp.status_code}: {resp.text}")
                 errors += 1
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger("uvicorn.error").error(f"[HF DEBUG] Benchmark model {model_name} raised exception: {str(e)}")
             errors += 1
 
     total_items = len(dataset)
