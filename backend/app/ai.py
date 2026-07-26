@@ -385,7 +385,7 @@ Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 1
 
 # --------------------------------------------------------------------------
 # Company digest
-# -----------------------------def company_digest(ticker: str, name: str, news_items: list, business_summary: str = "") -> tuple[str, str]:
+def company_digest(ticker: str, name: str, news_items: list, business_summary: str = "") -> tuple[str, str]:
     if not business_summary:
         data = datalib.fetch_financial_info(ticker)
         info = data.get("info") or {}
