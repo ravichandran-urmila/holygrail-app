@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "article_text": "Tesla shares jumped 7% on Monday following reports that the Trump transition team plans to make a federal framework for self-driving vehicles a priority for the Department of Transportation.",
+    "gold_output": {
+      "company": "Tesla",
+      "catalyst": "Federal framework prioritizing self-driving vehicles",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 2,
+    "article_text": "NVIDIA shares fell 3% after Bloomberg reported that the Department of Justice sent subpoenas to the chipmaker as part of an escalating antitrust investigation into its dominance in AI hardware.",
+    "gold_output": {
+      "company": "NVIDIA",
+      "catalyst": "DOJ antitrust investigation subpoena",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 3,
+    "article_text": "Apple announced it is partnering with OpenAI to integrate ChatGPT directly into iOS 18, bringing advanced AI capabilities to over 1 billion iPhone users later this year.",
+    "gold_output": {
+      "company": "Apple",
+      "catalyst": "Partnership with OpenAI to integrate ChatGPT into iOS 18",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 4,
+    "article_text": "Advanced Micro Devices (AMD) surged 8% after unveiling its new Instinct MI325X AI chip, aiming to challenge Nvidia's dominance in the rapidly growing artificial intelligence data center market.",
+    "gold_output": {
+      "company": "AMD",
+      "catalyst": "Unveiling of Instinct MI325X AI chip",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 5,
+    "article_text": "Microsoft shares dipped 2% after the tech giant reported earnings that beat analyst estimates but gave a lower-than-expected revenue guidance for its Azure cloud computing division next quarter.",
+    "gold_output": {
+      "company": "Microsoft",
+      "catalyst": "Lower than expected Azure cloud revenue guidance",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 6,
+    "article_text": "Amazon stock surged 5% in after-hours trading as the company reported a massive 19% growth in AWS cloud revenue, driven by accelerating enterprise adoption of artificial intelligence tools.",
+    "gold_output": {
+      "company": "Amazon",
+      "catalyst": "Strong AWS cloud revenue growth driven by enterprise AI adoption",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 7,
+    "article_text": "Alphabet shares slipped 4% after a federal judge ruled that Google operates an illegal monopoly in online search and advertising, raising concerns about potential regulatory breakup actions.",
+    "gold_output": {
+      "company": "Alphabet",
+      "catalyst": "Federal antitrust ruling declaring Google search monopoly illegal",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 8,
+    "article_text": "Meta Platforms gained 6% after beating revenue expectations for the second quarter and issuing strong third-quarter sales guidance, demonstrating resilient ad spending across Instagram and Facebook.",
+    "gold_output": {
+      "company": "Meta Platforms",
+      "catalyst": "Q2 earnings beat and strong Q3 sales guidance",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 9,
+    "article_text": "Netflix shares rose 4% after the streaming company announced it added 8 million new subscribers in the latest quarter, significantly beating Wall Street projections.",
+    "gold_output": {
+      "company": "Netflix",
+      "catalyst": "Strong subscriber growth beating expectations",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 10,
+    "article_text": "Intel shares plunged 20% in after-hours trading after the chipmaker announced it is cutting 15,000 jobs, suspending its dividend, and reporting a wider-than-expected loss.",
+    "gold_output": {
+      "company": "Intel",
+      "catalyst": "Massive job cuts, suspended dividend, and earnings loss",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 11,
+    "article_text": "Eli Lilly stock jumped 10% after clinical trial results showed its weight-loss drug Zepbound reduced the risk of developing type 2 diabetes by 94% in prediabetic adults.",
+    "gold_output": {
+      "company": "Eli Lilly",
+      "catalyst": "Zepbound clinical trial showing 94% reduced risk of type 2 diabetes",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 12,
+    "article_text": "Super Micro Computer (SMCI) plummeted 25% after Hindenburg Research released a short-seller report alleging accounting manipulation, sibling self-dealing, and export control failures.",
+    "gold_output": {
+      "company": "Super Micro Computer",
+      "catalyst": "Short-seller report alleging accounting manipulation and export failures",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 13,
+    "article_text": "Broadcom shares rose 3% after VMWare integration exceeded financial targets, leading to an upward revision of fiscal year revenue forecasts for the combined enterprise segment.",
+    "gold_output": {
+      "company": "Broadcom",
+      "catalyst": "VMWare integration success and upward revenue forecast revision",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 14,
+    "article_text": "Palantir stock gained 12% after securing a new $480 million contract with the U.S. Army to integrate its Maven artificial intelligence system across multiple tactical commands.",
+    "gold_output": {
+      "company": "Palantir",
+      "catalyst": "$480M contract with U.S. Army for Maven AI system integration",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 15,
+    "article_text": "Salesforce shares dropped 6% after reporting quarterly revenue that missed expectations for the first time in nearly a decade, citing longer sales cycles and tightening client budgets.",
+    "gold_output": {
+      "company": "Salesforce",
+      "catalyst": "Quarterly revenue miss due to longer sales cycles and tight budgets",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 16,
+    "article_text": "Oracle jumped 8% after announcing multi-cloud partnerships with Google Cloud and AWS, allowing customers to run Oracle database services natively inside rival cloud infrastructure.",
+    "gold_output": {
+      "company": "Oracle",
+      "catalyst": "Multi-cloud database partnerships with Google Cloud and AWS",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 17,
+    "article_text": "CrowdStrike plummeted 15% following a global IT outage caused by a faulty software update, which disrupted airline operations, healthcare networks, and corporate systems worldwide.",
+    "gold_output": {
+      "company": "CrowdStrike",
+      "catalyst": "Global IT outage caused by a faulty software update",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 18,
+    "article_text": "Snowflake shares fell 4% after the company disclosed it is investigating a cyber security incident targeting certain customer accounts that lacked multi-factor authentication.",
+    "gold_output": {
+      "company": "Snowflake",
+      "catalyst": "Investigation into cyber security incident targeting customer accounts",
+      "sentiment": "bearish"
+    }
+  },
+  {
+    "id": 19,
+    "article_text": "Coinbase shares climbed 9% as Bitcoin surged past $95,000, boosting transaction volumes and retail trading activity on the cryptocurrency exchange platform.",
+    "gold_output": {
+      "company": "Coinbase",
+      "catalyst": "Bitcoin rally past $95,000 boosting trading volumes",
+      "sentiment": "bullish"
+    }
+  },
+  {
+    "id": 20,
+    "article_text": "Boeing dipped 3% as union factory workers rejected the latest contract proposal, extending a costly month-long labor strike that has halted production of its best-selling 737 Max jet.",
+    "gold_output": {
+      "company": "Boeing",
+      "catalyst": "Union rejection of contract proposal extending labor strike",
+      "sentiment": "bearish"
+    }
+  }
+]

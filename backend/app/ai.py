@@ -92,7 +92,10 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
             pass
 
     if hf_token:
-        for model in HF_MODELS:
+        from . import benchmark
+        active_model = benchmark.load_active_model()
+        models_to_try = [active_model] + [m for m in HF_MODELS if m != active_model]
+        for model in models_to_try:
             try:
                 resp = requests.post(
                     f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions",

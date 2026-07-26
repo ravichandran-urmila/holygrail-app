@@ -402,6 +402,24 @@ def verify_admin(x_admin_password: str | None = Header(default=None)):
     return {"status": "ok"}
 
 
+@app.get("/api/admin/benchmark-status")
+def benchmark_status(x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    from . import benchmark
+    return {
+        "active_model": benchmark.load_active_model(),
+        "candidates": benchmark.CANDIDATES
+    }
+
+
+@app.post("/api/admin/run-benchmark")
+def run_benchmark(x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    from . import benchmark
+    res = benchmark.run_weekly_benchmark()
+    return res
+
+
 @app.post("/api/admin/request-pin")
 def request_pin():
     pin = f"{random.randint(100000, 999999)}"

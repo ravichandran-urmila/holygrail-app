@@ -14,6 +14,15 @@ def run_screener_job(universe: str):
     settings = HGSettings()
     screener.start(settings, universe, force=True)
 
+def run_weekly_benchmark_job():
+    log.info("Starting weekly Hugging Face model benchmark job...")
+    try:
+        from . import benchmark
+        res = benchmark.run_weekly_benchmark()
+        log.info(f"Weekly benchmark job completed. Active model: {res.get('active_model')}. Swapped: {res.get('swapped')}")
+    except Exception as e:
+        log.error(f"Failed to run weekly benchmark job: {e}")
+
 def start_scheduler():
     if not scheduler.running:
         # Schedule S&P 500 at 2 AM EST (which is roughly UTC-5)
@@ -41,6 +50,14 @@ def start_scheduler():
             CronTrigger(day_of_week='sat', hour=6, minute=0, timezone='America/New_York'),
             args=['russell2000'],
             id='russell2000_cron',
+            replace_existing=True
+        )
+
+        # Schedule Weekly Benchmark at 1 AM EST on Sunday
+        scheduler.add_job(
+            run_weekly_benchmark_job,
+            CronTrigger(day_of_week='sun', hour=1, minute=0, timezone='America/New_York'),
+            id='weekly_benchmark_cron',
             replace_existing=True
         )
 
