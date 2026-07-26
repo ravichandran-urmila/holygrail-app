@@ -208,6 +208,18 @@ def fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     peg = info.get("pegRatio")
     fcf = info.get("freeCashflow")
     mcap = info.get("marketCap")
+    price_to_book = info.get("priceToBook")
+
+    # Estimated Forward EV/EBITDA based on EBITDA and Forward/Trailing EPS ratios
+    trailing_eps = info.get("trailingEps")
+    forward_eps = info.get("forwardEps")
+    ebitda = info.get("ebitda")
+    ev = info.get("enterpriseValue")
+    forward_ev_ebitda = None
+    if ev and ebitda and trailing_eps and forward_eps and trailing_eps > 0:
+        forward_ebitda = ebitda * (forward_eps / trailing_eps)
+        if forward_ebitda > 0:
+            forward_ev_ebitda = ev / forward_ebitda
 
     def f(v):
         return f"{v:.2f}" if v is not None else "N/A"
@@ -264,7 +276,7 @@ def fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     snapshot_html = (
         f"<p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>"
         f"<ul>"
-        f"<li>📊 <strong>Valuation</strong>: PE: <strong>{f(trailing_pe)}</strong> (T) / <strong>{f(forward_pe)}</strong> (F) | PS: <strong>{f(ps)}</strong> / <strong>{f(forward_ps)}</strong> | PEG: <strong>{f(peg)}</strong> | EV/EBITDA: <strong>{f(ev_ebitda)}</strong>.</li>"
+        f"<li>📊 <strong>Valuation</strong>: PE: <strong>{f(trailing_pe)}</strong> (T) / <strong>{f(forward_pe)}</strong> (F) | PS: <strong>{f(ps)}</strong> / <strong>{f(forward_ps)}</strong> | PEG: <strong>{f(peg)}</strong> | EV/EBITDA: <strong>{f(ev_ebitda)}</strong> (T) / <strong>{f(forward_ev_ebitda)}</strong> (F) | P/B: <strong>{f(price_to_book)}</strong>.</li>"
         f"<li>💰 <strong>Cash Flow</strong>: P/FCF: <strong>{p_fcf_desc}</strong> | Growth: <strong>{fcf_growth_desc}</strong>. {growth_verdict}</li>"
         f"<li>💡 <strong>Context</strong>: {valuation_health}</li>"
         f"</ul>"
@@ -279,7 +291,8 @@ Metrics:
 - PE: {f(trailing_pe)} (T) / {f(forward_pe)} (F)
 - PS: {f(ps)} / {f(forward_ps)}
 - PEG: {f(peg)}
-- EV/EBITDA: {f(ev_ebitda)}
+- EV/EBITDA: {f(ev_ebitda)} (T) / {f(forward_ev_ebitda)} (F)
+- P/B: {f(price_to_book)}
 - P/FCF: {p_fcf_desc}
 - FCF Growth: {fcf_growth_desc}
 
