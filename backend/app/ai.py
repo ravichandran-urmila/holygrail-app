@@ -385,112 +385,35 @@ Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 1
 
 # --------------------------------------------------------------------------
 # Company digest
-# --------------------------------------------------------------------------
-def company_digest(ticker: str, name: str, news_items: list, business_summary: str = "") -> tuple[str, str]:
-    import json
-    cutoff = datetime.now(timezone.utc) - timedelta(days=14)
-    valid_news = []
-    for item in news_items or []:
-        content = item.get("content", item)
-        title = content.get("title")
-        if not title:
-            continue
-        provider = content.get("provider") or {}
-        pub_date_str = content.get("pubDate")
-        pub_ts = content.get("providerPublishTime")
-        if pub_date_str:
-            try:
-                if datetime.fromisoformat(pub_date_str.replace("Z", "+00:00")) < cutoff:
-                    continue
-            except Exception:
-                pass
-        elif pub_ts:
-            try:
-                if float(pub_ts) < cutoff.timestamp():
-                    continue
-            except Exception:
-                pass
-        valid_news.append(title)
+# -----------------------------def company_digest(ticker: str, name: str, news_items: list, business_summary: str = "") -> tuple[str, str]:
+    if not business_summary:
+        data = datalib.fetch_financial_info(ticker)
+        info = data.get("info") or {}
+        business_summary = info.get("longBusinessSummary", "")
 
-    news_text = "\n".join(f"- {title}" for title in valid_news[:5])
-    
-    prompt = f"""You are a precision financial extraction engine for a real-time stock app.
-Your task is to analyze raw company data and recent news/filings, then return a concise, ultra-dense summary and catalyst analysis.
-
-CRITICAL RULES:
-1. Output MUST be strictly valid raw JSON only. No markdown formatting (no ```json code blocks), no introductory text, no conversational preambles.
-2. Be extremely concise. The UI needs short, punchy text.
-3. Isolate the primary active catalyst moving or likely to move the stock price (e.g., earnings beat/miss, FDA approval, M&A, guidance change, regulatory action, CEO change). Ignore generic market noise or general macro commentary.
-4. If no clear catalyst exists in the provided context, state "No distinct single catalyst identified" for primary_catalyst.
-
-JSON SCHEMA REQUIREMENT:
-{{
-  "ticker": "{ticker}",
-  "company_overview": "STRING (Max 25 words describing core business model)",
-  "primary_catalyst": "STRING (Max 12 words identifying the exact event)",
-  "catalyst_details": "STRING (Max 35 words explaining the metric, numbers, or key takeaway)",
-  "catalyst_type": "STRING (e.g., Earnings, M&A, FDA/Regulatory, Guidance, Executive, Product)",
-  "sentiment": "Bullish | Bearish | Neutral"
-}}
-
-Context for {name} ({ticker}):
-Business Summary: {business_summary[:600] if business_summary else "No summary available."}
-Recent Headlines:
-{news_text if news_text else "No recent headlines."}
-"""
-
-    result = _call_llm(prompt)
-    if result:
-        llm_out, source = result
-        try:
-            cleaned = llm_out.strip()
-            if cleaned.startswith("```"):
-                cleaned = cleaned.strip("`").replace("json\n", "").strip()
-            parsed = json.loads(cleaned)
-            
-            overview = parsed.get("company_overview", "")
-            catalyst_type = parsed.get("catalyst_type", "General")
-            primary = parsed.get("primary_catalyst", "")
-            details = parsed.get("catalyst_details", "")
-            sentiment = parsed.get("sentiment", "Neutral").capitalize()
-            
-            sent_color = "rgba(255,255,255,0.5)"
-            if sentiment == "Bullish":
-                sent_color = "#1fdd97"
-            elif sentiment == "Bearish":
-                sent_color = "#ff5470"
-                
-            html = (
-                f"<p style='margin-bottom: 6px;'>{overview}</p>"
-                f"<p><strong>Primary Catalyst ({catalyst_type})</strong>: <strong>{primary}</strong> — {details} "
-                f"<span style='font-size: 0.75rem; font-weight: bold; color: {sent_color};'>({sentiment})</span></p>"
-            )
-            return html, source
-        except Exception:
-            if "<p>" in llm_out or "<strong>" in llm_out:
-                return llm_out, source
-
-    # Local fallback
+    # Local fallback description
     desc = ""
     if business_summary:
         sentences = [s.strip() for s in business_summary.split(".") if s.strip()]
-        desc = ". ".join(sentences[:2]) + "."
+        desc = ". ".join(sentences[:3]) + "."
     if not desc:
-        desc = f"{name} ({ticker}) is a publicly traded company."
+        desc = f"{name} ({ticker}) is a leading publicly traded corporation."
 
-    catalyst_title = "No distinct single catalyst identified"
-    catalyst_desc = "No recent major news catalysts were identified from public sources in the last two weeks."
-    sentiment = "Neutral"
-    sent_color = "rgba(255,255,255,0.5)"
-    
-    if valid_news:
-        catalyst_title = "Recent news headline catalyst"
-        catalyst_desc = f"Recent news headlines center around: '{_html.escape(valid_news[0])}'."
-        
-    html = (
-        f"<p style='margin-bottom: 6px;'>{desc}</p>"
-        f"<p><strong>Primary Catalyst (News)</strong>: <strong>{catalyst_title}</strong> — {catalyst_desc} "
-        f"<span style='font-size: 0.75rem; font-weight: bold; color: {sent_color};'>({sentiment})</span></p>"
-    )
-    return html, "Local Expert System"
+    gemini_key, openai_key, hf_token = _keys()
+    if gemini_key or openai_key or hf_token:
+        prompt = f"""You are a professional financial analyst. Summarize the core business model, key products, and market position of {name} ({ticker}) based on the business summary.
+Summary must be highly professional, descriptive yet concise (max 45 words).
+
+Business Summary:
+{business_summary[:800] if business_summary else "No summary available."}
+
+CRITICAL: Output raw text only. No markdown formatting, no code blocks, no introductory preambles. Maximum 45 words."""
+        result = _call_llm(prompt)
+        if result:
+            overview, source = result
+            # Strip any wrapped HTML tags if present, then wrap cleanly in a styled paragraph
+            clean_text = re.sub(r'<[^>]*>', '', overview).strip()
+            return f"<p style='line-height:1.5;'>{clean_text}</p>", source
+
+    return f"<p style='line-height:1.5;'>{desc}</p>", "Local Expert System"
 
