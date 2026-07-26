@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useScan } from "../lib/api";
+import { useScan, useAi } from "../lib/api";
 import { useSettings } from "../lib/settings";
 import { Chart } from "../components/Chart";
 import { AiPanels } from "../components/AiPanels";
@@ -24,6 +24,7 @@ export function Scanner() {
   useEffect(() => setInput(urlTicker), [urlTicker]);
 
   const { data, isLoading, isError, error } = useScan(urlTicker, range, settings, true);
+  const { data: aiData, isLoading: aiLoading } = useAi(urlTicker, !!data);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -61,7 +62,7 @@ export function Scanner() {
 
       {data && !isError && (
         <div className="space-y-6">
-          <Hero data={data} />
+          <Hero data={data} aiData={aiData} aiLoading={aiLoading} />
           <MetricRow data={data} />
 
           <div className="card animate-fade-up overflow-hidden">
@@ -156,7 +157,15 @@ function useWeekChange(data: ScanResponse): number | null {
   }, [data]);
 }
 
-function Hero({ data }: { data: ScanResponse }) {
+function Hero({
+  data,
+  aiData,
+  aiLoading,
+}: {
+  data: ScanResponse;
+  aiData?: any;
+  aiLoading: boolean;
+}) {
   const s = data.summary;
   const meta = VERDICT_META[s.verdict] ?? VERDICT_META["NO SETUP"];
   const week = useWeekChange(data);
@@ -181,7 +190,29 @@ function Hero({ data }: { data: ScanResponse }) {
             <span className="font-display text-2xl font-bold tracking-tight">{data.ticker}</span>
             <span className="truncate text-sm text-muted">{data.name}</span>
           </div>
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+
+          {/* Company Digest */}
+          {aiLoading ? (
+            <div className="mt-3.5 space-y-2 max-w-2xl">
+              <div className="skeleton h-3 w-4/5" />
+              <div className="skeleton h-3 w-11/12" />
+            </div>
+          ) : aiData?.digest ? (
+            <div className="mt-3.5 max-w-2xl">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-accent mb-1.5" style={{ color: "#34d399" }}>
+                <span>🏢</span> Company Digest
+                {aiData.digest.source && (
+                  <span className="text-[9px] text-faint font-normal normal-case">· {aiData.digest.source}</span>
+                )}
+              </div>
+              <div
+                className="ai-prose text-xs text-muted leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: aiData.digest.html }}
+              />
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <span className="tnum font-display text-5xl font-bold tracking-tight sm:text-6xl">
               {fmtUsd(s.lastClose)}
             </span>

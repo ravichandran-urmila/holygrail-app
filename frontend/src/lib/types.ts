@@ -99,6 +99,7 @@ export interface AiResponse {
   technical: AiPanel;
   fundamental: AiPanel;
   narrative: AiPanel;
+  digest: AiPanel;
 }
 
 export interface WatchlistItem {
