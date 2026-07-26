@@ -15,6 +15,10 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 import requests
 
+import logging
+
+logger = logging.getLogger("uvicorn.error")
+
 from . import data as datalib
 
 HF_MODELS = [
@@ -50,7 +54,6 @@ def _clean_html_response(text: str) -> str:
 
 def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
     gemini_key, openai_key, hf_token = _keys()
-    print(f"[HF DEBUG] Keys present: Gemini={bool(gemini_key)}, OpenAI={bool(openai_key)}, HF={bool(hf_token)}", flush=True)
 
     if gemini_key:
         try:
@@ -113,9 +116,9 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     if text:
                         return _clean_html_response(text), f"HF ({model.split('/')[-1]})"
                 else:
-                    print(f"[HF DEBUG] Model {model} failed with status {resp.status_code}: {resp.text}", flush=True)
+                    logger.warning(f"HF model {model} failed with status {resp.status_code}: {resp.text[:100]}")
             except Exception as e:
-                print(f"[HF DEBUG] Model {model} raised exception: {str(e)}", flush=True)
+                logger.error(f"HF model {model} exception: {str(e)}")
     return None
 
 

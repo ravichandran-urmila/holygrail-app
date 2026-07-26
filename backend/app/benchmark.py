@@ -152,11 +152,11 @@ Article: "{item['article_text']}"
                     total_similarity += sim
             else:
                 import logging
-                logging.getLogger("uvicorn.error").error(f"[HF DEBUG] Benchmark model {model_name} failed with status {resp.status_code}: {resp.text}")
+                logging.getLogger("uvicorn.error").warning(f"Benchmark model {model_name} failed with status {resp.status_code}: {resp.text[:100]}")
                 errors += 1
         except Exception as e:
             import logging
-            logging.getLogger("uvicorn.error").error(f"[HF DEBUG] Benchmark model {model_name} raised exception: {str(e)}")
+            logging.getLogger("uvicorn.error").error(f"Benchmark model {model_name} exception: {str(e)}")
             errors += 1
 
     total_items = len(dataset)
