@@ -11,10 +11,10 @@ _ACTIVE_PATH = Path(os.path.dirname(__file__)) / "active_model.json"
 # Candidate open-source models to benchmark
 CANDIDATES = [
     "moonshotai/Kimi-K2-Instruct",
-    "Qwen/Qwen2.5-7B-Instruct",
-    "google/gemma-2-2b-it",
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    "microsoft/Phi-3-mini-4k-instruct"
+    "meta-llama/Llama-3.1-8B-Instruct",
+    "Qwen/Qwen2.5-1.5B-Instruct",
+    "Qwen/Qwen2.5-3B-Instruct",
+    "google/gemma-3-1b-it"
 ]
 
 def _gh_cfg():
