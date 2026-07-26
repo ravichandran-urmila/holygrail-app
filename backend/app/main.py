@@ -176,13 +176,16 @@ def scan_ai(ticker: str, full_thresh: float = 0.70, partial_thresh: float = 0.35
         spx = datalib.fetch_spx_weekly(period="10y")
         name = datalib.resolve_name(ticker)
         news = datalib.fetch_news(ticker)
+        fin_info = datalib.fetch_financial_info(ticker)
+        info = fin_info.get("info") or {}
+        business_summary = info.get("longBusinessSummary", "")
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Failed to load {ticker}: {e}")
     res = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
     tech_html, tech_src = ai.technical_summary(ticker, name, res, settings)
     fund_html, fund_src = ai.fundamental_summary(ticker, name)
     narr_html, narr_src = ai.catalyst_narrative(ticker, name, news)
-    digest_html, digest_src = ai.company_digest(ticker, name, news)
+    digest_html, digest_src = ai.company_digest(ticker, name, news, business_summary)
     return {
         "technical": {"html": tech_html, "source": tech_src},
         "fundamental": {"html": fund_html, "source": fund_src},

@@ -402,7 +402,8 @@ Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 1
 # --------------------------------------------------------------------------
 # Company digest
 # --------------------------------------------------------------------------
-def company_digest(ticker: str, name: str, news_items: list) -> tuple[str, str]:
+def company_digest(ticker: str, name: str, news_items: list, business_summary: str = "") -> tuple[str, str]:
+    import json
     cutoff = datetime.now(timezone.utc) - timedelta(days=14)
     valid_news = []
     for item in news_items or []:
@@ -411,7 +412,6 @@ def company_digest(ticker: str, name: str, news_items: list) -> tuple[str, str]:
         if not title:
             continue
         provider = content.get("provider") or {}
-        publisher = (provider.get("displayName") if isinstance(provider, dict) else None) or content.get("publisher") or "Unknown"
         pub_date_str = content.get("pubDate")
         pub_ts = content.get("providerPublishTime")
         if pub_date_str:
@@ -430,28 +430,83 @@ def company_digest(ticker: str, name: str, news_items: list) -> tuple[str, str]:
 
     news_text = "\n".join(f"- {title}" for title in valid_news[:5])
     
-    prompt = f"""You are a professional financial analyst. Write a highly concise company digest for {name} ({ticker}) under 85 words.
-Structure it into exactly two short paragraphs:
-1. First paragraph: Explain briefly what the company does (sector, core business model, key products).
-2. Second paragraph: Summarize the most recent catalyst moving the stock based on these recent headlines:
-{news_text if news_text else "No recent major news headlines available."}
+    prompt = f"""You are a precision financial extraction engine for a real-time stock app.
+Your task is to analyze raw company data and recent news/filings, then return a concise, ultra-dense summary and catalyst analysis.
 
-CRITICAL INSTRUCTIONS:
-- Return ONLY valid raw HTML (using <p> and <strong> tags). No <html>/<body> wrapping. No markdown or code block formatting.
-- Keep the total length strictly under 85 words.
-- Be objective, clear, and professional.
+CRITICAL RULES:
+1. Output MUST be strictly valid raw JSON only. No markdown formatting (no ```json code blocks), no introductory text, no conversational preambles.
+2. Be extremely concise. The UI needs short, punchy text.
+3. Isolate the primary active catalyst moving or likely to move the stock price (e.g., earnings beat/miss, FDA approval, M&A, guidance change, regulatory action, CEO change). Ignore generic market noise or general macro commentary.
+4. If no clear catalyst exists in the provided context, state "No distinct single catalyst identified" for primary_catalyst.
+
+JSON SCHEMA REQUIREMENT:
+{{
+  "ticker": "{ticker}",
+  "company_overview": "STRING (Max 25 words describing core business model)",
+  "primary_catalyst": "STRING (Max 12 words identifying the exact event)",
+  "catalyst_details": "STRING (Max 35 words explaining the metric, numbers, or key takeaway)",
+  "catalyst_type": "STRING (e.g., Earnings, M&A, FDA/Regulatory, Guidance, Executive, Product)",
+  "sentiment": "Bullish | Bearish | Neutral"
+}}
+
+Context for {name} ({ticker}):
+Business Summary: {business_summary[:600] if business_summary else "No summary available."}
+Recent Headlines:
+{news_text if news_text else "No recent headlines."}
 """
 
     result = _call_llm(prompt)
     if result:
-        return result
+        llm_out, source = result
+        try:
+            cleaned = llm_out.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.strip("`").replace("json\n", "").strip()
+            parsed = json.loads(cleaned)
+            
+            overview = parsed.get("company_overview", "")
+            catalyst_type = parsed.get("catalyst_type", "General")
+            primary = parsed.get("primary_catalyst", "")
+            details = parsed.get("catalyst_details", "")
+            sentiment = parsed.get("sentiment", "Neutral").capitalize()
+            
+            sent_color = "rgba(255,255,255,0.5)"
+            if sentiment == "Bullish":
+                sent_color = "#1fdd97"
+            elif sentiment == "Bearish":
+                sent_color = "#ff5470"
+                
+            html = (
+                f"<p style='margin-bottom: 6px;'>{overview}</p>"
+                f"<p><strong>Primary Catalyst ({catalyst_type})</strong>: <strong>{primary}</strong> — {details} "
+                f"<span style='font-size: 0.75rem; font-weight: bold; color: {sent_color};'>({sentiment})</span></p>"
+            )
+            return html, source
+        except Exception:
+            if "<p>" in llm_out or "<strong>" in llm_out:
+                return llm_out, source
 
     # Local fallback
-    desc = f"{name} ({ticker}) is a publicly traded company. Detailed business operations and specific sector metrics can be reviewed in the fundamental analysis card below."
-    catalyst = "No recent major news catalysts were identified from public sources in the last two weeks. Price action is driven by technical setups, broader market flows, or sector-wide dynamics."
+    desc = ""
+    if business_summary:
+        sentences = [s.strip() for s in business_summary.split(".") if s.strip()]
+        desc = ". ".join(sentences[:2]) + "."
+    if not desc:
+        desc = f"{name} ({ticker}) is a publicly traded company."
+
+    catalyst_title = "No distinct single catalyst identified"
+    catalyst_desc = "No recent major news catalysts were identified from public sources in the last two weeks."
+    sentiment = "Neutral"
+    sent_color = "rgba(255,255,255,0.5)"
+    
     if valid_news:
-        catalyst = f"Recent news headlines center around: '{_html.escape(valid_news[0])}'. Check the catalyst news narrative section below for detailed context."
+        catalyst_title = "Recent news headline catalyst"
+        catalyst_desc = f"Recent news headlines center around: '{_html.escape(valid_news[0])}'."
         
-    html = f"<p>{desc}</p><p><strong>Recent Catalyst</strong>: {catalyst}</p>"
+    html = (
+        f"<p style='margin-bottom: 6px;'>{desc}</p>"
+        f"<p><strong>Primary Catalyst (News)</strong>: <strong>{catalyst_title}</strong> — {catalyst_desc} "
+        f"<span style='font-size: 0.75rem; font-weight: bold; color: {sent_color};'>({sentiment})</span></p>"
+    )
     return html, "Local Expert System"
 
