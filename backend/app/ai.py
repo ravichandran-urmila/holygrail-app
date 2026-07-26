@@ -65,7 +65,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {"maxOutputTokens": 300, "temperature": 0.4},
                 },
-                timeout=8,
+                timeout=3,
             )
             if resp.status_code == 200:
                 text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
@@ -85,7 +85,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     "max_tokens": 300,
                     "temperature": 0.4,
                 },
-                timeout=8,
+                timeout=3,
             )
             if resp.status_code == 200:
                 text = resp.json()["choices"][0]["message"]["content"].strip()
@@ -109,7 +109,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                         "max_tokens": 250,
                         "temperature": 0.4,
                     },
-                    timeout=8,
+                    timeout=3,
                 )
                 if resp.status_code == 200:
                     text = resp.json()["choices"][0]["message"]["content"].strip()
@@ -153,54 +153,6 @@ def technical_summary(ticker: str, name: str, res, settings) -> tuple[str, str]:
         else False
     )
 
-    if hg_weeks_ago is not None and hg_close_price is not None:
-        pct = ((last_close - hg_close_price) / hg_close_price) * 100.0
-        hg_prompt = f"A COMPLETE Holy Grail setup was triggered {hg_weeks_ago} week(s) ago (week close ${hg_close_price:.2f}). "
-        if pct <= 15.0 and above_50wma:
-            hg_prompt += f"Current close (${last_close:.2f}) is {pct:.1f}% from setup close, within the 15% range and above the 50WMA — prime buying zone."
-        elif above_50wma:
-            hg_prompt += f"Current close (${last_close:.2f}) is {pct:.1f}% above setup close, exceeding the 15% range (extended)."
-        else:
-            hg_prompt += "Price has since dropped below the 50WMA, invalidating the setup."
-    else:
-        hg_prompt = "No COMPLETE Holy Grail setup has been triggered in the history."
-
-    prompt = f"""You are a professional stock market technical analyst. Write a highly concise, structured, non-wordy executive summary analyzing {name} ({ticker}) based on the Holy Grail setup rules.
-
-Holy Grail Setup Status:
-- {hg_prompt}
-- Current Setup Verdict: {verdict}
-- Latest Close: ${last_close:.2f}
-- Weighted Score: {weighted_score:.2f} / {total_weight:.2f}
-
-Rules breakdown:
-{rules_text}
-
-Entry/Exit Strategy:
-- Suggested Entry Range: ${entry_low:.2f} to ${entry_high:.2f} (50WMA to +{settings.retest_max:.1f}%)
-- Suggested Stop Loss: ${stop_price:.2f} (50WMA * 0.995 on a weekly closing basis)
-
-CRITICAL INSTRUCTIONS:
-1. Be concise (short bulleted points or tight sentences).
-2. Acknowledge the most recent Holy Grail setup and whether it's still a good time to buy.
-3. Format in raw HTML using <p>, <strong>, <ul>, <li>. No markdown/code blocks. Under 120 words."""
-
-    result = _call_llm(prompt)
-    if result:
-        return result
-
-    # Local template fallback
-    if hg_weeks_ago is not None and hg_close_price is not None:
-        pct = ((last_close - hg_close_price) / hg_close_price) * 100.0
-        if above_50wma and pct <= 15.0:
-            history_html = f"<li>🟢 <strong>Holy Grail Buy Zone</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG close ${hg_close_price:.2f}). Price is within the 15% range (<strong>{pct:.1f}%</strong> above) and above the 50WMA — a <strong>prime buying zone</strong>.</li>"
-        elif above_50wma:
-            history_html = f"<li>⚠️ <strong>Extended Price</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG close ${hg_close_price:.2f}). Price is <strong>{pct:.1f}%</strong> above the setup close (extended).</li>"
-        else:
-            history_html = f"<li>❌ <strong>Setup Invalidated</strong>: A setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> but price has since dropped below the 50WMA.</li>"
-    else:
-        history_html = "<li>⚠️ <strong>No Active Setup</strong>: No complete Holy Grail setup in history.</li>"
-
     status_title = {"COMPLETE SETUP": "🚀 Complete Buy Setup", "WATCHING": "👀 On Close Watch"}.get(
         verdict, "⚠️ No Active Setup"
     )
@@ -217,6 +169,18 @@ CRITICAL INSTRUCTIONS:
         if (("mansfield_rs" in last_row and not np.isnan(last_row["mansfield_rs"])) and bool(last_row["rule5_mansfield"]))
         else "Underperforming the S&P 500."
     )
+
+    if hg_weeks_ago is not None and hg_close_price is not None:
+        pct = ((last_close - hg_close_price) / hg_close_price) * 100.0
+        if above_50wma and pct <= 15.0:
+            history_html = f"<li>🟢 <strong>Holy Grail Buy Zone</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG close ${hg_close_price:.2f}). Price is within the 15% range (<strong>{pct:.1f}%</strong> above) and above the 50WMA — a <strong>prime buying zone</strong>.</li>"
+        elif above_50wma:
+            history_html = f"<li>⚠️ <strong>Extended Price</strong>: A complete buy setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> (HG close ${hg_close_price:.2f}). Price is <strong>{pct:.1f}%</strong> above the setup close (extended).</li>"
+        else:
+            history_html = f"<li>❌ <strong>Setup Invalidated</strong>: A setup occurred <strong>{hg_weeks_ago} week(s) ago</strong> but price has since dropped below the 50WMA.</li>"
+    else:
+        history_html = "<li>⚠️ <strong>No Active Setup</strong>: No complete Holy Grail setup in history.</li>"
+
     html = (
         f"<p><strong>{status_title}</strong> ({weighted_score:.2f}/{total_weight:.2f}):</p>"
         f"<ul>{history_html}"
@@ -268,28 +232,6 @@ def fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     if p_fcf is not None and fcf_growth_pct is not None and fcf_growth_pct > 0:
         p_fcf_growth_desc = f"{p_fcf / fcf_growth_pct:.2f}"
 
-    prompt = f"""You are a professional fundamental stock market analyst. Write a highly concise, structured executive summary analyzing the fundamental health of {name} ({ticker}).
-
-Key Financial Metrics:
-- Trailing PE: {f(trailing_pe)}
-- Forward PE: {f(forward_pe)}
-- Trailing PS: {f(ps)}
-- Forward PS: {f(forward_ps)}
-- PEG Ratio: {f(peg)}
-- EV/EBITDA: {f(ev_ebitda)}
-- Price to Free Cash Flow (P/FCF): {p_fcf_desc}
-- YoY Free Cash Flow Growth: {fcf_growth_desc}
-- Price to FCF Growth Ratio: {p_fcf_growth_desc}
-
-CRITICAL INSTRUCTIONS:
-1. One intro paragraph then a <ul> with EXACTLY 3 bullets: 📊 Valuation, 💰 Cash Flow, 💡 Context.
-2. Under 130 words.
-3. Raw HTML using <p>, <strong>, <ul>, <li>. No markdown/code blocks."""
-
-    result = _call_llm(prompt, label_prefix="")
-    if result:
-        return result
-
     mcap_desc = f"${mcap/1e9:.1f}B" if mcap else "N/A"
     valuation_signals = []
     if ev_ebitda is not None:
@@ -319,7 +261,7 @@ CRITICAL INSTRUCTIONS:
         elif fcf_growth_pct > 0:
             growth_verdict = f"YoY Free Cash Flow growth is healthy at <strong>{fcf_growth_desc}</strong>, reflecting steady business scale."
 
-    html = (
+    snapshot_html = (
         f"<p><strong>Valuation Snapshot</strong> (Market Cap: {mcap_desc}):</p>"
         f"<ul>"
         f"<li>📊 <strong>Valuation</strong>: PE: <strong>{f(trailing_pe)}</strong> (T) / <strong>{f(forward_pe)}</strong> (F) | PS: <strong>{f(ps)}</strong> / <strong>{f(forward_ps)}</strong> | PEG: <strong>{f(peg)}</strong> | EV/EBITDA: <strong>{f(ev_ebitda)}</strong>.</li>"
@@ -327,7 +269,30 @@ CRITICAL INSTRUCTIONS:
         f"<li>💡 <strong>Context</strong>: {valuation_health}</li>"
         f"</ul>"
     )
-    return html, "Local Expert System"
+
+    ai_text = None
+    ai_src = ""
+    gemini_key, openai_key, hf_token = _keys()
+    if gemini_key or openai_key or hf_token:
+        prompt = f"""You are a fundamental stock market analyst. Write a concise fundamental context note (max 30 words) for {name} ({ticker}) explaining how these metrics shape its outlook.
+Metrics:
+- PE: {f(trailing_pe)} (T) / {f(forward_pe)} (F)
+- PS: {f(ps)} / {f(forward_ps)}
+- PEG: {f(peg)}
+- EV/EBITDA: {f(ev_ebitda)}
+- P/FCF: {p_fcf_desc}
+- FCF Growth: {fcf_growth_desc}
+
+CRITICAL: Output raw text only. No HTML. Maximum 30 words."""
+        result = _call_llm(prompt)
+        if result:
+            ai_text, ai_src = result
+
+    if ai_text:
+        html = snapshot_html + f"<p style='margin-top:8px;font-size:0.95rem;opacity:0.9;'>🤖 <strong>AI Context:</strong> {ai_text}</p>"
+        return html, f"Metrics + AI ({ai_src})"
+
+    return snapshot_html, "Local Expert System"
 
 
 # --------------------------------------------------------------------------
@@ -375,6 +340,18 @@ def catalyst_narrative(ticker: str, name: str, news_items: list) -> tuple[str, s
             "Local System",
         )
 
+    links_html = f"<div style='margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);'><p style='margin-bottom:6px;font-size:0.95rem;font-weight:bold;'>📰 Recent Sources:</p><ul style='margin-left:15px;padding-left:0;list-style-type:disc;'>"
+    for n in valid_news[:3]:
+        safe_title = _html.escape(n["title"])
+        safe_pub = _html.escape(n["publisher"])
+        safe_link = _html.escape(n["link"], quote=True)
+        links_html += (
+            f"<li style='margin-bottom:6px;'><a href='{safe_link}' target='_blank' rel='noopener noreferrer' "
+            f"style='color:#ff9100;text-decoration:underline;'>{safe_title}</a> "
+            f"<span style='color:rgba(255,255,255,0.5);font-size:0.85rem;'>({safe_pub})</span></li>"
+        )
+    links_html += "</ul></div>"
+
     news_text = "".join(f'{i+1}. "{n["title"]}" (published by {n["publisher"]})\n' for i, n in enumerate(news_subset))
     prompt = f"""You are a professional financial journalist and stock market catalyst analyst.
 Analyze the following recent news headlines for {name} ({ticker}) and synthesize them into a concise unified "current narrative" summary (max 120 words).
@@ -388,8 +365,10 @@ Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 1
 
     result = _call_llm(prompt)
     if result:
-        return result
+        ai_html, source = result
+        return ai_html + links_html, source
 
+    # Fallback to pure links
     html = f"<p>Recent news headlines indicating potential catalysts for <strong>{_html.escape(name)} ({_html.escape(ticker)})</strong>:</p><ul style='margin-left:15px;padding-left:0;'>"
     for n in valid_news[:3]:
         safe_title = _html.escape(n["title"])

@@ -182,10 +182,17 @@ def scan_ai(ticker: str, full_thresh: float = 0.70, partial_thresh: float = 0.35
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Failed to load {ticker}: {e}")
     res = compute(ohlcv, spx_close=spx if not spx.empty else None, settings=settings)
-    tech_html, tech_src = ai.technical_summary(ticker, name, res, settings)
-    fund_html, fund_src = ai.fundamental_summary(ticker, name)
-    narr_html, narr_src = ai.catalyst_narrative(ticker, name, news)
-    digest_html, digest_src = ai.company_digest(ticker, name, news, business_summary)
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        future_tech = executor.submit(ai.technical_summary, ticker, name, res, settings)
+        future_fund = executor.submit(ai.fundamental_summary, ticker, name)
+        future_narr = executor.submit(ai.catalyst_narrative, ticker, name, news)
+        future_digest = executor.submit(ai.company_digest, ticker, name, news, business_summary)
+
+        tech_html, tech_src = future_tech.result()
+        fund_html, fund_src = future_fund.result()
+        narr_html, narr_src = future_narr.result()
+        digest_html, digest_src = future_digest.result()
     return {
         "technical": {"html": tech_html, "source": tech_src},
         "fundamental": {"html": fund_html, "source": fund_src},
