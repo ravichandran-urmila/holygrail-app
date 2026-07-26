@@ -423,6 +423,20 @@ def run_benchmark(x_admin_password: str | None = Header(default=None)):
     return res
 
 
+@app.get("/api/admin/dns-test")
+def dns_test(x_admin_password: str | None = Header(default=None)):
+    _require_admin(x_admin_password)
+    import socket
+    results = {}
+    for host in ("google.com", "query1.finance.yahoo.com", "huggingface.co", "api-inference.huggingface.co", "router.huggingface.co"):
+        try:
+            ip = socket.gethostbyname(host)
+            results[host] = {"status": "success", "ip": ip}
+        except Exception as e:
+            results[host] = {"status": "error", "error": str(e)}
+    return results
+
+
 @app.post("/api/admin/request-pin")
 def request_pin():
     pin = f"{random.randint(100000, 999999)}"
