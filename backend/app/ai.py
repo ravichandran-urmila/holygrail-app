@@ -51,6 +51,7 @@ def _clean_html_response(text: str) -> str:
 
 def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
     gemini_key, openai_key, hf_token = _keys()
+    print(f"[HF DEBUG] Keys present: Gemini={bool(gemini_key)}, OpenAI={bool(openai_key)}, HF={bool(hf_token)}", flush=True)
 
     if gemini_key:
         try:
@@ -113,9 +114,9 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     if text:
                         return _clean_html_response(text), f"HF ({model.split('/')[-1]})"
                 else:
-                    print(f"[HF DEBUG] Model {model} failed with status {resp.status_code}: {resp.text}")
+                    print(f"[HF DEBUG] Model {model} failed with status {resp.status_code}: {resp.text}", flush=True)
             except Exception as e:
-                print(f"[HF DEBUG] Model {model} raised exception: {str(e)}")
+                print(f"[HF DEBUG] Model {model} raised exception: {str(e)}", flush=True)
     return None
 
 
