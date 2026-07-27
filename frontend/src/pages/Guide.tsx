@@ -142,20 +142,20 @@ function CaseChart({ c }: { c: Case }) {
         <>
           <div className="absolute right-6 top-6 z-10 flex rounded-lg border border-line bg-surface/80 p-1 shadow-sm backdrop-blur transition-opacity opacity-0 group-hover:opacity-100">
             <button
-              onClick={() => setChartType("candle")}
-              className={`rounded px-2.5 py-1 text-xs font-semibold ${
-                chartType === "candle" ? "bg-white/10 text-ink" : "text-muted hover:text-ink"
-              }`}
-            >
-              Candle
-            </button>
-            <button
               onClick={() => setChartType("line")}
               className={`rounded px-2.5 py-1 text-xs font-semibold ${
                 chartType === "line" ? "bg-white/10 text-ink" : "text-muted hover:text-ink"
               }`}
             >
               Line
+            </button>
+            <button
+              onClick={() => setChartType("candle")}
+              className={`rounded px-2.5 py-1 text-xs font-semibold ${
+                chartType === "candle" ? "bg-white/10 text-ink" : "text-muted hover:text-ink"
+              }`}
+            >
+              Candle
             </button>
           </div>
           <Chart data={data} showCloud height={360} type={chartType} />
