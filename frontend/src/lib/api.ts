@@ -70,7 +70,7 @@ export function useAi(ticker: string, enabled: boolean) {
     queryKey: ["ai", ticker],
     queryFn: () => get<AiResponse>(`/api/scan/${encodeURIComponent(ticker)}/ai`),
     enabled: enabled && ticker.length > 0,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000,
     retry: 0,
   });
 }
