@@ -314,18 +314,33 @@ def add_watchlist(item: WatchlistItem, x_admin_password: str | None = Header(def
         raise HTTPException(status_code=400, detail="Price must be > 0.")
     items = wl.load()
     ticker = item.ticker.strip().upper()
+    
+    existing = None
+    for x in items:
+        if x.get("ticker") == ticker:
+            existing = x
+            break
+            
+    new_item = {
+        "ticker": ticker,
+        "date_added": item.date_added,
+        "price_added": float(item.price_added),
+        "price_target": float(item.price_target) if item.price_target is not None else None,
+        "options": item.options,
+        "verdict": item.verdict,
+        "commentary": item.commentary,
+    }
+    
+    if existing:
+        if "sells" in existing:
+            new_item["sells"] = existing["sells"]
+        if "position_size" in existing:
+            new_item["position_size"] = existing["position_size"]
+        if "status" in existing:
+            new_item["status"] = existing["status"]
+            
     items = [x for x in items if x.get("ticker") != ticker]
-    items.append(
-        {
-            "ticker": ticker,
-            "date_added": item.date_added,
-            "price_added": float(item.price_added),
-            "price_target": float(item.price_target) if item.price_target is not None else None,
-            "options": item.options,
-            "verdict": item.verdict,
-            "commentary": item.commentary,
-        }
-    )
+    items.append(new_item)
     if not wl.save(items):
         raise HTTPException(status_code=502, detail="Failed to persist watchlist.")
     return {"items": wl.with_live_prices(items), "githubEnabled": wl.github_enabled()}
