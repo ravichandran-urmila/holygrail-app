@@ -56,25 +56,33 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
     gemini_key, openai_key, hf_token = _keys()
 
     if gemini_key:
+        import time as _time
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
-            resp = requests.post(
-                url,
-                headers={"Content-Type": "application/json"},
-                json={
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"maxOutputTokens": 300, "temperature": 0.4},
-                },
-                timeout=5,
-            )
-            if resp.status_code == 200:
-                text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-                if text:
-                    return _clean_html_response(text), f"{label_prefix}Gemini 2.0 Flash"
-            else:
-                logger.error(f"Gemini API error: Status {resp.status_code}, Response: {resp.text}")
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": 300, "temperature": 0.4},
+            }
+            for attempt in range(2):
+                resp = requests.post(
+                    url,
+                    headers={"Content-Type": "application/json"},
+                    json=payload,
+                    timeout=8,
+                )
+                if resp.status_code == 200:
+                    text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    if text:
+                        return _clean_html_response(text), f"{label_prefix}Gemini 2.0 Flash"
+                    break
+                elif resp.status_code == 429 and attempt == 0:
+                    # Rate limited — wait up to 4 seconds then retry once
+                    _time.sleep(4)
+                else:
+                    logger.warning(f"Gemini API: Status {resp.status_code}")
+                    break
         except Exception as e:
-            logger.error(f"Gemini API exception: {str(e)}")
+            logger.warning(f"Gemini API exception: {str(e)}")
 
     if openai_key:
         try:
