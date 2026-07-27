@@ -79,6 +79,11 @@ export function About() {
               </figcaption>
             </figure>
           </div>
+
+          <h2 className="text-2xl font-bold tracking-tight text-ink mt-8">
+            But isn't investing in individual stocks more risky?
+          </h2>
+
           <p>
             Over the last few decades, global broad money has grown at about 7% annually, the S&P 500 has compounded at roughly 10% nominally, and real household income has barely moved. That gap leaves working families squeezed when major expenses show up, because the things parents care about most — housing, healthcare, and education — often rise faster than wages.
           </p>
