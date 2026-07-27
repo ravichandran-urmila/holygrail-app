@@ -71,8 +71,10 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                 text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
                 if text:
                     return _clean_html_response(text), f"{label_prefix}Gemini 2.5 Flash"
-        except Exception:
-            pass
+            else:
+                logger.error(f"Gemini API error: Status {resp.status_code}, Response: {resp.text}")
+        except Exception as e:
+            logger.error(f"Gemini API exception: {str(e)}")
 
     if openai_key:
         try:
