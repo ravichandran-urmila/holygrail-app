@@ -333,7 +333,7 @@ function ResultsTable({ rows }: { rows: ScreenResult[] }) {
                     )}
                   </td>
                   <td className="px-4 py-3 tnum text-muted">
-                    {r.entryLow === null || r.entryLow === undefined || r.entryHigh === null || r.entryHigh === undefined
+                    {r.verdict === "NO SETUP" || r.entryLow === null || r.entryLow === undefined || r.entryHigh === null || r.entryHigh === undefined
                       ? "N/A"
                       : `${fmtUsd(r.entryLow)} – ${fmtUsd(r.entryHigh)}`}
                   </td>
