@@ -313,14 +313,26 @@ function MetricRow({ data }: { data: ScanResponse }) {
         icon="📈"
         tint="#7c5cff"
         label="Entry range (50WMA zone)"
-        value={`${fmtUsd(s.entryPriceLow)} – ${fmtUsd(s.entryPriceHigh)}`}
+        value={
+          s.verdict === "NO SETUP" ? (
+            <span className="text-faint">N/A</span>
+          ) : (
+            `${fmtUsd(s.entryPriceLow)} – ${fmtUsd(s.entryPriceHigh)}`
+          )
+        }
         sub={`up to +${data.settings.retestMax}% above the 50-week MA`}
       />
       <MetricCard
         icon="🛑"
         tint="#ff5470"
         label="Stop loss (weekly close)"
-        value={<span className="text-bear">{fmtUsd(s.stopPrice)}</span>}
+        value={
+          s.verdict === "NO SETUP" ? (
+            <span className="text-faint">N/A</span>
+          ) : (
+            <span className="text-bear">{fmtUsd(s.stopPrice)}</span>
+          )
+        }
         sub="0.5% below the 50-week MA"
       />
     </div>
@@ -410,10 +422,12 @@ function DashboardTab({ data }: { data: ScanResponse }) {
           </span>{" "}
           → <span className={VERDICT_META[s.verdict]?.color}>{VERDICT_META[s.verdict]?.label}</span>
         </div>
-        <div className="mt-1 text-xs text-muted">
-          Suggested entry {fmtUsd(s.entryPriceLow)} – {fmtUsd(s.entryPriceHigh)} · stop{" "}
-          {fmtUsd(s.stopPrice)} on a weekly close.
-        </div>
+        {s.verdict !== "NO SETUP" && (
+          <div className="mt-1 text-xs text-muted">
+            Suggested entry {fmtUsd(s.entryPriceLow)} – {fmtUsd(s.entryPriceHigh)} · stop{" "}
+            {fmtUsd(s.stopPrice)} on a weekly close.
+          </div>
+        )}
       </div>
     </div>
   );
