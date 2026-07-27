@@ -57,7 +57,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
 
     if gemini_key:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
             resp = requests.post(
                 url,
                 headers={"Content-Type": "application/json"},
@@ -70,7 +70,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
             if resp.status_code == 200:
                 text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
                 if text:
-                    return _clean_html_response(text), f"{label_prefix}Gemini 1.5 Flash"
+                    return _clean_html_response(text), f"{label_prefix}Gemini 2.0 Flash"
             else:
                 logger.error(f"Gemini API error: Status {resp.status_code}, Response: {resp.text}")
         except Exception as e:
