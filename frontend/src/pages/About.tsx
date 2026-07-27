@@ -51,7 +51,7 @@ export function About() {
       <div className="animate-fade-up mx-auto max-w-3xl space-y-8">
         <div>
           <h1 className="font-display text-4xl font-bold tracking-tight">
-            Welcome to <span className="text-gradient">HolyGrail</span>
+            What's <span className="text-gradient">HolyGrail?</span>
           </h1>
         </div>
 
