@@ -1,5 +1,19 @@
 [
   {
+    "ticker": "GILD",
+    "date_added": "2026-07-04",
+    "price_added": 135.0,
+    "verdict": "WATCH",
+    "commentary": "Healthcare theme is picking up in midterm years"
+  },
+  {
+    "ticker": "CRSP",
+    "date_added": "2026-07-02",
+    "price_added": 59.0,
+    "verdict": "BUY",
+    "commentary": ""
+  },
+  {
     "ticker": "INCY",
     "date_added": "2026-06-27",
     "price_added": 113.0,
@@ -42,13 +56,6 @@
     "commentary": ""
   },
   {
-    "ticker": "ILMN",
-    "date_added": "2026-05-27",
-    "price_added": 120.0,
-    "verdict": "BUY",
-    "commentary": "ARKG and biotech seems like the next momentum sector"
-  },
-  {
     "ticker": "ZM",
     "date_added": "2026-04-20",
     "price_added": 92.0,
@@ -84,17 +91,39 @@
     "commentary": "Provide low cost AI powered insurance for small and medium business. cheap valuations"
   },
   {
-    "ticker": "CRSP",
-    "date_added": "2026-07-02",
-    "price_added": 59.0,
+    "ticker": "BMY",
+    "date_added": "2026-07-20",
+    "price_added": 60.16,
+    "price_target": 75.0,
+    "options": null,
     "verdict": "BUY",
-    "commentary": ""
+    "commentary": "Relative to traditional pharmaceutical peers\u2014moving beyond standard R&D by pairing heavy NVIDIA AI infrastructure with company-wide Anthropic/Claude agentic workflows to speed up trial execution, lower pipeline failure rates, and offset revenue cliffs from patent expirations."
   },
   {
-    "ticker": "APD",
-    "date_added": "2026-07-03",
-    "price_added": 314.19,
+    "ticker": "LNG",
+    "date_added": "2026-07-21",
+    "price_added": 262.59,
+    "price_target": null,
+    "options": null,
     "verdict": "BUY",
-    "commentary": "Helium shortage for everything from terrestial data center to space data centers to EVs "
+    "commentary": "Cheniere Energy (LNG) is riding strong upward momentum driven by the operational rollout of its Corpus Christi Stage 3 expansion, which locks in high-margin, long-term take-or-pay export capacity. This fundamental growth is amplified by tight global supply and Middle East supply disruptions, cementing U.S. LNG export dominance. Supported by upgraded full-year EBITDA guidance ($7.25B\u2013$7.75B) and aggressive share buybacks, the stock continues to attract robust institutional buying."
+  },
+  {
+    "ticker": "ILMN",
+    "date_added": "2026-05-27",
+    "price_added": 150.17,
+    "price_target": 198.96,
+    "options": null,
+    "verdict": "HOLD",
+    "commentary": "Momentum is driven by NovaSeq X adoption boosting high-margin consumable sales, post-GRAIL margin expansion (23.5%+ target), and a $1.5B buyback backed by upgraded 2026 guidance.",
+    "sells": [
+      {
+        "date": "2026-07-10",
+        "percent": 50.0,
+        "price": 194.0
+      }
+    ],
+    "position_size": 50.0,
+    "status": "open"
   }
 ]
