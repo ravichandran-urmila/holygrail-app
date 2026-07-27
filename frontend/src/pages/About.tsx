@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import aboutPerspective from "../assets/about-perspective.png";
 import aboutGap from "../assets/about-gap.jpg";
+import intcMomentum from "../assets/intc-momentum.gif";
 
 function WelcomeModal({ onClose }: { onClose: () => void }) {
   return (
@@ -59,6 +60,25 @@ export function About() {
           <p>
             We built HolyGrail to give busy parents and early-stage investors a faster path to learning momentum analysis. By learning to spot a few high-probability chart setups, you can catch powerful stock momentum before the crowd does.
           </p>
+
+          <div className="my-8 rounded-3xl border border-line bg-surface/50 p-6 shadow-xl backdrop-blur-md space-y-4">
+            <h3 className="font-display text-xl font-bold tracking-tight text-ink mt-0">
+              What is momentum analysis?
+            </h3>
+            <p className="text-[14px] leading-relaxed text-muted">
+              Simply put, our indicator suite identifies the best time and price to enter a stock where the risk to downside is low and reward of upside is high.
+            </p>
+            <figure className="my-4 overflow-hidden rounded-2xl border border-line bg-base/50 p-2 shadow-2xl">
+              <img 
+                src={intcMomentum} 
+                alt="INTC HolyGrail Indicator 2025 Momentum Chart" 
+                className="w-full rounded-xl"
+              />
+              <figcaption className="mt-2 text-center text-xs text-faint">
+                Example: Intel (INTC) flagged with a Holy Grail signal in August 2025 before starting a strong upward move.
+              </figcaption>
+            </figure>
+          </div>
           <p>
             Over the last few decades, global broad money has grown at about 7% annually, the S&P 500 has compounded at roughly 10% nominally, and real household income has barely moved. That gap leaves working families squeezed when major expenses show up, because the things parents care about most — housing, healthcare, and education — often rise faster than wages.
           </p>
