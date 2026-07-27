@@ -286,6 +286,14 @@ function ScoreMeter({
 
 function MetricRow({ data }: { data: ScanResponse }) {
   const s = data.summary;
+  const hasRecentHg = (() => {
+    if (!s.lastHgDate) return false;
+    const signalDate = new Date(s.lastHgDate);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return signalDate >= oneYearAgo;
+  })();
+
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <MetricCard
@@ -293,13 +301,13 @@ function MetricRow({ data }: { data: ScanResponse }) {
         tint="#1fdd97"
         label="Gain from HG signal"
         value={
-          s.lastHgGainPct === null ? (
+          !hasRecentHg || s.lastHgGainPct === null ? (
             <span className="text-faint">N/A</span>
           ) : (
             <span className={gainColor(s.lastHgGainPct)}>{fmtPct(s.lastHgGainPct)}</span>
           )
         }
-        sub={s.lastHgDate ? `${fmtUsd(s.lastHgEntry)} · ${s.lastHgDate}` : "No signals in history"}
+        sub={hasRecentHg && s.lastHgDate ? `${fmtUsd(s.lastHgEntry)} · ${s.lastHgDate}` : "no recent setups found"}
       />
       <MetricCard
         icon="📈"
