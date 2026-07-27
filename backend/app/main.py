@@ -550,3 +550,15 @@ def lookup_price(ticker: str, date: str, x_admin_password: str | None = Header(d
         raise
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Lookup failed: {e}")
+
+
+@app.get("/api/admin/diagnostics")
+def diagnostics():
+    return {
+        "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
+        "openai_key_present": bool(os.environ.get("OPENAI_API_KEY")),
+        "hf_token_present": bool(os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_API_KEY")),
+        "gemini_key_length": len(os.environ.get("GEMINI_API_KEY", "")),
+        "openai_key_length": len(os.environ.get("OPENAI_API_KEY", "")),
+        "hf_token_length": len(os.environ.get("HF_TOKEN", "") or os.environ.get("HUGGINGFACE_API_KEY", "")),
+    }
