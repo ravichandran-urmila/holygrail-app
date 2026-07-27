@@ -115,6 +115,15 @@
     "price_target": 198.96,
     "options": null,
     "verdict": "HOLD",
-    "commentary": "Momentum is driven by NovaSeq X adoption boosting high-margin consumable sales, post-GRAIL margin expansion (23.5%+ target), and a $1.5B buyback backed by upgraded 2026 guidance."
+    "commentary": "Momentum is driven by NovaSeq X adoption boosting high-margin consumable sales, post-GRAIL margin expansion (23.5%+ target), and a $1.5B buyback backed by upgraded 2026 guidance.",
+    "sells": [
+      {
+        "date": "2026-07-10",
+        "percent": 50.0,
+        "price": 194.0
+      }
+    ],
+    "position_size": 50.0,
+    "status": "open"
   }
 ]
