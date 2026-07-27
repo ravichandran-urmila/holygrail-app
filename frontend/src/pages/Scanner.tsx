@@ -18,7 +18,7 @@ export function Scanner() {
   const urlTab = params.get("tab");
   const initialTab = urlTab === "Dashboard" || urlTab === "Data" ? urlTab : "Chart";
   const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab);
-  const [chartType, setChartType] = useState<"candle" | "line">("candle");
+  const [chartType, setChartType] = useState<"candle" | "line">("line");
   const { settings, showCloud } = useSettings();
 
   useEffect(() => setInput(urlTicker), [urlTicker]);

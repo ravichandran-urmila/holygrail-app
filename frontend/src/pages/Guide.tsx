@@ -128,7 +128,7 @@ const CASES: Case[] = [
 
 function CaseChart({ c }: { c: Case }) {
   const { data, isLoading, isError } = useGuideCase(c.ticker, c.start, c.end);
-  const [chartType, setChartType] = useState<"candle" | "line">("candle");
+  const [chartType, setChartType] = useState<"candle" | "line">("line");
 
   return (
     <div className="card overflow-hidden p-3 relative group">
