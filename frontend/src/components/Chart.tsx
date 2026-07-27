@@ -19,7 +19,7 @@ interface Props {
   type?: "candle" | "line";
 }
 
-export function Chart({ data, showCloud, height = 560, type = "candle" }: Props) {
+export function Chart({ data, showCloud, height = 560, type = "line" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
 
