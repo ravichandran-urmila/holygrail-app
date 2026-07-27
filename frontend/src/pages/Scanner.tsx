@@ -288,7 +288,13 @@ function MetricRow({ data }: { data: ScanResponse }) {
   const s = data.summary;
   const hasRecentHg = (() => {
     if (!s.lastHgDate) return false;
-    const signalDate = new Date(s.lastHgDate);
+    const parts = s.lastHgDate.split("-");
+    if (parts.length !== 3) return false;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const d = parseInt(parts[2], 10);
+    const signalDate = new Date(y, m - 1, d);
+    
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     return signalDate >= oneYearAgo;
@@ -307,7 +313,7 @@ function MetricRow({ data }: { data: ScanResponse }) {
             <span className={gainColor(s.lastHgGainPct)}>{fmtPct(s.lastHgGainPct)}</span>
           )
         }
-        sub={hasRecentHg && s.lastHgDate ? `${fmtUsd(s.lastHgEntry)} · ${s.lastHgDate}` : "no recent setups found"}
+        sub={hasRecentHg && s.lastHgDate ? `${fmtUsd(s.lastHgEntry)} · ${s.lastHgDate}` : "no recent setups found in the past year"}
       />
       <MetricCard
         icon="📈"
