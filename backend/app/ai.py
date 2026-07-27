@@ -29,6 +29,9 @@ HF_MODELS = [
     "google/gemma-3-1b-it",
 ]
 
+# Models that returned 400/404 (unsupported) are skipped permanently in this process
+_HF_DEAD_MODELS: set[str] = set()
+
 
 def _keys():
     return (
@@ -109,6 +112,8 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
         active_model = benchmark.load_active_model()
         models_to_try = [active_model] + [m for m in HF_MODELS if m != active_model]
         for model in models_to_try:
+            if model in _HF_DEAD_MODELS:
+                continue
             try:
                 resp = requests.post(
                     "https://router.huggingface.co/v1/chat/completions",
@@ -116,7 +121,7 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     json={
                         "model": model,
                         "messages": [{"role": "user", "content": prompt}],
-                        "max_tokens": 250,
+                        "max_tokens": 200,
                         "temperature": 0.4,
                     },
                     timeout=5,
@@ -125,8 +130,12 @@ def _call_llm(prompt: str, label_prefix: str = "") -> tuple[str, str] | None:
                     text = resp.json()["choices"][0]["message"]["content"].strip()
                     if text:
                         return _clean_html_response(text), f"HF ({model.split('/')[-1]})"
+                elif resp.status_code in (400, 404):
+                    # Permanently unsupported — skip forever in this process
+                    _HF_DEAD_MODELS.add(model)
+                    logger.warning(f"HF model {model} permanently skipped (status {resp.status_code})")
                 else:
-                    logger.warning(f"HF model {model} failed with status {resp.status_code}: {resp.text[:100]}")
+                    logger.warning(f"HF model {model} failed with status {resp.status_code}")
             except Exception as e:
                 logger.error(f"HF model {model} exception: {str(e)}")
     return None
@@ -296,17 +305,7 @@ def fundamental_summary(ticker: str, name: str) -> tuple[str, str]:
     ai_src = ""
     gemini_key, openai_key, hf_token = _keys()
     if gemini_key or openai_key or hf_token:
-        prompt = f"""You are a fundamental stock market analyst. Write a concise fundamental context note (max 30 words) for {name} ({ticker}) explaining how these metrics shape its outlook.
-Metrics:
-- PE: {f(trailing_pe)} (T) / {f(forward_pe)} (F)
-- PS: {f(ps)} / {f(forward_ps)}
-- PEG: {f(peg)}
-- EV/EBITDA: {f(ev_ebitda)} (T) / {f(forward_ev_ebitda)} (F)
-- P/B: {f(price_to_book)}
-- P/FCF: {p_fcf_desc}
-- FCF Growth: {fcf_growth_desc}
-
-CRITICAL: Output raw text only. No HTML. Maximum 30 words."""
+        prompt = f"""Fundamental analyst. One sentence (max 20 words) on {ticker} outlook given: PE {f(trailing_pe)}T/{f(forward_pe)}F, EV/EBITDA {f(ev_ebitda)}T, FCF growth {fcf_growth_desc}, PEG {f(peg)}. Plain text only."""
         result = _call_llm(prompt)
         if result:
             ai_text, ai_src = result
@@ -376,15 +375,9 @@ def catalyst_narrative(ticker: str, name: str, news_items: list) -> tuple[str, s
     links_html += "</ul></div>"
 
     news_text = "".join(f'{i+1}. "{n["title"]}" (published by {n["publisher"]})\n' for i, n in enumerate(news_subset))
-    prompt = f"""You are a professional financial journalist and stock market catalyst analyst.
-Analyze the following recent news headlines for {name} ({ticker}) and synthesize them into a concise unified "current narrative" summary (max 120 words).
-Identify the key catalyst potentially moving the stock.
+    prompt = f"""Stock analyst. Synthesize these {ticker} headlines into a current narrative (max 80 words). Identify the key price catalyst. Use <p> and <strong> tags only.
 
-Recent News Headlines for {ticker}:
-{news_text}
-
-CRITICAL FORMATTING INSTRUCTIONS:
-Raw HTML (using <p>, <strong>, <br/>). No <html>/<body>, no code blocks. Under 120 words."""
+{news_text}"""
 
     result = _call_llm(prompt)
     if result:
@@ -422,21 +415,6 @@ def company_digest(ticker: str, name: str, news_items: list, business_summary: s
     if not desc:
         desc = f"{name} ({ticker}) is a leading publicly traded corporation."
 
-    gemini_key, openai_key, hf_token = _keys()
-    if gemini_key or openai_key or hf_token:
-        prompt = f"""You are a professional financial analyst. Summarize the core business model, key products, and market position of {name} ({ticker}) based on the business summary.
-Summary must be highly professional, descriptive yet concise (max 45 words).
-
-Business Summary:
-{business_summary[:800] if business_summary else "No summary available."}
-
-CRITICAL: Output raw text only. No markdown formatting, no code blocks, no introductory preambles. Maximum 45 words."""
-        result = _call_llm(prompt)
-        if result:
-            overview, source = result
-            # Strip any wrapped HTML tags if present, then wrap cleanly in a styled paragraph
-            clean_text = re.sub(r'<[^>]*>', '', overview).strip()
-            return f"<p style='line-height:1.5;'>{clean_text}</p>", source
-
+    # No LLM call for digest — use local 3-sentence truncation to save tokens
     return f"<p style='line-height:1.5;'>{desc}</p>", "Local Expert System"
 
