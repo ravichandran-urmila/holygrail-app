@@ -554,13 +554,14 @@ def lookup_price(ticker: str, date: str, x_admin_password: str | None = Header(d
 
 @app.get("/api/admin/models")
 def list_models():
+    import urllib.request, json as _json
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if not gemini_key:
         return {"error": "GEMINI_API_KEY not set"}
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={gemini_key}"
-        resp = requests.get(url, timeout=5)
-        return resp.json()
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            return _json.loads(resp.read().decode())
     except Exception as e:
         return {"error": str(e)}
 
