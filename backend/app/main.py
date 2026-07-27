@@ -167,10 +167,18 @@ def scan(
     return payload
 
 
+from .cache import _cache
+
 @app.get("/api/scan/{ticker}/ai")
 def scan_ai(ticker: str, full_thresh: float = 0.70, partial_thresh: float = 0.35, retest_max: float = 15.0):
     ticker = ticker.strip().upper()
     settings = _settings(retest_max=retest_max, partial_thresh=partial_thresh, full_thresh=full_thresh)
+    
+    cache_key = f"ai_scan:{ticker}:{full_thresh}:{partial_thresh}:{retest_max}"
+    cached_val = _cache.get(cache_key)
+    if cached_val is not None:
+        return cached_val
+
     try:
         ohlcv = datalib.fetch_weekly(ticker, period="10y")
         spx = datalib.fetch_spx_weekly(period="10y")
@@ -193,12 +201,26 @@ def scan_ai(ticker: str, full_thresh: float = 0.70, partial_thresh: float = 0.35
         fund_html, fund_src = future_fund.result()
         narr_html, narr_src = future_narr.result()
         digest_html, digest_src = future_digest.result()
-    return {
+        
+    payload = {
         "technical": {"html": tech_html, "source": tech_src},
         "fundamental": {"html": fund_html, "source": fund_src},
         "narrative": {"html": narr_html, "source": narr_src},
         "digest": {"html": digest_html, "source": digest_src},
     }
+    
+    # Determine TTL based on success:
+    # If any panel fell back to local system without AI, cache for 10s.
+    # Otherwise, cache for 1 hour.
+    sources = [tech_src, fund_src, narr_src, digest_src]
+    is_fallback = any(
+        s in ("Local Expert System", "Local System", "")
+        for s in sources
+    )
+    ttl = 10 if is_fallback else 3600
+    _cache.set(cache_key, payload, ttl)
+    
+    return payload
 
 
 # Guide case studies (ticker + date window from the original app).
