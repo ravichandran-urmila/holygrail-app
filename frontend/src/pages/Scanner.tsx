@@ -85,20 +85,20 @@ export function Scanner() {
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   <div className="flex rounded-2xl border border-line bg-white/[0.02] p-1">
                     <button
-                      onClick={() => setChartType("candle")}
-                      className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
-                        chartType === "candle" ? "bg-violet/25 text-ink" : "text-muted hover:text-ink"
-                      }`}
-                    >
-                      Candle
-                    </button>
-                    <button
                       onClick={() => setChartType("line")}
                       className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
                         chartType === "line" ? "bg-violet/25 text-ink" : "text-muted hover:text-ink"
                       }`}
                     >
                       Line
+                    </button>
+                    <button
+                      onClick={() => setChartType("candle")}
+                      className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
+                        chartType === "candle" ? "bg-violet/25 text-ink" : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      Candle
                     </button>
                   </div>
                   
