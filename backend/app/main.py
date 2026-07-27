@@ -551,3 +551,16 @@ def lookup_price(ticker: str, date: str, x_admin_password: str | None = Header(d
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Lookup failed: {e}")
 
+
+@app.get("/api/admin/models")
+def list_models():
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        return {"error": "GEMINI_API_KEY not set"}
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={gemini_key}"
+        resp = requests.get(url, timeout=5)
+        return resp.json()
+    except Exception as e:
+        return {"error": str(e)}
+
