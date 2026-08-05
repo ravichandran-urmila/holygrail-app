@@ -125,5 +125,14 @@
     ],
     "position_size": 50.0,
     "status": "open"
+  },
+  {
+    "ticker": "LMT",
+    "date_added": "2026-08-05",
+    "price_added": 760.0,
+    "price_target": null,
+    "options": null,
+    "verdict": "BUY",
+    "commentary": ""
   }
 ]
