@@ -81,7 +81,15 @@
     "date_added": "2025-06-23",
     "price_added": 124.0,
     "verdict": "HOLD",
-    "commentary": "The frontrunner of inference chips"
+    "commentary": "The frontrunner of inference chips",
+    "sells": [
+      {
+        "date": "2026-08-07",
+        "percent": 20.0,
+        "price": 481.0
+      }
+    ],
+    "position_size": 80.0
   },
   {
     "ticker": "OSCR",
